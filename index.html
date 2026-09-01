@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Performance - Vendas & Metas</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse CDN para Leitura de CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary: #d9251c; /* Vermelho Claro/Padrão */
+            --secondary: #1a1a1a;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; color: var(--secondary); }
+
+        .controls { display: flex; gap: 10px; align-items: center; }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-nav {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-nav.active {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .kpi-title { font-size: 0.85rem; color: #666; font-weight: 600; }
+        .kpi-value { font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        th { background-color: #f8f9fa; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        input[type="file"] { display: none; }
+        .file-label {
+            background-color: var(--secondary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dashboard de Performance Comercial</h1>
+        <div class="controls">
+            <button class="btn btn-nav active" onclick="switchTab('dash1')">Visão por Loja/Meta</button>
+            <button class="btn btn-nav" onclick="switchTab('dash2')">Histórico & Aparelhos</button>
+            <label class="file-label" for="csvInput">Carregar Base Diária (.CSV)</label>
+            <input type="file" id="csvInput" accept=".csv">
+        </div>
+    </header>
+
+    <!-- DASHBOARD 1: METAS E PERFORMANCE -->
+    <div id="dash1" class="tab-content active">
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-title">Vendas Realizadas</div>
+                <div class="kpi-value" id="kpi-vendas">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Meta do Mês</div>
+                <div class="kpi-value" id="kpi-meta">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">% Atingimento</div>
+                <div class="kpi-value" id="kpi-atingimento">0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Meta Dia (Úteis)</div>
+                <div class="kpi-value" id="kpi-meta-dia">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Projeção Mês</div>
+                <div class="kpi-value" id="kpi-projecao">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Acompanhamento por Loja e Vendedor (HC)</h3>
+                <table id="table-lojas">
+                    <thead>
+                        <tr>
+                            <th>Loja</th>
+                            <th>Vendedor (HC)</th>
+                            <th>Realizado</th>
+                            <th>Meta HC</th>
+                            <th>% Atingimento</th>
+                            <th>Projeção</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" style="text-align:center;">Carregue a base de dados para visualizar.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD 2: HISTÓRICO E APARELHOS -->
+    <div id="dash2" class="tab-content">
+        <div style="margin-bottom: 15px;">
+            <label><b>Filtrar Indicador:</b></label>
+            <select id="select-indicador" onchange="renderDash2()">
+                <option value="TODOS">Todos</option>
+                <option value="Controle">Controle</option>
+                <option value="Pós">Pós</option>
+                <option value="Conta">Conta</option>
+                <option value="BL">Banda Larga (BL)</option>
+                <option value="TV">TV</option>
+            </select>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-title">Qtd. Aparelhos Válidos</div>
+                <div class="kpi-value" id="kpi-qtd-aparelhos">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Receita Assinatura (Col BF)</div>
+                <div class="kpi-value" id="kpi-receita">R$ 0,00</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ticket Médio Aparelho</div>
+                <div class="kpi-value" id="kpi-ticket">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Evolução Histórica de Vendas</h3>
+                <canvas id="chartHistorico" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let chartInstance = null;
+
+        // Alternar entre abas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Leitura do Arquivo CSV
+        document.getElementById('csvInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    rawData = results.data;
+                    processData();
+                }
+            });
+        });
+
+        // Regras de Negócio e Processamento
+        function processData() {
+            if (rawData.length === 0) return;
+
+            let totalVendas = 0;
+            let qtdAparelhos = 0;
+            let receitaTotal = 0;
+
+            // Iterar pelas linhas (ignorando cabeçalho se houver)
+            rawData.forEach((row, index) => {
+                if (index === 0) return; // pular cabeçalho
+
+                // 1. De/Para Indicador
+                let produtoRaw = row[3] || ""; // ajuste o índice da coluna de produto
+                let indicador = trataIndicador(produtoRaw);
+
+                // 2. Regra Aparelho (Coluna L [11] - IMEI e Coluna M [12] - Descrição)
+                let imei = row[11] ? row[11].trim() : "";
+                let descricao = row[12] ? row[12].trim() : "";
+                
+                if (imei !== "" && descricao !== "") {
+                    qtdAparelhos++;
+                }
+
+                // 3. Receita (Coluna BF [57])
+                let receitaVal = parseFloat(row[57]) || 0;
+                receitaTotal += receitaVal;
+
+                totalVendas++;
+            });
+
+            // Atualizar KPIs do Dashboard 1
+            document.getElementById('kpi-vendas').innerText = totalVendas;
+            document.getElementById('kpi-meta').innerText = 1000; // Exemplo fixo
+            document.getElementById('kpi-atingimento').innerText = ((totalVendas / 1000) * 100).toFixed(1) + "%";
+            
+            // Atualizar KPIs do Dashboard 2
+            document.getElementById('kpi-qtd-aparelhos').innerText = qtdAparelhos;
+            document.getElementById('kpi-receita').innerText = "R$ " + receitaTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpi-ticket').innerText = "R$ " + (qtdAparelhos > 0 ? (receitaTotal / qtdAparelhos) : 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+            renderDash2();
+        }
+
+        function trataIndicador(nome) {
+            let n = nome.toLowerCase();
+            if (n.includes("pré-controle") || n.includes("migração pré-controle") || n.includes("controle")) {
+                return "Controle";
+            }
+            if (n.includes("pós")) return "Pós";
+            if (n.includes("conta")) return "Conta";
+            if (n.includes("bl") || n.includes("banda larga")) return "BL";
+            if (n.includes("tv")) return "TV";
+            return "Outros";
+        }
+
+        function renderDash2() {
+            const ctx = document.getElementById('chartHistorico').getContext('2d');
+            
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                    datasets: [{
+                        label: 'Volume de Vendas',
+                        data: [120, 190, 300, 250],
+                        backgroundColor: '#d9251c'
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+    </script>
+</body>
+</html>
