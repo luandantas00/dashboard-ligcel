@@ -107,9 +107,9 @@
 <body>
 
     <header>
-        <h1>Painel de Vendas - Ligcel</h1>
+        <h1>Painel Comercial - Ligcel</h1>
         <div class="controls">
-            <button class="btn btn-nav active" onclick="switchTab('dash1', event)">Visão por Loja/Meta</button>
+            <button class="btn btn-nav active" onclick="switchTab('dash1', event)">Visão Meta & Indicadores</button>
             <button class="btn btn-nav" onclick="switchTab('dash2', event)">Histórico & Aparelhos</button>
             <label class="file-label" for="csvInput">Selecionar CSV</label>
             <input type="file" id="csvInput" accept=".csv">
@@ -121,34 +121,34 @@
     <div id="dash1" class="tab-content active">
         <div class="kpi-container">
             <div class="kpi-card">
-                <div class="kpi-title">Vendas Totais</div>
-                <div class="kpi-value" id="kpi-vendas">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Qtd. Controle (Ajustado)</div>
+                <div class="kpi-title">Qtd. CONTROLE</div>
                 <div class="kpi-value" id="kpi-controle">0</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Qtd. Pós</div>
+                <div class="kpi-title">Qtd. PÓS</div>
                 <div class="kpi-value" id="kpi-pos">0</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Qtd. Banda Larga (BL)</div>
+                <div class="kpi-title">Qtd. BL (Vírtua)</div>
                 <div class="kpi-value" id="kpi-bl">0</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Qtd. TV</div>
-                <div class="kpi-value" id="kpi-tv">0</div>
+                <div class="kpi-title">Apenas Comissão / Fora Meta</div>
+                <div class="kpi-value" id="kpi-comissao-apenas">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Total Geral Registros</div>
+                <div class="kpi-value" id="kpi-vendas-totais">0</div>
             </div>
         </div>
 
         <div class="dashboard-grid">
             <div class="card">
-                <h3>Resumo de Registro por Produto</h3>
+                <h3>Consolidado De/Para por Categoria</h3>
                 <table id="table-resumo">
                     <thead>
                         <tr>
-                            <th>Categoria Trada</th>
+                            <th>Categoria De/Para</th>
                             <th>Total de Registros</th>
                         </tr>
                     </thead>
@@ -179,7 +179,7 @@
 
         <div class="dashboard-grid">
             <div class="card">
-                <h3>Contagem por Categoria</h3>
+                <h3>Volume por CategoriaTrada</h3>
                 <canvas id="chartCategorias" height="100"></canvas>
             </div>
         </div>
@@ -188,6 +188,36 @@
     <script>
         let rawData = [];
         let chartInstance = null;
+
+        // Tabela de Mapeamento De/Para
+        const deParaMap = {
+            "ativação controle": "CONTROLE",
+            "migração pré - controle": "CONTROLE",
+            "migração pré-controle": "CONTROLE",
+            
+            "ativação dependente": "PÓS",
+            "ativação dependente grátis": "PÓS",
+            "ativação dependente gratis": "PÓS",
+            "ativação internet": "PÓS",
+            "ativação pós": "PÓS",
+            "migração pré - pós": "PÓS",
+            "migração pré-pós": "PÓS",
+            
+            "instalação vírtua": "BL",
+            "instalação virtua": "BL",
+
+            "ativação dependente base": "NÃO CONSIDERAR",
+
+            "ativação pré": "APENAS COMISSÃO",
+            "comissões adicionais": "APENAS COMISSÃO",
+            "fone fixo": "APENAS COMISSÃO",
+            "instalação fone": "APENAS COMISSÃO",
+            "instalação tv": "APENAS COMISSÃO",
+            "serviços gerais": "APENAS COMISSÃO",
+            "substituição de aparelho": "APENAS COMISSÃO",
+            "troca de aparelho": "APENAS COMISSÃO",
+            "upgrade de plano": "APENAS COMISSÃO"
+        };
 
         function switchTab(tabId, evt) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -205,16 +235,14 @@
             Papa.parse(file, {
                 header: false,
                 skipEmptyLines: true,
-                dynamicTyping: false,
-                encoding: "ISO-8859-1", // Suporta acentuação em bases brasileiras
+                encoding: "ISO-8859-1",
                 complete: function(results) {
                     rawData = results.data;
-                    document.getElementById('status-msg').innerText = "✓ Arquivo Lido!";
+                    document.getElementById('status-msg').innerText = "✓ Arquivo Processado!";
                     processData();
                 },
                 error: function(err) {
-                    document.getElementById('status-msg').innerText = "Erro ao carregar CSV.";
-                    console.error(err);
+                    document.getElementById('status-msg').innerText = "Erro no CSV.";
                 }
             });
         });
@@ -229,87 +257,73 @@
         function processData() {
             if (!rawData || rawData.length === 0) return;
 
-            let totalVendas = 0;
+            let totalValidos = 0;
             let qtdAparelhos = 0;
             let receitaTotal = 0;
 
             let contagemCategorias = {
-                "Controle": 0,
-                "Pós": 0,
-                "Conta": 0,
+                "CONTROLE": 0,
+                "PÓS": 0,
                 "BL": 0,
-                "TV": 0,
-                "Outros": 0
+                "APENAS COMISSÃO": 0,
+                "OUTROS": 0
             };
 
-            // Processa linha por linha
             rawData.forEach((row, index) => {
-                if (index === 0) return; // Ignora linha do cabeçalho
+                if (index === 0) return;
 
-                // Busca pelas posições exatas (Col L = 11, Col M = 12, Col BF = 57)
-                let imei = row[11] ? row[11].toString().trim() : "";
-                let descricao = row[12] ? row[12].toString().trim() : "";
-                let receitaVal = parseValorBr(row[57]);
-
-                // Procura coluna do produto na linha
+                // Captura a descrição do produto presente na linha
                 let produtoRaw = "";
                 row.forEach(cell => {
-                    if (cell && typeof cell === 'string' && (
-                        cell.toLowerCase().includes("controle") || 
-                        cell.toLowerCase().includes("pós") || 
-                        cell.toLowerCase().includes("banda larga") ||
-                        cell.toLowerCase().includes("tv")
-                    )) {
-                        produtoRaw = cell;
+                    if (cell && typeof cell === 'string') {
+                        let cLower = cell.trim().toLowerCase();
+                        if (deParaMap[cLower] !== undefined) {
+                            produtoRaw = cLower;
+                        }
                     }
                 });
 
-                // 1. Trata Nomenclatura (Pré-Controle -> Controle)
-                let cat = trataIndicador(produtoRaw);
-                contagemCategorias[cat] = (contagemCategorias[cat] || 0) + 1;
+                let categoriaFinal = deParaMap[produtoRaw] || "OUTROS";
 
-                // 2. Validação de Aparelho (IMEI na Col L + Descrição na Col M)
+                // Desconsidera itens marcados como 'NÃO CONSIDERAR'
+                if (categoriaFinal === "NÃO CONSIDERAR") return;
+
+                contagemCategorias[categoriaFinal] = (contagemCategorias[categoriaFinal] || 0) + 1;
+
+                // Validação de Aparelho (IMEI Col L [11] + Descrição Col M [12])
+                let imei = row[11] ? row[11].toString().trim() : "";
+                let descricao = row[12] ? row[12].toString().trim() : "";
                 if (imei !== "" && descricao !== "") {
                     qtdAparelhos++;
                 }
 
-                // 3. Receita da Coluna BF
+                // Receita Assinatura Col BF [57]
+                let receitaVal = parseValorBr(row[57]);
                 receitaTotal += receitaVal;
-                totalVendas++;
+
+                totalValidos++;
             });
 
-            // Atualiza KPIs da Visão 1
-            document.getElementById('kpi-vendas').innerText = totalVendas;
-            document.getElementById('kpi-controle').innerText = contagemCategorias["Controle"];
-            document.getElementById('kpi-pos').innerText = contagemCategorias["Pós"];
+            // Atualização dos KPIs
+            document.getElementById('kpi-controle').innerText = contagemCategorias["CONTROLE"];
+            document.getElementById('kpi-pos').innerText = contagemCategorias["PÓS"];
             document.getElementById('kpi-bl').innerText = contagemCategorias["BL"];
-            document.getElementById('kpi-tv').innerText = contagemCategorias["TV"];
+            document.getElementById('kpi-comissao-apenas').innerText = contagemCategorias["APENAS COMISSÃO"];
+            document.getElementById('kpi-vendas-totais').innerText = totalValidos;
 
-            // Atualiza Tabela Resumo
+            // Tabela Resumo
             let tbody = document.getElementById('tbody-resumo');
             tbody.innerHTML = "";
             for (let [key, val] of Object.entries(contagemCategorias)) {
                 tbody.innerHTML += `<tr><td><b>${key}</b></td><td>${val}</td></tr>`;
             }
 
-            // Atualiza KPIs da Visão 2
+            // KPIs do Dashboard 2
             document.getElementById('kpi-qtd-aparelhos').innerText = qtdAparelhos;
             document.getElementById('kpi-receita').innerText = "R$ " + receitaTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('kpi-ticket').innerText = "R$ " + (qtdAparelhos > 0 ? (receitaTotal / qtdAparelhos) : 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
             renderChart(contagemCategorias);
-        }
-
-        function trataIndicador(nome) {
-            let n = nome.toLowerCase();
-            if (n.includes("pré-controle") || n.includes("migração pré-controle") || n.includes("controle")) {
-                return "Controle";
-            }
-            if (n.includes("pós")) return "Pós";
-            if (n.includes("conta")) return "Conta";
-            if (n.includes("bl") || n.includes("banda larga")) return "BL";
-            if (n.includes("tv")) return "TV";
-            return "Outros";
         }
 
         function renderChart(dados) {
@@ -321,7 +335,7 @@
                 data: {
                     labels: Object.keys(dados),
                     datasets: [{
-                        label: 'Quantidade por Categoria',
+                        label: 'Quantidade Registrada',
                         data: Object.values(dados),
                         backgroundColor: '#d9251c'
                     }]
