@@ -1,348 +1,71 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Comercial - Ligcel</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <style>
-        :root {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --primary: #d9251c;
-            --secondary: #1a1a1a;
-            --border: #e0e0e0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        h1 { margin: 0; font-size: 1.4rem; color: var(--secondary); }
-
-        .controls { display: flex; gap: 10px; align-items: center; }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-nav { background-color: #e0e0e0; color: #333; }
-        .btn-nav.active { background-color: var(--secondary); color: white; }
-
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .kpi-card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--primary);
-        }
-
-        .kpi-title { font-size: 0.85rem; color: #666; font-weight: 600; }
-        .kpi-value { font-size: 1.3rem; font-weight: bold; margin-top: 5px; }
-
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        th { background-color: #f8f9fa; }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        input[type="file"] { display: none; }
-        .file-label {
-            background-color: var(--secondary);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        #status-msg {
-            font-size: 0.85rem;
-            color: #28a745;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Painel Comercial</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/shell.css">
 </head>
 <body>
 
-    <header>
-        <h1>Painel Comercial - Ligcel</h1>
-        <div class="controls">
-            <button class="btn btn-nav active" onclick="switchTab('dash1', event)">Visão Meta & Indicadores</button>
-            <button class="btn btn-nav" onclick="switchTab('dash2', event)">Histórico & Aparelhos</button>
-            <label class="file-label" for="csvInput">Selecionar CSV</label>
-            <input type="file" id="csvInput" accept=".csv">
-            <span id="status-msg"></span>
-        </div>
-    </header>
+<main id="telaLogin" class="login" hidden>
+  <form id="formLogin" class="login-card" autocomplete="on">
+    <div class="marca"><span class="bola"></span><span id="loginTitulo">Painel Comercial</span></div>
+    <p class="sub">Entre com o seu e-mail e a senha que a sua liderança cadastrou.</p>
+    <label for="lgEmail">E-mail</label>
+    <input id="lgEmail" type="email" autocomplete="username" required inputmode="email">
+    <label for="lgSenha">Senha</label>
+    <input id="lgSenha" type="password" autocomplete="current-password" required>
+    <button class="btn principal" id="btnEntrar" type="submit">Entrar</button>
+    <p class="msg" id="lgMsg" role="alert"></p>
+    <p class="dica">Esqueceu a senha? Peça a redefinição para quem cadastrou o seu acesso.</p>
+  </form>
+</main>
 
-    <!-- DASHBOARD 1 -->
-    <div id="dash1" class="tab-content active">
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-title">Qtd. CONTROLE</div>
-                <div class="kpi-value" id="kpi-controle">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Qtd. PÓS</div>
-                <div class="kpi-value" id="kpi-pos">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Qtd. BL (Vírtua)</div>
-                <div class="kpi-value" id="kpi-bl">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Apenas Comissão / Fora Meta</div>
-                <div class="kpi-value" id="kpi-comissao-apenas">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Total Geral Registros</div>
-                <div class="kpi-value" id="kpi-vendas-totais">0</div>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Consolidado De/Para por Categoria</h3>
-                <table id="table-resumo">
-                    <thead>
-                        <tr>
-                            <th>Categoria De/Para</th>
-                            <th>Total de Registros</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-resumo">
-                        <tr><td colspan="2" style="text-align:center;">Aguardando arquivo CSV...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<div id="telaApp" class="app" hidden>
+  <header class="topo">
+    <div class="topo-in">
+      <div class="marca">
+        <span class="bola"></span>
+        <h1 id="tituloTxt">Painel Comercial</h1>
+        <button class="icone" id="btnEditarTitulo" title="Alterar o título" aria-label="Alterar o título" hidden>✎</button>
+        <form id="formTitulo" class="titulo-form" hidden>
+          <input id="inpTitulo" maxlength="60" aria-label="Título">
+          <button class="btn mini principal" type="submit">Salvar</button>
+          <button class="btn mini" type="button" id="btnCancTitulo">Cancelar</button>
+        </form>
+      </div>
+      <div class="quem">
+        <span class="chip-user"><b id="uNome">—</b><small id="uPapel">—</small></span>
+        <button class="btn mini" id="btnConta">Minha conta</button>
+        <button class="btn mini" id="btnSair">Sair</button>
+      </div>
     </div>
+    <nav id="abas" class="abas" aria-label="Seções"></nav>
+  </header>
+  <section id="palco" class="palco"></section>
+</div>
 
-    <!-- DASHBOARD 2 -->
-    <div id="dash2" class="tab-content">
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-title">Aparelhos Válidos (Col L + M)</div>
-                <div class="kpi-value" id="kpi-qtd-aparelhos">0</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Receita Assinatura (Col BF)</div>
-                <div class="kpi-value" id="kpi-receita">R$ 0,00</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Ticket Médio por Aparelho</div>
-                <div class="kpi-value" id="kpi-ticket">R$ 0,00</div>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Volume por CategoriaTrada</h3>
-                <canvas id="chartCategorias" height="100"></canvas>
-            </div>
-        </div>
+<dialog id="dlgConta">
+  <form method="dialog" id="formConta" class="dlg">
+    <h2>Minha conta</h2>
+    <p class="sub" id="contaInfo"></p>
+    <label for="novaSenha">Nova senha (mínimo 8 caracteres)</label>
+    <input id="novaSenha" type="password" autocomplete="new-password" minlength="8">
+    <p class="msg" id="contaMsg" role="alert"></p>
+    <div class="linha">
+      <button class="btn principal" type="submit" id="btnSalvarSenha" value="ok">Trocar senha</button>
+      <button class="btn" type="button" id="btnFecharConta">Fechar</button>
     </div>
+  </form>
+</dialog>
 
-    <script>
-        let rawData = [];
-        let chartInstance = null;
-
-        // Tabela de Mapeamento De/Para
-        const deParaMap = {
-            "ativação controle": "CONTROLE",
-            "migração pré - controle": "CONTROLE",
-            "migração pré-controle": "CONTROLE",
-            
-            "ativação dependente": "PÓS",
-            "ativação dependente grátis": "PÓS",
-            "ativação dependente gratis": "PÓS",
-            "ativação internet": "PÓS",
-            "ativação pós": "PÓS",
-            "migração pré - pós": "PÓS",
-            "migração pré-pós": "PÓS",
-            
-            "instalação vírtua": "BL",
-            "instalação virtua": "BL",
-
-            "ativação dependente base": "NÃO CONSIDERAR",
-
-            "ativação pré": "APENAS COMISSÃO",
-            "comissões adicionais": "APENAS COMISSÃO",
-            "fone fixo": "APENAS COMISSÃO",
-            "instalação fone": "APENAS COMISSÃO",
-            "instalação tv": "APENAS COMISSÃO",
-            "serviços gerais": "APENAS COMISSÃO",
-            "substituição de aparelho": "APENAS COMISSÃO",
-            "troca de aparelho": "APENAS COMISSÃO",
-            "upgrade de plano": "APENAS COMISSÃO"
-        };
-
-        function switchTab(tabId, evt) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if (evt && evt.target) evt.target.classList.add('active');
-        }
-
-        document.getElementById('csvInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            document.getElementById('status-msg').innerText = "Lendo arquivo...";
-
-            Papa.parse(file, {
-                header: false,
-                skipEmptyLines: true,
-                encoding: "ISO-8859-1",
-                complete: function(results) {
-                    rawData = results.data;
-                    document.getElementById('status-msg').innerText = "✓ Arquivo Processado!";
-                    processData();
-                },
-                error: function(err) {
-                    document.getElementById('status-msg').innerText = "Erro no CSV.";
-                }
-            });
-        });
-
-        function parseValorBr(val) {
-            if (!val) return 0;
-            let str = val.toString().replace("R$", "").replace(/\s/g, "");
-            str = str.replace(/\./g, "").replace(",", ".");
-            return parseFloat(str) || 0;
-        }
-
-        function processData() {
-            if (!rawData || rawData.length === 0) return;
-
-            let totalValidos = 0;
-            let qtdAparelhos = 0;
-            let receitaTotal = 0;
-
-            let contagemCategorias = {
-                "CONTROLE": 0,
-                "PÓS": 0,
-                "BL": 0,
-                "APENAS COMISSÃO": 0,
-                "OUTROS": 0
-            };
-
-            rawData.forEach((row, index) => {
-                if (index === 0) return;
-
-                // Captura a descrição do produto presente na linha
-                let produtoRaw = "";
-                row.forEach(cell => {
-                    if (cell && typeof cell === 'string') {
-                        let cLower = cell.trim().toLowerCase();
-                        if (deParaMap[cLower] !== undefined) {
-                            produtoRaw = cLower;
-                        }
-                    }
-                });
-
-                let categoriaFinal = deParaMap[produtoRaw] || "OUTROS";
-
-                // Desconsidera itens marcados como 'NÃO CONSIDERAR'
-                if (categoriaFinal === "NÃO CONSIDERAR") return;
-
-                contagemCategorias[categoriaFinal] = (contagemCategorias[categoriaFinal] || 0) + 1;
-
-                // Validação de Aparelho (IMEI Col L [11] + Descrição Col M [12])
-                let imei = row[11] ? row[11].toString().trim() : "";
-                let descricao = row[12] ? row[12].toString().trim() : "";
-                if (imei !== "" && descricao !== "") {
-                    qtdAparelhos++;
-                }
-
-                // Receita Assinatura Col BF [57]
-                let receitaVal = parseValorBr(row[57]);
-                receitaTotal += receitaVal;
-
-                totalValidos++;
-            });
-
-            // Atualização dos KPIs
-            document.getElementById('kpi-controle').innerText = contagemCategorias["CONTROLE"];
-            document.getElementById('kpi-pos').innerText = contagemCategorias["PÓS"];
-            document.getElementById('kpi-bl').innerText = contagemCategorias["BL"];
-            document.getElementById('kpi-comissao-apenas').innerText = contagemCategorias["APENAS COMISSÃO"];
-            document.getElementById('kpi-vendas-totais').innerText = totalValidos;
-
-            // Tabela Resumo
-            let tbody = document.getElementById('tbody-resumo');
-            tbody.innerHTML = "";
-            for (let [key, val] of Object.entries(contagemCategorias)) {
-                tbody.innerHTML += `<tr><td><b>${key}</b></td><td>${val}</td></tr>`;
-            }
-
-            // KPIs do Dashboard 2
-            document.getElementById('kpi-qtd-aparelhos').innerText = qtdAparelhos;
-            document.getElementById('kpi-receita').innerText = "R$ " + receitaTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('kpi-ticket').innerText = "R$ " + (qtdAparelhos > 0 ? (receitaTotal / qtdAparelhos) : 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-            renderChart(contagemCategorias);
-        }
-
-        function renderChart(dados) {
-            const ctx = document.getElementById('chartCategorias').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(dados),
-                    datasets: [{
-                        label: 'Quantidade Registrada',
-                        data: Object.values(dados),
-                        backgroundColor: '#d9251c'
-                    }]
-                },
-                options: { responsive: true }
-            });
-        }
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/shell.js"></script>
 </body>
 </html>
