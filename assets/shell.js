@@ -464,7 +464,9 @@ function montarComissao(wb, antigo, modo) {
   if (!nw.M.length) return { erro: 'Não achei vendas com data válida para a comissão.' };
   const velho = antigo && antigo.data;
   if (modo === 'tudo' || !velho) return { data: nw, nw, linhas: json.length };
-  const ruim = nw.M.filter(m => velho.M.includes(m) && (nw.MN[m] || 1) > 1);
+  // mês só é substituído se o arquivo cobre desde o primeiro dia de venda já carregado (o dia 1 pode ser feriado ou domingo)
+  const mnVelho = velho.MN || {};
+  const ruim = nw.M.filter(m => velho.M.includes(m) && (nw.MN[m] || 1) > (mnVelho[m] != null ? mnVelho[m] : 3));
   if (ruim.length) return { pulou: ruim, nw, linhas: json.length };
   return { data: ComissaoNucleo.mergeData(velho, nw), nw, linhas: json.length };
 }
@@ -491,7 +493,7 @@ async function lerExcelUnico(file) {
     else ha = '<li>Aparelhos e Chip ainda não tem base carregada: só o Ritmo será atualizado.</li>';
     const c = montarComissao(wb, comis, modo);
     const hc = c.erro ? `<li><b>Comissão e Meta:</b> ${c.erro}</li>` : c.pulou
-      ? `<li><b>Comissão e Meta não será atualizado:</b> o arquivo começa depois do dia 1 em ${c.pulou.map(mesRot).join(', ')}. Para a comissão, envie o acumulado do mês (dia 1 até hoje), ou o ano inteiro.</li>`
+      ? `<li><b>Comissão e Meta não será atualizado:</b> o arquivo começa depois do primeiro dia já carregado em ${c.pulou.map(mesRot).join(", ")}. Para a comissão, envie o acumulado do mês (dia 1 até hoje), ou o ano inteiro.</li>`
       : `<li><b>Comissão e Meta:</b> ${c.nw.M.map(k => mesRot(k) + ' até o dia ' + c.nw.D[k]).join(' · ')}${modo === 'tudo' ? ' (substituição total)' : ''}${Object.keys(c.nw.unmapped || {}).length ? ' · tipos sem regra: ' + Object.keys(c.nw.unmapped).join(', ') : ''}</li>`;
     ha += hc;
     m.className = 'msg ok'; m.textContent = 'Arquivo lido. Confira e confirme abaixo.';

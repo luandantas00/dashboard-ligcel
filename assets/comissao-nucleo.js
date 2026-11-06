@@ -117,7 +117,8 @@ function mergeData(old, nw) {
   const A = keepA.concat(nw.A.map(a => [a[0], mapL[a[1]], mapV[a[2]], a[3], a[4]]));
   const P = keepP.concat(nw.P.map(p => [p[0], p[1], p[2], p[3], p[4], p[5], p[6], mapL[p[7]], mapV[p[8]]]));
   const D = Object.assign({}, old.D, nw.D);
-  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D };
+  const MN = Object.assign({}, old.MN || {}, nw.MN || {});
+  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D, MN };
 }
 
 // ---------- regras ----------
