@@ -1,0 +1,1160 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap"><style>/* Layout: cabeçalho fixo com abas de visão; abaixo, painéis de tabela densos para quem opera a loja. */
+:root{
+  --bg:#F2F3F5; --surface:#FFFFFF; --ink:#15171C; --muted:#5E6573; --line:#E0E3E8; --soft:#F7F8FA;
+  --red:#E3000F; --red-ink:#FFFFFF; --ok:#17794F; --ok-bg:#E3F4EB; --mid:#9A6200; --mid-bg:#FBF0D9; --low:#B3261E; --low-bg:#FBE5E3; --zero:#6B7280; --zero-bg:#ECEEF1;
+  --bar:#D8DCE3; --focus:#1D4ED8; --g1:#EBEDF0; --g2:#DDE0E5;
+  --f-head:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1115; --surface:#171A20; --ink:#ECEEF2; --muted:#9BA2AF; --line:#2A2E37; --soft:#1C2027;
+  --red:#FF3B48; --red-ink:#12141A; --ok:#4BD89B; --ok-bg:#12281F; --mid:#F2B84B; --mid-bg:#2D2412; --low:#FF8279; --low-bg:#34191A; --zero:#9BA2AF; --zero-bg:#23272F;
+  --bar:#323744; --focus:#7AA2FF; --g1:#1E222A; --g2:#2B303A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1115; --surface:#171A20; --ink:#ECEEF2; --muted:#9BA2AF; --line:#2A2E37; --soft:#1C2027;
+  --red:#FF3B48; --red-ink:#12141A; --ok:#4BD89B; --ok-bg:#12281F; --mid:#F2B84B; --mid-bg:#2D2412; --low:#FF8279; --low-bg:#34191A; --zero:#9BA2AF; --zero-bg:#23272F;
+  --bar:#323744; --focus:#7AA2FF; --g1:#1E222A; --g2:#2B303A; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.wrap{max-width:1180px;margin:0 auto}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:20px;font-weight:800}
+.brand .tag{font-size:12px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;transform:translateY(0)}
+.bar{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tabs{display:flex;gap:2px;background:var(--line);padding:2px;border-radius:8px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 13px var(--f-body);padding:7px 14px;border-radius:6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.tabs button[aria-selected="true"]::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:7px}
+select,input,button.btn{font:500 13px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 9px;min-height:32px}
+input[type=number]{width:92px;text-align:right;font-variant-numeric:tabular-nums}
+input:disabled{background:var(--soft);color:var(--ink);border-color:transparent;opacity:1;-webkit-text-fill-color:var(--ink)}
+button.btn{cursor:pointer;font-weight:600}
+button.btn.primary{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);font-weight:500}
+.spacer{flex:1}
+.pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.mid{background:var(--mid-bg);color:var(--mid)}.pill.low{background:var(--low-bg);color:var(--low)}.pill.zero{background:var(--zero-bg);color:var(--zero)}
+main{padding-top:18px;display:grid;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font:800 24px var(--f-head);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.panel>header{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.panel>header h2{font-size:15px;font-weight:700}
+.panel>header .n{color:var(--muted);font-size:12px}
+.pad{padding:12px 14px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:var(--soft);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--soft)}
+td.name{white-space:normal;min-width:150px}
+.sub{color:var(--muted);font-size:12px}
+.chips{display:flex;gap:5px;justify-content:flex-end}
+.at{display:inline-block;min-width:46px;text-align:center;font-size:12px;font-weight:700;padding:2px 6px;border-radius:5px}
+.at.ok{background:var(--ok-bg);color:var(--ok)}.at.mid{background:var(--mid-bg);color:var(--mid)}.at.low{background:var(--low-bg);color:var(--low)}.at.zero{background:var(--zero-bg);color:var(--zero)}
+.meter{height:6px;background:var(--bar);border-radius:3px;overflow:hidden;min-width:70px}
+.meter i{display:block;height:100%;background:var(--ink)}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.9fr);gap:12px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.big{font:800 40px var(--f-head);font-variant-numeric:tabular-nums;line-height:1.05}
+.note{font-size:12.5px;color:var(--muted)}
+.callout{border-left:3px solid var(--red);padding:8px 12px;background:var(--soft);border-radius:0 6px 6px 0;font-size:13px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.form{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
+.form .row{display:contents}
+.err{color:var(--low);font-weight:600}
+.okk{color:var(--ok);font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(16px,env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;z-index:20;max-width:90vw}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.lock{display:inline-flex;gap:6px;align-items:center}
+.nowrap{white-space:nowrap}
+.h-hide{display:none}
+@media (prefers-reduced-motion:no-preference){.meter i{transition:width .3s}}
+
+.fld{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.fld input,.fld select{font-weight:500}
+tr.sel td{background:var(--soft)}
+tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+details summary{font-weight:600}
+
+/* v2 */
+.dl{display:inline-flex;gap:6px;align-items:baseline;font-variant-numeric:tabular-nums;font-size:12.5px}
+.dl b{font-weight:700}.dl i{font-style:normal;color:var(--muted)}
+.dl.up b{color:var(--ok)}.dl.dn b{color:var(--low)}.dl.fl b{color:var(--zero)}
+.cmp{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:3px}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.card h3{font-size:13px;margin-bottom:6px}
+.hr{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:13px}
+.hr:last-child{border-bottom:0}
+.hl{min-width:0}
+.nm{display:inline-flex;align-items:center;gap:8px}
+.kidn{padding-left:30px;color:var(--muted)}
+tr.kid td{background:var(--soft)}
+tr.tr td{background:var(--soft)}
+button.xp{width:22px;height:22px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;padding:0;position:relative}
+button.xp i{position:absolute;left:6px;top:7px;width:6px;height:6px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+button.xp[aria-expanded="true"] i{transform:rotate(45deg);top:5px}
+.tabs button{white-space:nowrap}
+.top .bar{overflow-x:auto}
+.kidn,.nm{max-width:100%}
+
+tr.det>td{padding:0;white-space:normal;text-align:left;background:var(--soft)}
+.detbox{display:grid;gap:12px;padding:12px 14px;min-width:0;max-width:calc(100vw - 32px)}
+.detbox .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.detbox table{background:var(--surface)}
+.detbox .pad{padding:0}
+tr.click td:first-child .xp{position:relative;width:22px;height:22px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
+tr.click td:first-child .xp i{position:absolute;left:6px;top:7px;width:6px;height:6px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+
+tr.det>td{background:var(--g1)}
+.detbox{background:var(--g1);border-left:3px solid var(--red)}
+.detbox .dtit{font:800 12px var(--f-head);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:4px}
+.detbox thead th{background:var(--g2);color:var(--ink);position:static}
+.detbox tbody td{border-bottom:1px solid var(--line)}
+.detbox tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--g1) 55%,var(--surface))}
+.detbox tbody td{background:var(--surface)}
+.detbox tbody tr:nth-child(even) td{background:var(--g1)}
+tr.sec td,.detbox tbody tr.sec:nth-child(even) td{background:var(--g2);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:5px 10px}
+tr.tot td,.detbox tbody tr.tot:nth-child(even) td{background:var(--ink);color:var(--bg);font-weight:800;border-bottom:0}
+tr.tot td b{color:var(--bg)}
+.detbox .kpi{background:var(--surface)}
+
+.detbox tbody tr.sec td{background:var(--g2)}
+.detbox tbody tr.tot td{background:var(--ink);color:var(--bg)}
+.detbox tbody tr.tot td b{color:var(--bg)}
+
+td.best{background:var(--g2);font-weight:800}
+.detbox tbody td.best{background:var(--g2)}
+
+/* ===== v3: visual mais simples e moderno ===== */
+.sect{display:grid;gap:12px}
+.sh{font:800 18px var(--f-head);letter-spacing:-.01em}
+.shrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.lcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.lc{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:6px;padding:14px 16px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;min-width:0}
+.lc:hover{border-color:var(--muted)}
+.lc.sel{border-color:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 14%,transparent)}
+.lc:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.lc .n{font-weight:700;font-size:14px}
+.lc .p{font:800 28px var(--f-head);font-variant-numeric:tabular-nums;line-height:1}
+.lc .p.ok{color:var(--ok)}.lc .p.mid{color:var(--mid)}.lc .p.low{color:var(--low)}.lc .p.zero{color:var(--zero)}
+.lc .s{font-size:12px;color:var(--muted)}
+.mbar{position:relative;height:8px;border-radius:99px;background:var(--bar);overflow:hidden}
+.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--zero)}
+.mbar i.ok{background:var(--ok)}.mbar i.mid{background:var(--mid)}.mbar i.low{background:var(--low)}
+.mbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--surface);opacity:.9}
+.radios{border:0;padding:0;margin:0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.radios legend{float:left;margin-right:4px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0;line-height:34px}
+.rad{position:relative;cursor:pointer}
+.rad input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.rad span{display:inline-block;padding:7px 14px;border-radius:99px;background:var(--surface);border:1.5px solid var(--line);font-weight:600;font-size:13px;color:var(--muted)}
+.rad input:checked+span{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.rad input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.det2{display:grid;gap:12px}
+.icgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ic{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+.ic header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ic h4{margin:0;font:700 14px var(--f-head)}
+.ic .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin:0}
+.ic .kv div{min-width:0}
+.ic dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.ic dd{margin:0;font:700 16px var(--f-head);font-variant-numeric:tabular-nums}
+.ic dd small{font:500 11.5px var(--f-body);color:var(--muted)}
+.ic .rv{font-size:12px;color:var(--muted);background:var(--soft);border-radius:8px;padding:5px 8px}
+.ic footer{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:8px;font-size:13px;color:var(--muted)}
+.ic footer b{font:800 20px var(--f-head);color:var(--ink);font-variant-numeric:tabular-nums}
+.ic footer b small{font:600 12px var(--f-body);color:var(--muted)}
+.ic .hint{font-size:12px;color:var(--muted)}
+.ic .mx{font-style:normal;font-weight:700;font-size:11px;color:var(--ok);background:var(--ok-bg);padding:1px 6px;border-radius:99px;margin-left:4px}
+.ic.tot{background:var(--ink);color:var(--bg);border-color:var(--ink);grid-row:span 1}
+.ic.tot h4,.ic.tot .hint{color:inherit;opacity:.85}
+.big2{font:800 38px var(--f-head);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.parts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;opacity:.9}
+.parts b{font-weight:800}
+.ic.tot .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+details.prod{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+details.prod>summary{cursor:pointer;padding:12px 16px;font-weight:700;list-style:none}
+details.prod>summary::before{content:"▸";display:inline-block;margin-right:8px;transition:transform .15s}
+details.prod[open]>summary::before{transform:rotate(90deg)}
+details.prod .scroll,details.prod .note{border-top:1px solid var(--line)}
+.panel,.kpi{border-radius:14px}
+body{letter-spacing:0}
+
+.ii{white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+.grid1{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+.form{align-items:center}
+.sumry{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sumhead{background:var(--ink);color:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px}
+.sumhead small{font-size:12px;opacity:.8;font-weight:700}
+.sumhead .big2{font:800 34px var(--f-head);font-variant-numeric:tabular-nums}
+.sumact{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sumact .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.sumry .scroll{border-top:0}
+.sumry .note{padding:10px 16px;border-top:1px solid var(--line)}
+.sumtb tr.sub1 td{background:var(--soft)}
+.sumtb tr.tr td{background:var(--soft);border-top:2px solid var(--line)}
+tr.mrow td{background:var(--ok-bg)}
+tr.mrow td.name{padding-left:26px}
+.mx{font-style:normal;font-weight:700;font-size:11px;color:var(--ok);background:var(--ok-bg);padding:1px 6px;border-radius:99px;margin-left:4px;white-space:nowrap}
+tr.mrow .mx{background:var(--surface)}
+tr.tg{cursor:pointer}
+tr.tg:hover td{background:var(--soft)}
+tr.tg.op td{background:var(--soft)}
+tr.dtl>td{padding:0!important;background:var(--surface);border-top:0}
+.dstrip{display:flex;flex-wrap:wrap;gap:8px 22px;padding:12px 18px;background:var(--soft);border-bottom:1px solid var(--line)}
+.dstrip div{display:grid;gap:2px}
+.dstrip small{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.dstrip b{font:700 15px var(--f-head);font-variant-numeric:tabular-nums}
+table.pt{margin:0}
+table.pt td.name{padding-left:24px}
+[data-act="sair"]{display:none!important}</style><div id="app"></div><script>const EMB={pub:null,blobs:{at:0,dono:null,lojas:[]},pacote:null};</script><script>// ===== Núcleo (puro; testado em node) =====
+const IND = [
+  { k: 'controle', n: 'Controle' }, { k: 'pos', n: 'Pós' }, { k: 'bl', n: 'BL' }, { k: 'tv', n: 'TV' }, { k: 'servico', n: 'Serviços' }
+];
+const FRK = ['controle', 'pos', 'bl', 'tv']; // comissão sobre a franquia total (coluna BT)
+const INDN = Object.fromEntries(IND.map(i => [i.k, i.n]));
+// Tabela DE-PARA enviada pelo Luan
+const DEPARA = {
+  'Ativação Controle': 'controle', 'Ativação Dependente': 'pos', 'Ativação Dependente Base': 'nc', 'Ativação Dependente Grátis': 'pos',
+  'Ativação Internet': 'pos', 'Ativação Pós': 'pos', 'Ativação Pré': 'servico', 'Comissões Adicionais': 'servico', 'Downgrade de Plano': 'servico',
+  'Fone Fixo': 'servico', 'Instalação Fone': 'servico', 'Instalação TV': 'tv', 'Instalação Vírtua': 'bl', 'Migração Pré - Controle': 'controle',
+  'Migração Pré - Pós': 'controle', 'Serviços Gerais': 'servico', 'Substituição de Aparelho': 'nc', 'Troca de Aparelho': 'servico', 'Upgrade de Plano': 'servico'
+};
+const AP_MIN = 60; // só produtos acima de R$ 70 entram no faturamento de aparelho (coluna N)
+
+function defaultCfg() {
+  const gat = [0.8, 0.9, 1.0];
+  return {
+    metas: {},
+    esc: {
+      fr: { gat: gat.slice(), v: [0.10, 0.20, 0.25], g: [0.05, 0.10, 0.15], vm: [0.12, 0.24, 0.30], gm: [0.06, 0.12, 0.18] },
+      sv: { gat: gat.slice(), v: [0.05, 0.10, 0.15], g: [0.02, 0.04, 0.06] },
+      ap: { gat: gat.slice(), v: [0.005, 0.01, 0.015], g: [0.0025, 0.005, 0.0075], modo: 'fat', q: { v: [5, 10, 15], g: [2, 4, 6] } }
+    },
+    svp: { v: 0.10, g: 0.04 },
+    trava: { min: 0.8, parcial: 0.5, pleno: 1.0 },
+    bonus: [{ a: 1.2, valor: 100 }, { a: 1.5, valor: 250 }],
+    ref: { v: 0.30, g: 0.05 },
+    classe: 'Select',
+    cres: 0.05,
+    lib: {}
+  };
+}
+function mergeCfg(base, over) {
+  const out = JSON.parse(JSON.stringify(base)); if (!over) return out;
+  for (const k of Object.keys(over)) {
+    const o = over[k], b = out[k];
+    if (o && typeof o === 'object' && !Array.isArray(o) && b && typeof b === 'object' && !Array.isArray(b)) {
+      for (const k2 of Object.keys(o)) {
+        if (o[k2] && typeof o[k2] === 'object' && !Array.isArray(o[k2]) && b[k2] && typeof b[k2] === 'object' && !Array.isArray(b[k2])) b[k2] = Object.assign({}, b[k2], o[k2]);
+        else b[k2] = o[k2];
+      }
+    } else out[k] = o;
+  }
+  return out;
+}
+function metaOf(cfg, mk) {
+  if (cfg.metas[mk]) return cfg.metas[mk];
+  const prev = Object.keys(cfg.metas).filter(k => k < mk).sort().pop() || Object.keys(cfg.metas).sort().pop();
+  return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, lojaPct: {} };
+}
+function monthDays(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m, 0).getDate(); }
+
+// ---------- agregação da planilha (build) ----------
+function titleLoja(s) {
+  const t = String(s ?? 'SEM LOJA').replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase()
+    .replace(/(^|\s)(\S+)/g, (m, p, w) => p + ((p && /^(de|da|do|das|dos)$/.test(w)) ? w : w[0].toUpperCase() + w.slice(1)));
+  return /^jj seabra$/i.test(t) ? 'JJ Seabra' : t;
+}
+function aggregateRows(json) {
+  const num = x => { const n = typeof x === 'number' ? x : parseFloat(String(x ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
+  const rows = []; const unmapped = {};
+  for (const r of json) {
+    let d = r['Data'];
+    if (d instanceof Date) d = new Date(d.getTime() + 12 * 3600e3);
+    else if (typeof d === 'string') { const m = d.match(/^(\d{4})-(\d{2})-(\d{2})/); if (!m) continue; d = new Date(+m[1], +m[2] - 1, +m[3], 12); }
+    else continue;
+    const mk = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const tipo = String(r['Tipo de Ativação'] ?? '').trim();
+    let ind = DEPARA[tipo]; if (!ind) { ind = 'nc'; unmapped[tipo] = (unmapped[tipo] || 0) + 1; }
+    if (ind === 'nc') continue;
+    const combo = String(r['Combo'] ?? '').trim();
+    const vv = num(r['Valor Venda']);
+    rows.push({ mk, day: d.getDate(), loja: titleLoja(r['Loja (Venda)']), vend: String(r['Vendedor'] ?? '').trim() || 'SEM VENDEDOR', ind, tipo,
+      mu: /claro/i.test(combo) ? 2 : combo ? 1 : 0, f: num(r['Franquia Total']), r: num(r['Comissão']) + num(r['Comissão Res']),
+      fat: vv > AP_MIN ? vv : 0, plano: String(r['Plano/Serviço'] ?? '').trim() });
+  }
+  // loja de lotação: onde o vendedor mais vendeu no mês
+  const cnt = {};
+  for (const x of rows) if (x.vend !== 'SEM VENDEDOR') { const k = x.mk + '|' + x.vend; (cnt[k] = cnt[k] || {})[x.loja] = (cnt[k][x.loja] || 0) + 1; }
+  const lot = {}; for (const k in cnt) lot[k] = Object.entries(cnt[k]).sort((a, b) => b[1] - a[1])[0][0];
+  const L = [], V = [], T = []; const ix = (arr, v) => { let i = arr.indexOf(v); if (i < 0) { i = arr.length; arr.push(v); } return i; };
+  const R = new Map(), A = new Map(), P = new Map(), days = {}, mn = {};
+  for (const x of rows) {
+    if (x.vend !== 'SEM VENDEDOR') x.loja = lot[x.mk + '|' + x.vend];
+    days[x.mk] = Math.max(days[x.mk] || 0, x.day); mn[x.mk] = Math.min(mn[x.mk] || 99, x.day);
+    const li = ix(L, x.loja), vi = ix(V, x.vend), ti = ix(T, x.tipo);
+    const key = [x.mk, li, vi, x.ind, ti, x.mu].join('|');
+    const a = R.get(key) || [x.mk, li, vi, x.ind, ti, x.mu, 0, 0, 0]; a[6]++; a[7] += x.f; a[8] += x.r; R.set(key, a);
+    if (x.fat > 0) { const k2 = [x.mk, li, vi].join('|'); const b = A.get(k2) || [x.mk, li, vi, 0, 0]; b[3]++; b[4] += x.fat; A.set(k2, b); }
+    const pn = x.ind === 'servico' ? (x.tipo || x.plano) : x.plano;
+    if (pn && x.ind !== 'nc') { const k3 = [x.mk, x.ind, pn, x.mu, li, vi].join('|'); const c = P.get(k3) || [x.mk, x.ind, pn, x.mu, 0, 0, 0, li, vi]; c[4]++; c[5] += x.r; c[6] += x.f; P.set(k3, c); }
+  }
+  const rd = a => a.map(v => typeof v === 'number' ? Math.round(v * 100) / 100 : v);
+  return { M: Object.keys(days).sort(), L, V, T, R: [...R.values()].map(rd), A: [...A.values()].map(rd), P: [...P.values()].map(rd), D: days, MN: mn, unmapped };
+}
+function subsetByLoja(data, li) {
+  // visão de uma loja: só os vendedores e linhas dela (nomes das outras lojas e vendedores não vão no pacote)
+  const R0 = data.R.filter(r => r[1] === li), A0 = data.A.filter(a => a[1] === li);
+  const P0 = (data.P || []).filter(p => p[7] === li);
+  const vs = [...new Set([...R0.map(r => r[2]), ...A0.map(a => a[2]), ...P0.map(p => p[8])])];
+  const vm = new Map(vs.map((v, i) => [v, i]));
+  return { M: data.M, L: [data.L[li]], V: vs.map(v => data.V[v]), T: data.T, only: 0, D: data.D, P: P0.map(p => [p[0], p[1], p[2], p[3], p[4], p[5], p[6], 0, vm.get(p[8])]),
+    R: R0.map(r => [r[0], 0, vm.get(r[2]), r[3], r[4], r[5], r[6], r[7], r[8]]), A: A0.map(a => [a[0], 0, vm.get(a[2]), a[3], a[4]]) };
+}
+
+
+// incorpora uma exportação nova: os meses presentes nela substituem os meses antigos
+function mergeData(old, nw) {
+  const L = old.L.slice(), V = old.V.slice(), T = old.T.slice();
+  const ix = (arr, v) => { let i = arr.indexOf(v); if (i < 0) { i = arr.length; arr.push(v); } return i; };
+  const mon = new Set(nw.M);
+  const keepR = old.R.filter(r => !mon.has(r[0])), keepA = old.A.filter(a => !mon.has(a[0])), keepP = (old.P || []).filter(p => !mon.has(p[0]));
+  const mapL = nw.L.map(l => ix(L, l)), mapV = nw.V.map(v => ix(V, v)), mapT = nw.T.map(t => ix(T, t));
+  const R = keepR.concat(nw.R.map(r => [r[0], mapL[r[1]], mapV[r[2]], r[3], mapT[r[4]], r[5], r[6], r[7], r[8]]));
+  const A = keepA.concat(nw.A.map(a => [a[0], mapL[a[1]], mapV[a[2]], a[3], a[4]]));
+  const P = keepP.concat(nw.P.map(p => [p[0], p[1], p[2], p[3], p[4], p[5], p[6], mapL[p[7]], mapV[p[8]]]));
+  const D = Object.assign({}, old.D, nw.D);
+  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D };
+}
+
+// ---------- regras ----------
+function faixaPct(ating, gat, pcts) { if (ating == null) return 0; let p = 0; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) p = pcts[i]; return p; }
+function faixaIdx(ating, gat) { if (ating == null) return -1; let x = -1; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) x = i; return x; }
+function liberacao(blAting, blMeta, cfg) {
+  if (!(blMeta > 0)) return 1;
+  return blAting + 1e-9 >= cfg.trava.pleno ? 1 : (blAting + 1e-9 >= cfg.trava.min ? cfg.trava.parcial : 0);
+}
+// real: {ind:{f,r,q}}, ap: {fat,q}, meta: {ind:R$}, kind: 'v'|'g'
+function calcScope(real, ap, meta, metaAp, cfg, kind, servLib) {
+  const o = { ind: {}, comFr: 0, comSv: 0, comAp: 0, comMulti: 0, comExtra: 0, rTot: 0, mTot: 0, fTot: 0 };
+  for (const { k } of IND) {
+    const rr = (real && real[k]) || { f: 0, r: 0, q: 0 };
+    if (k === 'servico') {
+      // serviços não têm meta nem faixa: percentual fixo sobre a receita (comissão + comissão residencial)
+      const pctS = (cfg.svp || {})[kind] || 0, com = rr.r * pctS;
+      o.ind[k] = { meta: 0, r: rr.r, f: 0, q: rr.q || 0, fm: 0, qm: 0, ating: null, pct: pctS, pctM: pctS, base: rr.r, com, comExtra: 0, idx: -1 };
+      o.comSv += com; continue;
+    }
+    const m = meta[k] || 0, ating = m > 0 ? rr.r / m : null, sc = cfg.esc.fr;
+    const pct = faixaPct(ating, sc.gat, sc[kind]), pctM = faixaPct(ating, sc.gat, sc[kind + 'm'] || sc[kind]);
+    const fm = Math.min(rr.fm || 0, rr.f), fs = rr.f - fm, com = fs * pct + fm * pctM;
+    o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct), idx: faixaIdx(ating, sc.gat) };
+    o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM; o.comExtra += fm * (pctM - pct);
+  }
+  const a = ap || { fat: 0, q: 0 }, aAting = metaAp > 0 ? a.fat / metaAp : null, apQ = cfg.esc.ap.modo === 'qtd', aPct = faixaPct(aAting, cfg.esc.ap.gat, apQ ? (cfg.esc.ap.q || { v: [], g: [] })[kind] : cfg.esc.ap[kind]);
+  o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, modo: apQ ? 'qtd' : 'fat', com: apQ ? (a.q || 0) * aPct : a.fat * aPct, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
+  o.comAp = o.ap.com;
+  o.atTotal = o.mTot > 0 ? o.rTot / o.mTot : null;
+  o.lib = liberacao(o.ind.bl.ating, o.ind.bl.meta, cfg);
+  let bonus = 0;
+  if (kind === 'v' && o.atTotal != null) for (const b of cfg.bonus) if (o.atTotal + 1e-9 >= b.a) bonus = b.valor;
+  o.bonusBruto = bonus; o.bonus = bonus * o.lib;
+  o.servLib = !!servLib;
+  o.comLib = (o.comFr + o.comAp + (servLib ? o.comSv : 0)) * o.lib;
+  o.servPend = servLib ? 0 : o.comSv * o.lib; // serviços calculados, aguardando liberação do dono
+  o.total = o.comLib + o.bonus;
+  return o;
+}
+
+// vw: pesos de divisão entre vendedores por loja { loja: { vendedor: peso } } (ajustados pelo gerente)
+function buildModel(data, cfg, mk, k, vw) {
+  vw = vw || {};
+  const dm = monthDays(mk), dd = Math.min(data.D[mk] || dm, dm);
+  const recs = data.R.filter(r => r[0] === mk), aps = data.A.filter(a => a[0] === mk);
+  const realV = {}, realL = {}, apV = {}, apL = {}, vLoja = {};
+  const add = (o, key, ind, q, f, r, mu) => { const x = ((o[key] = o[key] || {})[ind] = (o[key][ind] || { f: 0, r: 0, q: 0, fm: 0, qm: 0 })); x.f += f * k; x.r += r * k; x.q += q; if (mu > 0 && ind !== 'servico') { x.fm += f * k; x.qm += q; } };
+  for (const [, li, vi, ind, , mu, q, f, r] of recs) {
+    add(realL, li, ind, q, f, r, mu);
+    if (data.V[vi] !== 'SEM VENDEDOR') { add(realV, vi, ind, q, f, r, mu); vLoja[vi] = li; }
+  }
+  for (const [, li, vi, q, fat] of aps) {
+    (apL[li] = apL[li] || { fat: 0, q: 0 }); apL[li].fat += fat * k; apL[li].q += q * k;
+    if (data.V[vi] !== 'SEM VENDEDOR') { (apV[vi] = apV[vi] || { fat: 0, q: 0 }); apV[vi].fat += fat * k; apV[vi].q += q * k; vLoja[vi] = vLoja[vi] ?? li; }
+  }
+  const M = metaOf(cfg, mk), mixSum = FRK.reduce((s, k) => s + (+M.mix[k] || 0), 0) || 1;
+  const metaEmp = {}; for (const { k: ik } of IND) metaEmp[ik] = ik === 'servico' ? 0 : (+M.total || 0) * ((+M.mix[ik] || 0) / mixSum);
+  const metaAp = +M.ap || 0;
+  const pctRaw = Object.values(M.lojaPct || {}).reduce((s, x) => s + (+x || 0), 0), pctSum = pctRaw || 1;
+  const hcL = {}; for (const vi of Object.keys(vLoja)) hcL[vLoja[vi]] = (hcL[vLoja[vi]] || 0) + 1; const hcT = Object.values(hcL).reduce((x, y) => x + y, 0) || 1;
+  const lojas = [], vends = [];
+  const lis = (data.only != null ? [data.only] : data.L.map((_, i) => i)).sort((a, b) => data.L[a].localeCompare(data.L[b]));
+  for (const li of lis) {
+    const nome = data.L[li], share = pctRaw ? (+(M.lojaPct || {})[nome] || 0) / pctSum : (hcL[li] || 0) / hcT;
+    const vis = Object.keys(vLoja).map(Number).filter(v => vLoja[v] === li);
+    const w = {}; let sw = 0;
+    for (const vi of vis) {
+      const ativo = FRK.some(ik => realV[vi] && realV[vi][ik]);
+      const wv = vw[nome] && vw[nome][data.V[vi]] != null ? +vw[nome][data.V[vi]] : (ativo ? 1 : 0);
+      w[vi] = wv; sw += wv;
+    }
+    const metaL = {}; for (const { k: ik } of IND) metaL[ik] = metaEmp[ik] * share; const metaApL = metaAp * share;
+    const vl = vis.map(vi => {
+      const meta = {}; for (const { k: ik } of IND) meta[ik] = sw > 0 ? metaL[ik] * w[vi] / sw : 0;
+      const mAp = sw > 0 ? metaApL * w[vi] / sw : 0;
+      return { nome: data.V[vi], loja: nome, w: w[vi], pctMeta: sw > 0 ? w[vi] / sw : 0, meta, metaAp: mAp, real: realV[vi] || {}, ap: apV[vi],
+        res: calcScope(realV[vi] || {}, apV[vi], meta, mAp, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos) };
+    }).sort((a, b) => b.res.total - a.res.total);
+    vends.push(...vl);
+    lojas.push({ nome, li, share, hc: vl.filter(v => v.w > 0).length, meta: metaL, metaAp: metaApL, real: realL[li] || {}, ap: apL[li], vends: vl,
+      res: calcScope(realL[li] || {}, apL[li], metaL, metaApL, cfg, 'g', cfg.lib[mk] && cfg.lib[mk].servicos) });
+  }
+  const tot = {}; for (const { k: ik } of IND) { tot[ik] = { f: 0, r: 0, q: 0, fm: 0, qm: 0 }; for (const l of lojas) { const x = l.real[ik]; if (x) { tot[ik].f += x.f; tot[ik].r += x.r; tot[ik].q += x.q; tot[ik].fm += x.fm || 0; tot[ik].qm += x.qm || 0; } } }
+  const totAp = { fat: lojas.reduce((s, l) => s + (l.ap ? l.ap.fat : 0), 0), q: lojas.reduce((s, l) => s + (l.ap ? l.ap.q : 0), 0) };
+  const metaTodas = {}; for (const { k: ik } of IND) metaTodas[ik] = lojas.reduce((s, l) => s + l.meta[ik], 0);
+  const metaApTodas = lojas.reduce((s, l) => s + l.metaAp, 0);
+  const empresa = calcScope(tot, totAp, metaTodas, metaApTodas, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos);
+  return { mk, k, dm, dd, M, mixSum, metaEmp, metaAp, lojas, vends, tot, totAp, empresa,
+    comV: vends.reduce((s, v) => s + v.res.total, 0), comG: lojas.reduce((s, l) => s + l.res.total, 0),
+    servPend: vends.reduce((s, v) => s + v.res.servPend, 0) + lojas.reduce((s, l) => s + l.res.servPend, 0) };
+}
+
+// custo de comissão se todos os indicadores chegarem a s% da meta
+function custoCenario(B, cfg, s) {
+  let v = 0, g = 0, rec = 0, nv = 0, fr = 0;
+  const rho = {}; for (const ik of FRK) rho[ik] = B.tot[ik].r > 0 ? B.tot[ik].f / B.tot[ik].r : 0;
+  const lib = liberacao(s, 1, cfg);
+  const bonus = cfg.bonus.reduce((b, x) => s + 1e-9 >= x.a ? x.valor : b, 0);
+  const svRatio = (() => { const fr = FRK.reduce((a, k) => a + B.tot[k].r, 0); return fr > 0 ? (B.tot.servico ? B.tot.servico.r : 0) / fr : 0; })();
+  let recServ = 0;
+  for (const l of B.lojas) {
+    let recL = 0;
+    for (const k of FRK) {
+      const r = l.meta[k] * s; rec += r; recL += r;
+      const base = r * rho[k]; fr += base; const ms = B.tot[k].f > 0 ? Math.min(1, (B.tot[k].fm || 0) / B.tot[k].f) : 0, sc = cfg.esc.fr;
+      const pv = faixaPct(s, sc.gat, sc.v), pvm = faixaPct(s, sc.gat, sc.vm || sc.v), pg = faixaPct(s, sc.gat, sc.g), pgm = faixaPct(s, sc.gat, sc.gm || sc.g);
+      v += base * ((1 - ms) * pv + ms * pvm); g += base * ((1 - ms) * pg + ms * pgm);
+    }
+    const sr = recL * svRatio; recServ += sr; v += sr * ((cfg.svp || {}).v || 0); g += sr * ((cfg.svp || {}).g || 0);
+    const fa = l.metaAp * s;
+    if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v); g += un * faixaPct(s, cfg.esc.ap.gat, qq.g); }
+    else { v += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.v); g += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.g); }
+    nv += l.vends.filter(x => x.w > 0).length;
+  }
+  v = v * lib; g = g * lib; const b = bonus * nv * lib;
+  return { s, v, g, bonus: b, total: v + g + b, rec, fr, recServ, pct: rec > 0 ? (v + g + b) / rec : 0, pctFr: fr > 0 ? (v + g + b) / fr : 0, lib };
+}
+
+// ---------- simulador de venda (Anexo I do manual) ----------
+const CLASSES = ['Elite', 'Prime', 'Select', 'Starter'];
+const FATOR = {
+  Elite: { s: 2.8, mm: 4.4, mr: 4.5, up: 3.8, tr: 0.90, pt: 0.26 }, Prime: { s: 2.7, mm: 4.1, mr: 4.2, up: 3.8, tr: 0.70, pt: 0.25 },
+  Select: { s: 2.4, mm: 3.6, mr: 3.7, up: 3.5, tr: 0.60, pt: 0.20 }, Starter: { s: 1.9, mm: 3.0, mr: 3.1, up: 3.3, tr: 0.50, pt: 0.15 }
+};
+const MIN_UP = 20, MIN_PORT = 15, FRANQ_TROCA = 0.423;
+const EVENTOS = {
+  controle: { n: 'Ativação de Controle', ind: 'controle', seg: 'movel', preco: 59.9, port: true, lp: 'Preço do plano (R$)' },
+  pos: { n: 'Ativação de Pós (Conta)', ind: 'pos', seg: 'movel', preco: 119.9, port: true, lp: 'Preço do plano (R$)' },
+  bl: { n: 'Instalação de Banda larga fixa', ind: 'bl', seg: 'res', preco: 104.9, port: false, lp: 'Preço do plano (R$)' },
+  tv: { n: 'Instalação de TV', ind: 'tv', seg: 'res', preco: 109.9, port: false, lp: 'Preço do plano (R$)' },
+  upgrade: { n: 'Upgrade de plano', ind: 'servico', kind: 'up', preco: 30, port: false, lp: 'Aumento de receita do plano (R$)' },
+  troca: { n: 'Troca de aparelho com fidelização', ind: 'servico', kind: 'tr', preco: 69.9, port: false, lp: 'Preço do plano fidelizado (R$)' }
+};
+function simulate(sim, classe, cfg) {
+  const e = EVENTOS[sim.ev], F = FATOR[classe], qtd = Math.max(1, +sim.qtd || 1), preco = +sim.preco || 0; let fator, rec, franq;
+  if (e.kind === 'up') { fator = F.up; rec = preco > 0 ? Math.max(F.up * preco, MIN_UP) : 0; franq = preco; }
+  else if (e.kind === 'tr') { fator = F.tr; rec = F.tr * preco; franq = preco * FRANQ_TROCA; }
+  else { fator = sim.multi ? (e.seg === 'movel' ? F.mm : F.mr) : F.s; rec = fator * preco; franq = preco; }
+  const port = (sim.port && e.port && preco > 0) ? Math.max(F.pt * preco, MIN_PORT) : 0;
+  const receita = (rec + port) * qtd, franquia = franq * qtd;
+  const sv = e.ind === 'servico', base = sv ? receita : franquia, sc = cfg.esc.fr, svp = cfg.svp || { v: 0, g: 0 }, mu = !sv && sim.multi;
+  const pv = sv ? sc.gat.map(() => svp.v) : (mu ? (sc.vm || sc.v) : sc.v), pg = sv ? sc.gat.map(() => svp.g) : (mu ? (sc.gm || sc.g) : sc.g);
+  return { fator, rec: rec * qtd, port: port * qtd, receita, franquia, base, baseTipo: sv ? 'receita' : 'franquia', vend: pv.map(p => base * p), ger: pg.map(p => base * p), gat: sc.gat, ind: e.ind, flat: sv, multi: mu };
+}
+
+</script><script>// ===== Aplicação =====
+const S = { role: null, loja: null, data: null, priv: null, cfg: defaultCfg(), vw: {}, tab: 'painel', mk: null, mode: 'real', projCalc: false,
+  simV: { vend: null, loaded: null, out: null }, sim: { ev: 'controle', preco: 59.9, multi: false, port: false, qtd: 1, classe: '' },
+  rv: 'grupo', selLoja: '', open: {}, toast: '', msg: '', busy: false, pacoteTxt: '' };
+const $app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const brl = n => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+const brl2 = n => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pc = n => n == null ? '—' : Math.round(n * 100) + '%';
+const pc1 = n => n == null ? '—' : (n * 100).toFixed(1).replace('.', ',') + '%';
+const num = (n, d = 2) => (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const mlabel = mk => { const [y, m] = mk.split('-'); return MESES[+m - 1] + '/' + y; };
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
+const isDono = () => S.role === 'dono';
+const servLiberado = () => !!(S.cfg.lib[S.mk] && S.cfg.lib[S.mk].servicos);
+const verServ = () => isDono() || servLiberado();
+
+// ---------- criptografia ----------
+const enc = new TextEncoder();
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64e = u => { let s = ''; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); return btoa(s); };
+async function deriveKey(pw, salt) {
+  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function decBlob(blob, pw) {
+  try { const k = await deriveKey(pw, b64d(blob.s)); const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(blob.i) }, k, b64d(blob.c)); return JSON.parse(new TextDecoder().decode(pt)); }
+  catch (e) { return null; }
+}
+async function encBlob(obj, pw) {
+  const s = crypto.getRandomValues(new Uint8Array(16)), i = crypto.getRandomValues(new Uint8Array(12)), k = await deriveKey(pw, s);
+  const c = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: i }, k, enc.encode(JSON.stringify(obj))));
+  return { s: b64e(s), i: b64e(i), c: b64e(c) };
+}
+async function verifyText(sig, text) {
+  try { const k = await crypto.subtle.importKey('jwk', EMB.pub, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']); return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, b64d(sig), enc.encode(text)); } catch (e) { return false; }
+}
+async function signText(privJwk, text) {
+  const k = await crypto.subtle.importKey('jwk', privJwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  return b64e(new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, k, enc.encode(text))));
+}
+async function verifyPacote(p) {
+  try {
+    const k = await crypto.subtle.importKey('jwk', EMB.pub, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, k, b64d(p.sig), enc.encode(JSON.stringify(p.cfg) + '|' + p.at));
+  } catch (e) { return false; }
+}
+
+// ---------- armazenamento (Apps Script quando existir; senão neste navegador) ----------
+const hasServer = () => true;
+const Store = {
+  get(k) { return Promise.resolve(null); },
+  set(k, v) { const m = /^vw-(.*)$/.exec(k); if (!m) return Promise.resolve(true); return parent.__painel.comissaoSalvarVw(m[1], v).then(() => true, () => false); }
+};
+async function melhorPacote() {
+  let best = null;
+  const cands = [EMB.pacote]; for (const t of [await Store.get('pacote'), lsGet('cm2-pacote')]) { try { if (t) cands.push(JSON.parse(t)); } catch (e) { } }
+  for (const p of cands) if (p && p.cfg && (!best || p.at > best.at) && await verifyPacote(p)) best = p;
+  return best;
+}
+
+async function melhorBlobs() {
+  let best = EMB.blobs;
+  for (const t of [await Store.get('blobs'), lsGet('cm2-blobs')]) {
+    try { if (!t) continue; const p = JSON.parse(t); if (p && p.at > (best.at || 0) && await verifyText(p.sig, JSON.stringify({ at: p.at, dono: p.dono, lojas: p.lojas }))) best = p; } catch (e) { }
+  }
+  return best;
+}
+// ---------- sessão ----------
+async function entrar(pw) {
+  if (!window.crypto || !crypto.subtle) return 'Este navegador não suporta a criptografia necessária. Abra em um navegador atualizado, por https.';
+  const BL = await melhorBlobs(); S.blobsAt = BL.at || 0;
+  let r = await decBlob(BL.dono, pw), role = 'dono';
+  if (!r) { role = 'gerente'; const ms = []; for (const b of BL.lojas) { const x = await decBlob(b, pw); if (x) ms.push(x); } if (ms.length > 1) { S.cands = ms; return null; } r = ms[0]; }
+  if (!r) return 'Senha inválida.';
+  return concluir(r, role, pw);
+}
+async function concluir(r, role, pw) {
+  S.cands = null; S.selLoja = ''; S.pSel = null; S.simc = null; S.pwDono = role === 'dono' ? pw : null; S.pws = r.pws || {}; S.pwNovo = ''; S.dirty = false; S.up = '';
+  S.role = role; S.data = r.data; S.priv = r.priv || null; S.loja = role === 'gerente' ? r.data.L[0] : null;
+  const p = await melhorPacote(); S.cfg = mergeCfg(defaultCfg(), p ? p.cfg : EMB.pacote.cfg);
+  if (role === 'dono') { try { const d = lsGet('cm2-cfg-dono'); if (d) { const dd = JSON.parse(d); if (!p || dd.at >= p.at) S.cfg = mergeCfg(defaultCfg(), dd.cfg); } } catch (e) { } }
+  S.vw = {};
+  for (const l of (role === 'dono' ? S.data.L : [S.loja])) { try { const t = await Store.get('vw-' + l); if (t) S.vw[l] = JSON.parse(t); } catch (e) { } }
+  S.mk = S.data.M[S.data.M.length - 1]; S.tab = 'painel'; S.mode = 'real'; S.projCalc = false;
+  return null;
+}
+function sair() { S.cands = null; S.pwDono = null; S.pws = {}; S.role = null; S.data = null; S.priv = null; S.cfg = defaultCfg(); S.vw = {}; S.msg = ''; render(); }
+function say(t) { S.toast = t; render(); clearTimeout(say.t); say.t = setTimeout(() => { S.toast = ''; render(); }, 3800); }
+
+// ---------- edição ----------
+function setPath(p, v) { let o = S.cfg; for (let i = 0; i < p.length - 1; i++) { if (o[p[i]] == null || typeof o[p[i]] !== 'object') o[p[i]] = {}; o = o[p[i]]; } o[p[p.length - 1]] = v; }
+function saveDono() { lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); }
+function metaW() { if (!S.cfg.metas[S.mk]) S.cfg.metas[S.mk] = JSON.parse(JSON.stringify(metaOf(S.cfg, S.mk))); return S.cfg.metas[S.mk]; }
+async function publicar() {
+  try { S.busy = true; render(); await parent.__painel.comissaoPublicarCfg(S.cfg); lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); say('Publicado: os gerentes veem as metas e regras novas.'); }
+  catch (e) { say('Não consegui publicar: ' + (e && e.message || e)); }
+  S.busy = false; render();
+}
+async function importarPacote(txt) {
+  try {
+    const p = JSON.parse(decodeURIComponent(escape(atob(String(txt).trim()))));
+    if (!(await verifyPacote(p))) return say('Código inválido: não foi assinado pelo dono.');
+    lsSet('cm2-pacote', JSON.stringify(p)); S.cfg = mergeCfg(defaultCfg(), p.cfg); say('Metas e regras do dono atualizadas.');
+  } catch (e) { say('Não consegui ler esse código.'); }
+}
+
+// ---------- componentes ----------
+const editavel = () => isDono();
+function inp(path, val, type = 'num', step = '0.01', w = '70px') {
+  const v = type === 'pct' ? Math.round(val * 10000) / 100 : val;
+  return `<span class="ii"><input type="number" step="${step}" min="0" value="${esc(v)}" data-p='${esc(JSON.stringify(path))}' data-t="${type}" ${editavel() ? '' : 'disabled'} style="width:${w}" aria-label="${esc(path.join(' '))}">${type === 'pct' ? '<span class="sub"> %</span>' : ''}</span>`;
+}
+const atCls = a => a == null ? 'zero' : a < 0.8 - 1e-9 ? 'low' : a < 1 - 1e-9 ? 'mid' : 'ok';
+const at = a => `<span class="at ${atCls(a)}">${pc(a)}</span>`;
+const libPill = l => l >= 1 ? '<span class="pill ok">100% liberado</span>' : l > 0 ? `<span class="pill mid">${pc(l)} liberado</span>` : '<span class="pill low">Travado</span>';
+const kpi = (l, v, s = '') => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+function dlt(c, p) { const d = c - p; return { d, p: p > 0 ? d / p : null }; }
+function dlHtml(c, p) {
+  const x = dlt(c, p), cls = x.d > 0.005 ? 'up' : x.d < -0.005 ? 'dn' : 'fl';
+  return `<span class="dl ${cls}"><b>${x.d >= 0 ? '+' : '−'}${brl(Math.abs(x.d))}</b><i>${x.p == null ? '—' : (x.p >= 0 ? '+' : '−') + Math.abs(x.p * 100).toFixed(1).replace('.', ',') + '%'}</i></span>`;
+}
+const pend = () => `<span class="pill zero">Aguardando liberação</span>`;
+
+function kFactor() {
+  const dm = monthDays(S.mk), dd = Math.min(S.data.D[S.mk] || dm, dm);
+  return (S.mode === 'proj' && S.projCalc && dd < dm) ? dm / dd : 1;
+}
+function gate() { return S.mode === 'proj' && !S.projCalc; }
+function projPrompt() {
+  const dm = monthDays(S.mk), dd = Math.min(S.data.D[S.mk] || dm, dm);
+  return `<div class="panel pad" style="text-align:center;display:grid;gap:10px;justify-items:center"><div><b>Projeção de ${mlabel(S.mk)}</b></div>
+    <div class="note">${dd < dm ? `Dados até o dia ${dd} de ${dm}. A projeção leva o ritmo atual até o fim do mês.` : 'O mês está fechado, então a projeção é igual ao realizado.'}</div>
+    <button class="btn primary" data-act="calcproj">Calcular projeção</button></div>`;
+}
+function model(k) { return buildModel(S.data, S.cfg, S.mk, k == null ? kFactor() : k, S.vw); }
+
+// ---------- cabeçalho ----------
+function header() {
+  const gerente = !isDono();
+  const tabs = isDono() ? [['painel', 'Painel'], ['aparelho', 'Aparelho'], ['receita', 'Receita'], ['metas', 'Metas e custo'], ['simc', 'Simulador de comissão'], ['sim', 'Simulador empresário'], ['regras', 'Regras']]
+    : [['painel', 'Painel'], ['metas', 'Metas da loja']];
+  const dm = monthDays(S.mk), dd = Math.min(S.data.D[S.mk] || dm, dm);
+  return `<div class="top"><div class="wrap">
+    <div class="brand"><span class="dot"></span><h1>Comissão e Meta</h1><span class="pill ${gerente ? 'mid' : 'ok'}">${gerente ? 'Gerente · ' + esc(S.loja) : 'Dono · todas as lojas'}</span><span class="tag">dados até ${String(dd).padStart(2, '0')}/${S.mk.slice(5)}</span><span class="spacer"></span><button class="btn" data-act="sair">Sair</button></div>
+    <div class="bar">
+      <div class="tabs" role="tablist">${tabs.map(([k, n]) => `<button role="tab" aria-selected="${S.tab === k}" data-act="tab" data-v="${k}">${n}</button>`).join('')}</div>
+      <select data-act="mk" aria-label="Mês">${S.data.M.map(m => `<option value="${m}" ${m === S.mk ? 'selected' : ''}>${mlabel(m)}</option>`).join('')}</select>
+      <div class="tabs" aria-label="Visão">
+        <button aria-selected="${S.mode === 'real'}" data-act="mode" data-v="real">Real</button><button aria-selected="${S.mode === 'proj'}" data-act="mode" data-v="proj">Projeção</button></div>
+      ${S.mode === 'proj' ? `<button class="btn ${S.projCalc ? '' : 'primary'}" data-act="calcproj">${S.projCalc ? 'Recalcular projeção' : 'Calcular projeção'}</button>` : ''}
+    </div></div></div>`;
+}
+
+
+// ---------- detalhe (loja ou vendedor) ----------
+const chev = op => `<span class="xp" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:8px"><i style="${op ? 'transform:rotate(45deg);top:5px' : ''}"></i></span>`;
+const ticketMap = B => { const kf = B.k || 1, t = {}; for (const { k } of IND) { const x = B.tot[k]; t[k] = x && x.q > 0 ? (x.r / kf) / x.q : 0; } return t; };
+const metaVendas = (B, meta) => { const t = ticketMap(B); return IND.reduce((s, { k }) => s + (t[k] > 0 ? Math.ceil((meta[k] || 0) / t[k]) : 0), 0); };
+const apFaixa = p => S.cfg.esc.ap.modo === 'qtd' ? brl2(p) + ' por aparelho' : pc1(p);
+const barCls = a => a == null ? 'zero' : a < 0.8 - 1e-9 ? 'low' : a < 1 - 1e-9 ? 'mid' : 'ok';
+const bar = (a, gat) => `<div class="mbar"><i class="${barCls(a)}" style="width:${Math.min(Math.max(a || 0, 0), 1.2) / 1.2 * 100}%"></i>${gat.map(g => `<b style="left:${g / 1.2 * 100}%"></b>`).join('')}</div>`;
+const kv = (t, v, s) => `<div><dt>${t}</dt><dd>${v}${s ? ` <small>${s}</small>` : ''}</dd></div>`;
+function prodInd(li, vi, res, ind) {
+  const kf = model().k || 1, D = S.data, priv = !isDono(), pr = {};
+  for (const p of D.P || []) { if (p[0] !== S.mk || p[7] !== li || (vi != null && p[8] !== vi) || p[1] !== ind) continue; const mu = p[3] > 0 && ind !== 'servico' ? 1 : 0, key = p[2] + '|' + mu; const o = (pr[key] = pr[key] || { plano: p[2], mu, q: 0, r: 0, f: 0 }); o.q += p[4]; o.r += p[5]; o.f += p[6]; }
+  const tot = {}; for (const o of Object.values(pr)) tot[o.plano] = (tot[o.plano] || 0) + (priv ? o.f : o.r);
+  const pl = Object.values(pr).sort((x, y) => tot[y.plano] - tot[x.plano] || x.plano.localeCompare(y.plano) || x.mu - y.mu);
+  if (!pl.length) return '<div class="note">Sem vendas de produtos neste indicador no mês.</div>';
+  const sv = ind === 'servico', x = res.ind[ind];
+  const com = o => sv ? o.r * kf * x.pct * res.lib : (o.f * kf) * (o.mu ? x.pctM : x.pct) * res.lib;
+  return `<div class="scroll"><table class="pt"><thead><tr><th>Produto</th><th>Vendas</th><th>Franquia média</th><th>Franquia total</th><th>Comissão</th></tr></thead><tbody>${pl.slice(0, 40).map(p => `<tr class="${p.mu ? 'mrow' : ''}"><td class="name"><b>${esc(p.plano)}${p.mu ? ' <em class="mx">multi</em>' : ''}</b></td><td>${Math.round(p.q * kf)}</td><td>${sv ? '—' : brl2(p.q ? p.f / p.q : 0)}</td><td>${sv ? '—' : brl2(p.f * kf)}</td><td>${sv && !verServ() ? '<small>a liberar</small>' : brl2(com(p))}</td></tr>`).join('')}</tbody></table></div>${pl.length > 40 ? `<div class="note">Mostrando os 40 maiores de ${pl.length}.</div>` : ''}`;
+}
+function detalhe(B, res, real, li, vi, kind, nome) {
+  const kf = B.k || 1, cfg = S.cfg, priv = !isDono(), tkt = ticketMap(B), sc = cfg.esc.fr, svp = (cfg.svp || {})[kind] || 0;
+  const sv = res.ind.servico, lib = verServ();
+  const a = res.ap;
+  const tkx = k => { const x = res.ind[k], rq = Math.round((real[k] ? real[k].q : 0) * kf), mq = tkt[k] > 0 ? Math.ceil(x.meta / tkt[k]) : null; return { x, rq, mq }; };
+  let fTot = 0, qTot = 0;
+  const openK = S.openInd || (S.openInd = {}), ok = k => !!openK[k];
+  const tgl = (k, n) => `<tr class="click tg ${ok(k) ? 'op' : ''}" data-act="tg" data-v="${k}" tabindex="0" aria-expanded="${ok(k)}"><td class="name"><b>${chev(ok(k))}${n}</b></td>`;
+  const strip = (k, x, rq, mq) => `<tr class="dtl"><td colspan="6"><div class="dstrip">${[['Meta', mq == null ? '—' : mq + ' vendas'], ['Real', rq + ' vendas'], ['Atingimento', pc(x.ating)], ['Franquia', brl(x.f)], ['Franquia média', brl2(rq ? x.f / rq : 0)], ['Comissão', brl(x.com)]].map(([t, v]) => `<div><small>${t}</small><b>${v}</b></div>`).join('')}${priv ? '' : `<div><small>Receita</small><b>${brl(x.r)} de ${brl(x.meta)}</b></div>`}</div>${prodInd(li, vi, res, k)}</td></tr>`;
+  const rows = FRK.map(k => { const { x, rq, mq } = tkx(k); fTot += x.f; qTot += rq;
+    return `${tgl(k, INDN[k])}<td>${mq == null ? '—' : mq}</td><td>${rq}</td><td>${at(x.ating)}</td><td>${brl(x.f)}</td><td><b>${brl(x.com)}</b>${x.comExtra > 0.005 ? ` <em class="mx">+${brl(x.comExtra)} multi</em>` : ''}</td></tr>${ok(k) ? strip(k, x, rq, mq) : ''}`; }).join('');
+  const svOpen = ok('servico');
+  const svRow = `<tr class="click tg ${svOpen ? 'op' : ''}" data-act="tg" data-v="servico" tabindex="0" aria-expanded="${svOpen}"><td class="name"><b>${chev(svOpen)}Serviços</b><div class="sub">fora da meta · ${pc1(svp)} sobre a comissão</div></td><td>—</td><td>${Math.round(sv.q * kf)}</td><td>—</td><td>—</td><td>${lib ? `<b>${brl(sv.com)}</b>` : `<small>${brl(sv.com)} a liberar</small>`}</td></tr>${svOpen ? `<tr class="dtl"><td colspan="6">${prodInd(li, vi, res, 'servico')}</td></tr>` : ''}`;
+  const comFr = res.comFr;
+  const resumo = `<section class="sumry"><div class="sumhead"><div><small>${kind === 'v' ? 'Comissão do vendedor' : 'Comissão do gerente'}</small><div class="big2">${brl(res.total)}</div></div><div class="sumact">${libPill(res.lib)}${kind === 'v' && nome ? `<button class="btn primary" data-act="goV" data-v='${esc(nome)}'>Simular minha comissão</button>` : ''}</div></div>
+    <div class="scroll"><table class="sumtb"><thead><tr><th>Indicador</th><th>Meta (vendas)</th><th>Real (vendas)</th><th>Ating.</th><th>Franquia</th><th>Comissão</th></tr></thead><tbody>${rows}
+    <tr class="sub1"><td><b>Total dos indicadores</b></td><td></td><td>${qTot}</td><td>${at(res.atTotal)}</td><td><b>${brl(fTot)}</b><div class="sub">média ${brl2(qTot ? fTot / qTot : 0)} por plano</div></td><td><b>${brl(comFr)}</b>${res.comExtra > 0.005 ? ` <em class="mx">+${brl(res.comExtra)} multi</em>` : ''}</td></tr>
+    <tr><td class="name"><b>Aparelho</b><div class="sub">${a.meta > 0 ? 'meta ' + brl(a.meta) : ''}</div></td><td>${brl(a.meta)}</td><td>${brl(a.fat)}</td><td>${at(a.ating)}</td><td>—</td><td><b>${brl(a.com)}</b></td></tr>
+    ${svRow}
+    ${kind === 'v' ? `<tr><td class="name"><b>Bônus</b></td><td colspan="4"><span class="sub">${res.bonusBruto > 0 ? 'meta total batida' : 'a partir de ' + pc(cfg.bonus[0].a) + ' do total'}</span></td><td><b>${brl(res.bonus)}</b></td></tr>` : ''}
+    <tr class="tr"><td colspan="5"><b>Total a receber</b>${res.lib < 1 ? ` <span class="sub">· trava de BL: libera ${pc(res.lib)} do valor</span>` : ''}</td><td><b>${brl(res.total)}</b></td></tr></tbody></table></div>
+    <div class="note">Clique em um indicador para ver os produtos vendidos. ${res.comExtra > 0.005 ? `O multi já está incluído: ${brl(res.comExtra * res.lib)} a mais do que se fossem vendas single.` : 'Venda multi paga percentual maior sobre a franquia.'}</div></section>`;
+  return `<div class="det2">${resumo}</div>`;
+}
+
+// ---------- Painel ----------
+function pSel(B) {
+  const lojas = isDono() ? B.lojas : [B.lojas[0]];
+  if (!S.pSel || !lojas.find(l => l.li === S.pSel.li)) S.pSel = { li: lojas[0].li, who: '' };
+  const L = lojas.find(l => l.li === S.pSel.li);
+  if (S.pSel.who && !L.vends.find(v => v.nome === S.pSel.who)) S.pSel.who = '';
+  return { lojas, L };
+}
+function viewPainel() {
+  if (gate()) return projPrompt();
+  const B = model(), g = !isDono(), E = B.empresa, { lojas, L } = pSel(B);
+  const R = g ? L.res : E, nVend = (g ? L.vends : B.vends).filter(v => v.w > 0).length;
+  const frF = FRK.reduce((s, k) => s + R.ind[k].f, 0), frQ = FRK.reduce((s, k) => s + Math.round(R.ind[k].q * B.k), 0);
+  const kp = g ? `<div class="kpis">${kpi('Atingimento da meta', pc(R.atTotal), 'Controle, Pós, BL e TV')}${kpi('Franquia vendida', brl(frF), `${frQ} planos · média ${brl2(frQ ? frF / frQ : 0)}`)}${kpi('Sua comissão', brl(R.total), 'franquia, serviços e aparelho')}${kpi('Comissão dos vendedores', brl(B.comV), nVend + ' vendedores')}</div>`
+    : `<div class="kpis">${kpi('Receita ' + (B.k > 1 ? 'projetada' : 'realizada'), brl(R.rTot), `Controle, Pós, BL e TV · meta ${brl(R.mTot)}`)}${kpi('Atingimento', pc(R.atTotal), 'sem serviços')}${kpi('Comissão de vendedores e gerentes', brl(B.comV + B.comG), pc1((B.comV + B.comG) / Math.max(R.rTot, 1)) + ' da receita')}${kpi('Serviços', Math.round(R.ind.servico.q * B.k) + ' vendas', 'comissão gerada ' + brl(R.ind.servico.com) + (servLiberado() ? ' · liberados' : ' · aguardando liberação'))}</div>`;
+  const cards = lojas.map(l => { const sel = l.li === L.li; return `<button class="lc ${sel ? 'sel' : ''}" ${g ? '' : 'data-act="pl"'} data-v="${l.li}" aria-pressed="${sel}"><span class="n">${esc(l.nome)}</span><span class="p ${barCls(l.res.atTotal)}">${pc(l.res.atTotal)}</span>${bar(l.res.atTotal, S.cfg.esc.fr.gat)}<span class="s">${l.hc} vendedores · ${g ? 'sua comissão' : 'gerente'} ${brl(l.res.total)}</span></button>`; }).join('');
+  const vs = L.vends.filter(v => v.w > 0 || v.res.total > 0).sort((a, b) => b.res.total - a.res.total);
+  const who = S.pSel.who, V = who ? vs.find(v => v.nome === who) : null;
+  const radios = `<fieldset class="radios" role="radiogroup" aria-label="Visão"><legend>Ver</legend>
+    <label class="rad"><input type="radio" name="pv" value="" data-act="pv" ${V ? '' : 'checked'}><span>Loja toda</span></label>
+    ${vs.map(v => `<label class="rad"><input type="radio" name="pv" value="${esc(v.nome)}" data-act="pv" ${V && V.nome === v.nome ? 'checked' : ''}><span>${esc(v.nome)}</span></label>`).join('')}</fieldset>`;
+  const titulo = V ? V.nome : L.nome;
+  const det = V ? detalhe(B, V.res, V.real, L.li, S.data.V.indexOf(V.nome), 'v', V.nome) : detalhe(B, L.res, L.real, L.li, null, 'g', null);
+  const comp = `<details class="prod"><summary>Comparar vendedores da loja</summary><div class="scroll"><table><thead><tr><th>Vendedor</th>${FRK.map(k => `<th>${INDN[k]}</th>`).join('')}<th>Aparelho</th><th>Trava BL</th><th>Comissão</th></tr></thead><tbody>${vs.map(v => `<tr class="click" data-act="pvrow" data-v='${esc(v.nome)}' tabindex="0"><td class="name"><b>${esc(v.nome)}</b></td>${FRK.map(k => `<td>${at(v.res.ind[k].ating)}</td>`).join('')}<td>${at(v.res.ap.ating)}</td><td>${libPill(v.res.lib)}</td><td><b>${brl(v.res.total)}</b></td></tr>`).join('')}<tr class="tr"><td><b>Total dos vendedores</b></td>${'<td></td>'.repeat(FRK.length + 2)}<td><b>${brl(vs.reduce((s, v) => s + v.res.total, 0))}</b></td></tr></tbody></table></div></details>`;
+  return `${kp}
+  <section class="sect"><h2 class="sh">${g ? 'Sua loja' : 'Lojas'}</h2><div class="lcs">${cards}</div></section>
+  <section class="sect"><div class="shrow"><h2 class="sh">${esc(titulo)}</h2><span class="note">${V ? esc(L.nome) + ' · vendedor' : 'visão da loja · gerente'}</span></div>${radios}${det}${comp}</section>`;
+}
+
+// ---------- Aparelho ----------
+function viewAparelho() {
+  if (gate()) return projPrompt();
+  const B = model(), g = !isDono(), L = g ? B.lojas[0] : null, R = g ? L.res : B.empresa, e = S.cfg.esc.ap;
+  const vs = (g ? L.vends : B.vends).filter(v => v.w > 0 || (v.ap && v.ap.fat > 0)).sort((a, b) => (b.ap ? b.ap.fat : 0) - (a.ap ? a.ap.fat : 0));
+  const vr = vs.map(v => `<tr><td class="name"><b>${esc(v.nome)}</b>${isDono() ? `<div class="sub">${esc(v.loja)}</div>` : ''}</td><td>${v.ap ? v.ap.q : 0}</td><td>${brl(v.ap ? v.ap.fat : 0)}</td><td>${brl(v.metaAp)}</td><td>${at(v.res.ap.ating)}</td><td>${apFaixa(v.res.ap.pct)}</td><td>${libPill(v.res.lib)}</td><td><b>${brl(v.res.comAp * v.res.lib)}</b></td></tr>`).join('');
+  const lr = B.lojas.map(l => `<tr><td class="name"><b>${esc(l.nome)}</b></td><td>${l.ap ? l.ap.q : 0}</td><td>${brl(l.ap ? l.ap.fat : 0)}</td><td>${brl(l.metaAp)}</td><td>${at(l.res.ap.ating)}</td><td>${apFaixa(l.res.ap.pct)}</td><td>${libPill(l.res.lib)}</td><td><b>${brl(l.res.comAp * l.res.lib)}</b></td></tr>`).join('');
+  return `<div class="kpis">
+    ${kpi('Faturamento de aparelho', brl(R.ap.fat), `meta ${brl(R.ap.meta)} · ${pc(R.ap.ating)} atingido`)}
+    ${kpi('Vendas acima de ' + brl(AP_MIN), String(R.ap.q), 'itens da coluna Valor Venda')}
+    ${kpi('Comissão vendedores', brl(B.vends.reduce((s, v) => s + v.res.comAp * v.res.lib, 0)), e.modo === 'qtd' ? 'por aparelho vendido' : 'sobre o faturamento')}
+    ${kpi('Comissão gerente', brl(B.lojas.reduce((s, l) => s + l.res.comAp * l.res.lib, 0)), e.modo === 'qtd' ? 'por aparelho vendido na loja' : 'sobre o faturamento da loja')}</div>
+  ${isDono() ? `<div class="callout">Entram só os itens com Valor Venda acima de ${brl(AP_MIN)} (coluna N), exceto tipos marcados como não considerar. ${e.modo === 'qtd' ? `Comissão por quantidade: o valor por aparelho vendido depende da faixa de faturamento. Vendedor: ${e.gat.map((x, i) => `${pc(x)} da meta paga ${brl2(e.q.v[i])}`).join(', ')}. Gerente: ${e.q.g.map(x => brl2(x)).join(' / ')} por aparelho.` : `Escala do vendedor: ${e.gat.map((x, i) => `${pc(x)} da meta paga ${pc1(e.v[i])}`).join(', ')}. Gerente: ${e.g.map(x => pc1(x)).join(' / ')} sobre o faturamento.`} A trava de BL também vale aqui.</div>` : `<div class="callout">Entram só os itens com Valor Venda acima de ${brl(AP_MIN)}. A comissão de aparelho depende do atingimento da meta de faturamento e da trava de BL.</div>`}
+  ${isDono() ? `<section class="panel"><header><h2>Lojas</h2></header><div class="scroll"><table><thead><tr><th>Loja</th><th>Itens</th><th>Faturamento</th><th>Meta</th><th>Ating.</th><th>Faixa</th><th>Trava BL</th><th>Gerente</th></tr></thead><tbody>${lr}</tbody></table></div></section>` : `<section class="panel"><header><h2>Sua loja</h2></header><div class="scroll"><table><thead><tr><th>Loja</th><th>Itens</th><th>Faturamento</th><th>Meta</th><th>Ating.</th><th>Faixa</th><th>Trava BL</th><th>Sua comissão</th></tr></thead><tbody>${lr}</tbody></table></div></section>`}
+  <section class="panel"><header><h2>Vendedores</h2></header><div class="scroll"><table><thead><tr><th>Vendedor</th><th>Itens</th><th>Faturamento</th><th>Meta</th><th>Ating.</th><th>Faixa</th><th>Trava BL</th><th>Comissão</th></tr></thead><tbody>${vr}</tbody></table></div></section>`;
+}
+
+// ---------- Receita (dono): melhores meses e oportunidade de meta ----------
+function recMes(mk, f) { let r = 0, q = 0, fr = 0; for (const x of S.data.R) { if (x[0] !== mk) continue; if (f && !f(x)) continue; r += x[8]; q += x[6]; fr += x[7]; } return { r, q, f: fr }; }
+function sugestao() {
+  const D = S.data, ms = D.M, cres = +S.cfg.cres || 0, K = kFactor();
+  const completo = m => (D.D[m] || 0) >= monthDays(m);
+  let ref = ms.filter(completo); if (!ref.length) ref = ms.slice();
+  const C = {}; for (const x of D.R) { const key = x[0] + '|' + x[1] + '|' + x[3]; C[key] = (C[key] || 0) + x[8]; }
+  const g = (m, li, k) => C[m + '|' + li + '|' + k] || 0;
+  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = dd < dm ? dm / dd : 1, aberto = pk > 1 && !ref.includes(S.mk), cand = aberto ? ref.concat([S.mk]) : ref;
+  const val = (m, li, k) => g(m, li, k) * (m === S.mk && aberto ? pk : 1);
+  const best = {}, potI = {}, potL = {};
+  for (const k of FRK) potI[k] = 0;
+  D.L.forEach((l, li) => { potL[li] = 0; best[li] = {}; for (const k of FRK) { let b = { v: 0, m: null }; for (const m of cand) { const v = val(m, li, k); if (v > b.v) b = { v, m }; } best[li][k] = b; potL[li] += b.v; potI[k] += b.v; } });
+  const pot = Object.values(potL).reduce((s, x) => s + x, 0), f = 1 + cres;
+  const mesTot = m => FRK.reduce((s, k) => s + D.L.reduce((t, _, li) => t + g(m, li, k), 0), 0);
+  let bestM = { v: 0, m: null }; for (const m of cand) { const v = mesTot(m) * (m === S.mk && aberto ? pk : 1); if (v > bestM.v) bestM = { v, m }; }
+  return { D, ms, ref, g, best, potI, potL, pot, f, cres, K, sug: pot * f, bestM, mesTot, aberto };
+}
+function viewReceita() {
+  if (gate()) return projPrompt();
+  const Z = sugestao(), { D, ms, ref, g, best, potI, potL, pot, f, K } = Z, B = model(), Mm = metaOf(S.cfg, S.mk);
+  const cur = FRK.reduce((s, k) => s + D.L.reduce((t, _, li) => t + g(S.mk, li, k), 0), 0) * K;
+  const metaAtual = B.empresa.mTot, oport = Z.sug - metaAtual;
+  const kp = `<div class="kpis">${kpi('Receita de ' + mlabel(S.mk) + (K > 1 ? ' (projeção)' : ''), brl(cur), 'Controle, Pós, BL e TV · comissão + comissão residencial')}
+    ${kpi('Melhor mês do grupo', brl(Z.bestM.v), Z.bestM.m ? mlabel(Z.bestM.m) + (Z.bestM.m === S.mk && Z.aberto ? ' (projeção)' : '') : '—')}
+    ${kpi('Meta atual', brl(metaAtual), metaAtual > 0 ? pc(cur / metaAtual) + ' atingido' : 'defina em Metas e custo')}
+    ${kpi('Potencial dos melhores meses', brl(pot), 'melhor mês de cada loja em cada indicador')}
+    ${kpi('Meta sugerida', brl(Z.sug), `potencial + ${pc1(Z.cres)} de crescimento`)}
+    ${kpi('Oportunidade', (oport >= 0 ? '+' : '−') + brl(Math.abs(oport)), 'sugerida contra a meta atual')}</div>`;
+  const best_ = (arr, vals) => { const mx = Math.max(...vals); return vals.map(v => mx > 0 && v === mx ? 'best' : ''); };
+  const mCols = ms.map(m => `<th>${mlabel(m)}${(D.D[m] || 0) < monthDays(m) ? '<div class="sub">parcial</div>' : ''}</th>`).join('');
+  // por indicador
+  const iRows = FRK.map(k => { const n = INDN[k];
+    const vals = ms.map(m => D.L.reduce((t, _, li) => t + g(m, li, k), 0)), cl = best_(ms, vals.map((v, i) => ref.includes(ms[i]) ? v : -1));
+    const bi = vals.reduce((b, v, i) => ref.includes(ms[i]) && v > b.v ? { v, i } : b, { v: 0, i: -1 });
+    const ex = B.empresa.ind[k], sug = potI[k] * f;
+    return `<tr><td><b>${n}</b></td>${vals.map((v, i) => `<td class="${cl[i]}">${brl(v)}</td>`).join('')}<td><b>${brl(bi.v)}</b><div class="sub">${bi.i >= 0 ? mlabel(ms[bi.i]) : ''}</div></td><td>${brl(ex.meta)}</td><td>${brl(sug)}<div class="sub">${pc1(pot > 0 ? potI[k] / pot : 0)} do total</div></td><td>${dlHtml(sug, ex.meta)}</td></tr>`;
+  }).join('');
+  const totVals = ms.map(m => Z.mesTot(m));
+  const iTot = `<tr class="tr"><td><b>Total</b></td>${totVals.map((v, i) => `<td class="${ref.includes(ms[i]) && v === Z.bestM.v ? 'best' : ''}"><b>${brl(v)}</b></td>`).join('')}<td><b>${brl(Z.bestM.v)}</b></td><td><b>${brl(metaAtual)}</b></td><td><b>${brl(Z.sug)}</b></td><td>${dlHtml(Z.sug, metaAtual)}</td></tr>`;
+  // por loja
+  const lRows = D.L.map((l, li) => {
+    const vals = ms.map(m => FRK.reduce((t, k) => t + g(m, li, k), 0)), cl = best_(ms, vals.map((v, i) => ref.includes(ms[i]) ? v : -1));
+    const bl = B.lojas.find(x => x.li === li), sug = potL[li] * f, bi = vals.reduce((b, v, i) => ref.includes(ms[i]) && v > b.v ? { v, i } : b, { v: 0, i: -1 });
+    return `<tr><td class="name"><b>${esc(l)}</b></td>${vals.map((v, i) => `<td class="${cl[i]}">${brl(v)}</td>`).join('')}<td><b>${brl(bi.v)}</b><div class="sub">${bi.i >= 0 ? mlabel(ms[bi.i]) : ''}</div></td><td>${brl(bl ? bl.res.mTot : 0)}</td><td>${brl(sug)}<div class="sub">${pc1(pot > 0 ? potL[li] / pot : 0)} do total</div></td><td>${dlHtml(sug, bl ? bl.res.mTot : 0)}</td></tr>`;
+  }).join('');
+  // matriz sugerida
+  const mRows = D.L.map((l, li) => `<tr><td class="name"><b>${esc(l)}</b></td>${FRK.map(k => `<td>${brl(best[li][k].v * f)}<div class="sub">${best[li][k].m ? mlabel(best[li][k].m) : '—'}</div></td>`).join('')}<td><b>${brl(potL[li] * f)}</b></td></tr>`).join('');
+  const mTot = `<tr class="tr"><td><b>Total</b></td>${FRK.map(k => `<td><b>${brl(potI[k] * f)}</b></td>`).join('')}<td><b>${brl(Z.sug)}</b></td></tr>`;
+  // gatilhos de multi
+  const tk = (k, mu) => { const x = recMes(S.mk, y => y[3] === k && (mu ? y[5] > 0 : y[5] === 0)); return x.q > 0 ? x.r / x.q : 0; };
+  const T1 = FRK.map(k => ({ k, n: INDN[k], s: tk(k, 0), m: tk(k, 1) }));
+  const gRows = T1.map(t => { const ex = B.empresa.ind[t.k], fl = Math.max(0, ex.meta - ex.r); return `<tr><td><b>${t.n}</b></td><td>${fl > 0 ? brl(fl) : 'meta batida'}</td><td>${t.s ? brl2(t.s) : '—'}</td><td>${t.m ? brl2(t.m) : '—'}</td><td>${fl > 0 && t.s ? Math.ceil(fl / t.s) : '—'}</td><td>${fl > 0 && t.m ? Math.ceil(fl / t.m) : '—'}</td></tr>`; }).join('');
+  const xRows = T1.map(a1 => `<tr><td class="name"><b>1 multi de ${a1.n}</b></td>${FRK.map(k => { const sT = T1.find(z => z.k === k).s; return `<td>${a1.m && sT ? num(a1.m / sT, 1) : '—'}</td>`; }).join('')}</tr>`).join('');
+  const svM = ms.map(m => recMes(m, y => y[3] === 'servico'));
+  const svP = `<section class="panel"><header><h2>Serviços (fora da meta e do total)</h2><span class="n">Serviços geram comissão própria, por isso não somam com os indicadores. Aqui: quantidade e o que geram.</span></header>
+    <div class="scroll"><table><thead><tr><th></th>${ms.map(m => `<th>${mlabel(m)}${(D.D[m] || 0) < monthDays(m) ? '<div class="sub">parcial</div>' : ''}</th>`).join('')}</tr></thead><tbody>
+    <tr><td><b>Quantidade</b></td>${svM.map(x => `<td>${x.q}</td>`).join('')}</tr>
+    <tr><td><b>Receita gerada</b></td>${svM.map(x => `<td>${brl(x.r)}</td>`).join('')}</tr>
+    <tr><td><b>Ticket médio</b></td>${svM.map(x => `<td>${x.q ? brl2(x.r / x.q) : '—'}</td>`).join('')}</tr>
+    <tr><td><b>Comissão paga (vendedor ${pc1((S.cfg.svp || {}).v)} + gerente ${pc1((S.cfg.svp || {}).g)})</b></td>${svM.map(x => `<td>${brl(x.r * (((S.cfg.svp || {}).v || 0) + ((S.cfg.svp || {}).g || 0)))}</td>`).join('')}</tr></tbody></table></div></section>`;
+  return `${kp}
+  <section class="panel"><header><h2>Meta sugerida pelos melhores meses</h2><span class="n">Referência: o melhor mês fechado de cada loja em cada indicador (${ref.map(mlabel).join(', ')}). O mês aberto entra pela projeção (aparece marcado como parcial).</span></header>
+    <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento sobre o melhor mês ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label>
+    <button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><span class="note">Define a meta total, o mix por indicador e a divisão por loja. Depois ajuste em Metas e custo e publique.</span></div></section>
+  <section class="panel"><header><h2>Receita por indicador</h2><span class="n">Receita = comissão + comissão residencial de Controle, Pós, BL e TV. Serviços ficam à parte. Destaque cinza = melhor mês.</span></header>
+    <div class="scroll"><table><thead><tr><th>Indicador</th>${mCols}<th>Melhor mês</th><th>Meta atual</th><th>Meta sugerida</th><th>Oportunidade</th></tr></thead><tbody>${iRows}${iTot}</tbody></table></div></section>
+  <section class="panel"><header><h2>Receita por loja</h2><span class="n">Onde há espaço para subir a meta: compare a meta atual com o que a loja já entregou no melhor mês.</span></header>
+    <div class="scroll"><table><thead><tr><th>Loja</th>${mCols}<th>Melhor mês</th><th>Meta atual</th><th>Meta sugerida</th><th>Oportunidade</th></tr></thead><tbody>${lRows}</tbody></table></div></section>
+  <section class="panel"><header><h2>Como dividir a meta sugerida</h2><span class="n">Loja × indicador, já com o crescimento aplicado. Mês pequeno embaixo = de onde veio o melhor resultado.</span></header>
+    <div class="scroll"><table><thead><tr><th>Loja</th>${FRK.map(k => `<th>${INDN[k]}</th>`).join('')}<th>Total</th></tr></thead><tbody>${mRows}${mTot}</tbody></table></div></section>
+  ${svP}
+  <section class="panel"><header><h2>Gatilhos de multi</h2><span class="n">A venda multi rende mais por venda. Use para fechar a falta de um indicador com menos vendas ou trocar o foco entre indicadores.</span></header>
+    <div class="scroll"><table><thead><tr><th>Indicador</th><th>Falta para a meta</th><th>Ticket single</th><th>Ticket multi</th><th>Vendas single p/ fechar</th><th>Vendas multi p/ fechar</th></tr></thead><tbody>${gRows}</tbody></table></div>
+    <div class="pad"><b>Equivalência:</b> quantas vendas single de cada indicador uma venda multi cobre.</div>
+    <div class="scroll"><table><thead><tr><th>Uma venda multi de…</th>${FRK.map(k => `<th>cobre vendas de ${INDN[k]}</th>`).join('')}</tr></thead><tbody>${xRows}</tbody></table></div></section>`;
+}
+
+function viewMetas() {
+  if (gate()) return projPrompt();
+  const B = model(), M = B.M;
+  if (!isDono()) {
+    const l = B.lojas[0]; const w = (S.vw[S.loja] = S.vw[S.loja] || {});
+    const rows = l.vends.map(v => `<tr><td class="name"><b>${esc(v.nome)}</b></td><td><input type="number" min="0" step="0.5" value="${esc(Math.round(v.pctMeta * 1000) / 10)}" data-act="vw" data-v='${esc(v.nome)}' style="width:80px"><span class="sub"> %</span></td><td>${metaVendas(B, v.meta)} vendas</td><td>${brl(v.metaAp)}</td><td>${at(v.res.atTotal)}</td></tr>`).join('');
+    return `<div class="callout">O dono definiu a meta da loja: cerca de ${metaVendas(B, l.meta)} vendas (estimadas pelo ticket médio) e ${brl(l.metaAp)} em faturamento de aparelho. Divida entre os vendedores como achar justo; o total sempre fecha em 100%. Use 0% para tirar alguém da divisão.</div>
+    <section class="panel"><header><h2>Divisão da meta entre vendedores</h2><button class="btn" data-act="vwigual" style="margin-left:auto">Dividir igualmente</button></header><div class="scroll"><table><thead><tr><th>Vendedor</th><th>Parte da meta</th><th>Meta de vendas (estim.)</th><th>Meta de aparelho</th><th>Ating. atual</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+    <section class="panel"><header><h2>Receber ajustes do dono</h2></header><div class="pad" style="display:grid;gap:8px"><div class="note">${hasServer() ? 'As metas e regras do dono chegam sozinhas quando você abre a página.' : 'Cole o código que o dono enviou para atualizar metas, regras e a liberação de serviços.'}</div>${hasServer() ? '' : `<textarea id="pkt" rows="3" placeholder="Código do dono" style="width:100%"></textarea><div><button class="btn primary" data-act="impkt">Aplicar código</button></div>`}</div></section>`;
+  }
+  const lib = servLiberado();
+  const lojasRows = B.lojas.map(l => `<tr><td class="name"><b>${esc(l.nome)}</b><div class="sub">${l.hc} vendedores ativos</div></td><td>${inp(['metas', S.mk, 'lojaPct', l.nome], (+(M.lojaPct || {})[l.nome] || 0) / 100, 'pct', '0.5', '70px')}</td><td>${brl(l.res.mTot)}</td><td>${brl(l.metaAp)}</td><td>${brl(l.hc ? l.res.mTot / l.hc : 0)}</td><td>${brl(l.res.rTot)}</td><td>${at(l.res.atTotal)}</td><td>${at(l.res.ap.ating)}</td></tr>`).join('');
+  const pctSum = Object.values(M.lojaPct || {}).reduce((s, x) => s + (+x || 0), 0);
+  const bate = B.lojas.map(l => { const n = l.vends.filter(v => v.w > 0).length, ok = l.vends.filter(v => v.w > 0 && v.res.atTotal != null && v.res.atTotal >= 1).length; const a = l.res.atTotal;
+    return `<tr><td class="name"><b>${esc(l.nome)}</b></td><td>${at(a)}</td><td>${a == null ? '—' : a >= 1 ? '<span class="pill ok">Batendo</span>' : a >= 0.8 ? '<span class="pill mid">Perto</span>' : '<span class="pill low">Abaixo</span>'}</td><td>${ok} de ${n}</td><td>${at(l.res.ind.bl.ating)}</td><td>${libPill(l.res.lib)}</td><td>${brl(l.res.total)}</td></tr>`; }).join('');
+  const cen = [0.8, 0.9, 1, 1.2].map(s => custoCenario(B, S.cfg, s));
+  const c100 = custoCenario(B, S.cfg, 1), lojaCusto = B.lojas.filter(l => l.res.mTot > 0).map(l => ({ l, c: custoCenario({ ...B, lojas: [l] }, S.cfg, 1) }));
+  const lcRows = lojaCusto.map(({ l, c }) => `<tr><td class="name"><b>${esc(l.nome)}</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td><td>${brl(c.rec - c.total)}</td></tr>`).join('');
+  const topo = `<section class="panel"><header><h2>Meta de receita e impacto da comissão</h2><span class="n">Receita = comissão + comissão residencial de Controle, Pós, BL e TV (serviços ficam fora da meta). Ao informar a meta, o custo de vendedores e gerentes é calculado em cima dela, pela escala atual.</span></header>
+    <div class="pad"><div class="form" style="grid-template-columns:auto auto;max-width:380px"><span>Meta de receita (R$)</span>${inp(['metas', S.mk, 'total'], +M.total || 0, 'num', '1000', '130px')}<span>Meta de faturamento de aparelho (R$)</span>${inp(['metas', S.mk, 'ap'], +M.ap || 0, 'num', '1000', '130px')}</div></div>
+    <div class="pad"><div class="kpis">${kpi('Receita na meta', brl(c100.rec), 'comissão + residencial · Controle, Pós, BL e TV')}${kpi('Franquia na meta', brl(c100.fr), 'base da comissão · ' + pc1(c100.rec ? c100.fr / c100.rec : 0) + ' da receita')}${kpi('Serviços (estimativa)', brl(c100.recServ), 'fora da meta; mesma proporção de hoje')}${kpi('Custo dos vendedores', brl(c100.v), pc1(c100.rec ? c100.v / c100.rec : 0) + ' da receita · ' + pc1(c100.fr ? c100.v / c100.fr : 0) + ' da franquia')}${kpi('Custo dos gerentes', brl(c100.g), pc1(c100.rec ? c100.g / c100.rec : 0) + ' da receita · ' + pc1(c100.fr ? c100.g / c100.fr : 0) + ' da franquia')}${kpi('Bônus', brl(c100.bonus), 'se atingirem ' + pc(S.cfg.bonus[0].a) + '+')}${kpi('Custo total de comissão', brl(c100.total), pc1(c100.pct) + ' da receita · ' + pc1(c100.pctFr) + ' da franquia')}${kpi('Sobra para o parceiro', brl(c100.rec - c100.total), 'receita menos comissões')}</div></div>
+    <div class="scroll"><table><thead><tr><th>Indicador</th><th>Mix da meta</th><th>Meta de receita</th><th>Franquia na meta</th><th>Realizado</th><th>Ating.</th><th>Falta ou sobra</th></tr></thead><tbody>${FRK.map(k => { const i = { k, n: INDN[k] }; const x = B.empresa.ind[i.k]; const rho = B.tot[i.k].r > 0 ? B.tot[i.k].f / B.tot[i.k].r : 0; return `<tr><td><b>${i.n}</b></td><td>${inp(['metas', S.mk, 'mix', i.k], +M.mix[i.k] || 0, 'num', '1', '70px')}<span class="sub"> %</span></td><td>${brl(x.meta)}</td><td>${brl(x.meta * rho)}</td><td>${brl(x.r)}</td><td>${at(x.ating)}</td><td>${dlHtml(x.r, x.meta)}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="pad note">${Math.abs(B.mixSum - 100) < 0.01 ? '<span class="okk">O mix fecha em 100%.</span>' : `<span class="err">O mix soma ${num(B.mixSum, 1)}%: a meta foi proporcionalizada.</span>`}</div>
+    <div class="pad"><b>Custo por loja se bater 100% da meta</b></div>
+    <div class="scroll"><table><thead><tr><th>Loja</th><th>Receita</th><th>Franquia</th><th>Vendedores</th><th>Gerente</th><th>Bônus</th><th>Total</th><th>% da receita</th><th>% da franquia</th><th>Sobra</th></tr></thead><tbody>${lcRows}</tbody></table></div></section>`;
+  const cr = cen.map(c => `<tr><td><b>${pc(c.s)} da meta</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td></tr>`).join('');
+  return `${topo}<section class="panel"><header><h2>Divisão da meta por loja</h2><span class="n">Cada loja recebe uma parte da meta de receita (${brl(M.total)}) e de aparelho (${brl(M.ap)}). A meta de cada loja cai igual entre os vendedores; o gerente pode ajustar.</span>
+      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="lojaigual">Dividir igualmente</button><button class="btn" data-act="lojahc">Dividir por nº de vendedores</button></span></header>
+    <div class="scroll"><table><thead><tr><th>Loja</th><th>Parte da meta</th><th>Meta de receita</th><th>Meta de aparelho</th><th>Meta por vendedor</th><th>Realizado</th><th>Ating. receita</th><th>Ating. aparelho</th></tr></thead><tbody>${lojasRows}</tbody></table></div>
+    <div class="pad note">${Math.abs(pctSum - 100) < 0.01 ? '<span class="okk">As partes fecham em 100%.</span>' : `<span class="err">As partes somam ${num(pctSum, 1)}%: a meta foi proporcionalizada.</span>`} O valor da meta e o mix por indicador estão no topo desta aba; a aba Receita sugere valores pelos melhores meses.</div></section>
+  <section class="panel"><header><h2>Quem está batendo meta</h2></header><div class="scroll"><table><thead><tr><th>Loja</th><th>Ating. total</th><th>Situação</th><th>Vendedores ≥100%</th><th>BL</th><th>Trava BL</th><th>Comissão da loja</th></tr></thead><tbody>${bate}</tbody></table></div></section>
+  <section class="panel"><header><h2>Custo de comissão sobre as metas</h2><span class="n">Se todos os indicadores e o aparelho chegarem ao percentual da meta. Considera serviços liberados e a escala atual.</span></header><div class="scroll"><table><thead><tr><th>Cenário</th><th>Receita</th><th>Franquia</th><th>Vendedores</th><th>Gerentes</th><th>Bônus</th><th>Total</th><th>% da receita</th><th>% da franquia</th></tr></thead><tbody>${cr}</tbody></table></div></section>
+  <section class="panel"><header><h2>Liberação e publicação</h2></header><div class="pad" style="display:grid;gap:12px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span class="pill ${lib ? 'ok' : 'zero'}">Serviços de ${mlabel(S.mk)}: ${lib ? 'liberados' : 'aguardando liberação'}</span><button class="btn ${lib ? '' : 'primary'}" data-act="liberar">${lib ? 'Bloquear pagamento de serviços' : 'Liberar pagamento de serviços'}</button><span class="note">Serviços pendentes calculados: ${brl(B.servPend)}.</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" data-act="publicar">Publicar para os gerentes</button><span class="note">${hasServer() ? 'Envia metas, regras e a liberação ao servidor.' : 'Gera um código assinado com suas metas, regras e liberação. Só o código do dono é aceito.'}</span></div>
+    ${S.pacoteTxt ? `<textarea readonly rows="3" style="width:100%" onclick="this.select()">${esc(S.pacoteTxt)}</textarea>` : ''}</div></section>`;
+}
+
+
+// ---------- Simulador de comissão (vendedor, gerente e dono) ----------
+function simcList(B) {
+  const out = [];
+  for (const l of B.lojas) {
+    out.push({ key: 'G|' + l.nome, label: 'Gerente · ' + l.nome, kind: 'g', meta: l.meta, metaAp: l.metaAp, real: l.real, ap: l.ap, res: l.res, loja: l });
+    for (const v of l.vends.filter(x => x.w > 0 || x.res.total > 0)) out.push({ key: 'V|' + v.nome, label: v.nome + (isDono() ? ' · ' + l.nome : ''), kind: 'v', meta: v.meta, metaAp: v.metaAp, real: v.real, ap: v.ap, res: v.res, loja: l });
+  }
+  return out;
+}
+function simcLoad(B, key, preset) {
+  const lst = simcList(B), s = lst.find(x => x.key === key) || lst[0]; if (!s) return;
+  const tkt = ticketMap(B), MQ = {}, V = {}, mm = {};
+  for (const k of FRK) { const x = s.res.ind[k]; MQ[k] = tkt[k] > 0 ? Math.ceil((s.meta[k] || 0) / tkt[k]) : 0; V[k] = preset != null ? Math.round(MQ[k] * preset / 100) : Math.round(x.q); mm[k] = x.f > 0 ? Math.round(x.fm / x.f * 100) : 0; }
+  const ma = Math.round(s.metaAp || 0);
+  S.simc = { who: s.key, meta: MQ, vend: V, mm, svq: Math.round(s.res.ind.servico.q), ma, fa: preset != null ? Math.round(ma * preset / 100) : Math.round(s.res.ap.fat) };
+}
+function viewSimc() {
+  const B = model(1), lst = simcList(B);
+  if (!lst.length) return '<div class="empty">Sem vendedores neste mês.</div>';
+  if (!S.simc || !lst.find(x => x.key === S.simc.who)) simcLoad(B, isDono() ? lst[0].key : 'G|' + B.lojas[0].nome);
+  const s = lst.find(x => x.key === S.simc.who), cfg = S.cfg, tkt = ticketMap(B), MQ = S.simc.meta, V = S.simc.vend, MM = S.simc.mm, kind = s.kind, sc = cfg.esc.fr;
+  const real = {}, metaS = {};
+  for (const k of FRK) {
+    const own = s.real[k], lj = s.loja.real[k], tt = B.tot[k];
+    const fq = own && own.q > 0 ? own.f / own.q : lj && lj.q > 0 ? lj.f / lj.q : tt.q > 0 ? tt.f / tt.q : 0;
+    const q = Math.max(0, +V[k] || 0), m = Math.min(100, Math.max(0, +MM[k] || 0)) / 100;
+    metaS[k] = Math.max(0, +MQ[k] || 0) * tkt[k];
+    real[k] = { r: q * tkt[k], f: q * fq, q, fm: q * fq * m, qm: q * m };
+  }
+  metaS.servico = 0;
+  const sv0 = s.res.ind.servico, svT = B.tot.servico, svAvg = sv0.q > 0 ? sv0.r / sv0.q : (s.loja.real.servico && s.loja.real.servico.q > 0 ? s.loja.real.servico.r / s.loja.real.servico.q : (svT && svT.q > 0 ? svT.r / svT.q : 0));
+  const svq = Math.max(0, +S.simc.svq || 0); real.servico = { r: svq * svAvg, f: 0, q: svq, fm: 0, qm: 0 };
+  const tkAp = s.ap && s.ap.q > 0 ? s.ap.fat / s.ap.q : B.totAp.q > 0 ? B.totAp.fat / B.totAp.q : 0, fatAp = Math.max(0, +S.simc.fa || 0), metaApS = Math.max(0, +S.simc.ma || 0);
+  const sim = calcScope(real, { fat: fatAp, q: tkAp > 0 ? fatAp / tkAp : 0 }, metaS, metaApS, cfg, kind, servLiberado());
+  const hoje = s.res.total;
+  const opts = isDono() ? B.lojas.map(l => `<optgroup label="${esc(l.nome)}">${lst.filter(x => x.loja === l).map(x => `<option value="${esc(x.key)}" ${x.key === s.key ? 'selected' : ''}>${esc(x.kind === 'g' ? 'Gerente' : x.label.split(' · ')[0])}</option>`).join('')}</optgroup>`).join('') : lst.map(x => `<option value="${esc(x.key)}" ${x.key === s.key ? 'selected' : ''}>${esc(x.label)}</option>`).join('');
+  const inpN = (act, k, v, w = 76, st = 1) => `<input type="number" min="0" step="${st}" value="${esc(v)}" data-act="${act}" data-k="${k}" style="width:${w}px" aria-label="${act} ${k}">`;
+  const linhas = FRK.map(k => {
+    const x = sim.ind[k];
+    return `<tr><td><b>${INDN[k]}</b></td><td>${inpN('simcmeta', k, MQ[k])}</td><td>${inpN('simcvend', k, V[k])}</td><td>${at(x.ating)}</td><td>${inpN('simcmm', k, MM[k], 64, 5)}<span class="sub"> %</span></td><td>${brl(x.f)}</td><td>${pc1(x.pct)}<div class="sub">multi ${pc1(x.pctM)}</div></td><td><b>${brl(x.com)}</b>${x.comExtra > 0.005 ? ` <em class="mx">+${brl(x.comExtra)} multi</em>` : ''}</td></tr>`;
+  }).join('') + `<tr class="sec2"><td><b>Serviços</b><div class="sub">sem meta · ${pc1(sim.ind.servico.pct)} sobre a comissão</div></td><td>—</td><td>${inpN('simcsv', 'sv', Math.round(svq))}</td><td>—</td><td>—</td><td>—</td><td>—</td><td><b>${brl(sim.ind.servico.com)}</b>${servLiberado() ? '' : '<div class="sub">paga após liberação</div>'}</td></tr>`
+    + `<tr><td><b>Aparelho</b><div class="sub">${cfg.esc.ap.modo === 'qtd' ? 'por aparelho vendido' : 'sobre o faturamento'} · valores em R$</div></td><td>${inpN('simcma', 'ma', S.simc.ma, 96, 1000)}</td><td>${inpN('simcfa', 'fa', S.simc.fa, 96, 1000)}</td><td>${at(sim.ap.ating)}</td><td>—</td><td>${Math.round(sim.ap.q)} itens</td><td>${apFaixa(sim.ap.pct)}</td><td><b>${brl(sim.ap.com)}</b></td></tr>`;
+  const bonusTxt = kind === 'v' ? (sim.bonus > 0 ? brl(sim.bonus) : '—') : null;
+  return `<section class="panel"><header><h2>Simulador de comissão</h2><span class="n">Escolha quem e edite a meta de vendas, as vendas simuladas, a parte de vendas multi e os serviços. O ganho é recalculado na hora.</span></header>
+    <div class="pad" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld">Simular para<select data-act="simcwho">${opts}</select></label>
+      <button class="btn" data-act="simcreset">Puxar do real</button><button class="btn" data-act="simcall" data-v="80">Tudo em 80%</button><button class="btn" data-act="simcall" data-v="100">Tudo em 100%</button><button class="btn" data-act="simcall" data-v="120">Tudo em 120%</button></div>
+    <div class="pad"><div class="kpis">${kpi('Você ganharia', brl(sim.total), (hoje > 0 || sim.total > 0) ? (sim.total >= hoje ? '+' : '−') + brl(Math.abs(sim.total - hoje)) + ' contra hoje (' + brl(hoje) + ')' : 'contra hoje: R$ 0')}
+      ${kpi('Comissão da franquia', brl(sim.comFr * sim.lib), 'Controle, Pós, BL e TV')}
+      ${kpi('Extra do multi', brl(sim.comExtra * sim.lib), 'já incluído na franquia')}
+      ${kpi('Serviços', servLiberado() ? brl(sim.comSv * sim.lib) : brl(sim.servPend), servLiberado() ? 'liberados' : 'pago só depois que o dono liberar')}
+      ${kpi('Aparelho', brl(sim.comAp * sim.lib), cfg.esc.ap.modo === 'qtd' ? 'por aparelho vendido' : 'sobre o faturamento')}
+      ${bonusTxt != null ? kpi('Bônus', bonusTxt, 'a partir de ' + pc(cfg.bonus[0].a) + ' do total') : ''}
+      ${kpi('Trava de BL', pc(sim.ind.bl.ating), sim.lib >= 1 ? 'comissões liberadas 100%' : sim.lib > 0 ? 'libera ' + pc(sim.lib) + ' do valor' : 'abaixo de ' + pc(cfg.trava.min) + ': nada é pago')}</div></div>
+    <div class="scroll"><table><thead><tr><th>Indicador</th><th>Meta de vendas</th><th>Vendas simuladas</th><th>Ating.</th><th>% de vendas multi</th><th>Franquia estimada</th><th>Faixa</th><th>Comissão</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <div class="pad note">Venda multi paga percentual maior sobre a franquia (coluna Faixa mostra single e multi). A meta de vendas começa estimada pelo ticket médio, mas você pode editar. O atingimento é vendas ÷ meta e a franquia usa a sua média por plano. Serviços não entram no atingimento. O total já considera a trava de BL${sim.lib < 1 ? ' (aplicada: ' + pc(sim.lib) + ')' : ''}.</div></section>`;
+}
+
+// ---------- Simulador ----------
+function carregarSimV(vendNome) {
+  const B = model(1); const v = B.vends.find(x => x.nome === vendNome); if (!v) return;
+  const l = B.lojas.find(x => x.nome === v.loja);
+  const rho = {}; for (const ik of FRK) { const a = v.real[ik]; const b = l.real[ik], c = B.tot[ik]; rho[ik] = a && a.r > 0 ? a.f / a.r : b && b.r > 0 ? b.f / b.r : c.r > 0 ? c.f / c.r : 0; }
+  const inD = {}; for (const { k } of IND) inD[k] = { meta: Math.round(v.meta[k] * 100) / 100, real: Math.round(((v.real[k] || {}).r || 0) * 100) / 100 };
+  S.simV = { vend: vendNome, rho, in: inD, ap: { meta: Math.round(v.metaAp * 100) / 100, real: Math.round(((v.ap || {}).fat || 0) * 100) / 100 }, out: null, base: v.res.total };
+}
+function calcSimV() {
+  const s = S.simV, meta = {}, real = {};
+  for (const { k } of IND) { meta[k] = +s.in[k].meta || 0; const r = +s.in[k].real || 0; real[k] = { f: k === 'servico' ? 0 : r * (s.rho[k] || 0), r, q: 0 }; }
+  s.out = calcScope(real, { fat: +s.ap.real || 0, q: 0 }, meta, +s.ap.meta || 0, S.cfg, 'v', servLiberado());
+}
+function viewSim() {
+  if (!isDono()) return '';
+  const B = model(1); const lista = B.vends.filter(v => v.w > 0 || v.res.total > 0);
+  const sel = S.simV.vend && lista.find(v => v.nome === S.simV.vend) ? S.simV.vend : (lista[0] && lista[0].nome);
+  if (sel && S.simV.vend !== sel) carregarSimV(sel);
+  const s = S.simV, o = s.out;
+  const linhas = IND.map(i => { const x = o && o.ind[i.k]; const sv = i.k === 'servico';
+    return `<tr><td><b>${i.n}</b><div class="sub">${sv ? 'sobre a receita' : 'sobre a franquia'}</div></td>
+      <td>${sv ? 'sem meta' : `<input type="number" min="0" step="100" value="${esc(s.in[i.k].meta)}" data-act="sv" data-k="${i.k}" data-f="meta" style="width:110px">`}</td>
+      <td><input type="number" min="0" step="100" value="${esc(s.in[i.k].real)}" data-act="sv" data-k="${i.k}" data-f="real" style="width:110px"></td>
+      <td>${x && !sv ? at(x.ating) : '—'}</td><td>${x ? pc1(x.pct) : '—'}</td><td>${x ? (sv && !verServ() ? pend() : '<b>' + brl(x.com) + '</b>') : '—'}</td></tr>`; }).join('')
+    + `<tr><td><b>Aparelho</b><div class="sub">sobre o faturamento</div></td><td><input type="number" min="0" step="1000" value="${esc(s.ap.meta)}" data-act="sv" data-k="ap" data-f="meta" style="width:110px"></td><td><input type="number" min="0" step="1000" value="${esc(s.ap.real)}" data-act="sv" data-k="ap" data-f="real" style="width:110px"></td><td>${o ? at(o.ap.ating) : '—'}</td><td>${o ? pc1(o.ap.pct) : '—'}</td><td>${o ? '<b>' + brl(o.ap.com) + '</b>' : '—'}</td></tr>`;
+  const res = o ? `<div class="kpis">${kpi('Você receberia', brl(verServ() ? o.total : o.comLib + o.bonus), verServ() ? 'comissão + bônus' : 'sem serviços (aguardando liberação)')}${kpi('Trava de BL', pc(o.ind.bl.ating), o.lib >= 1 ? 'liberada 100%' : o.lib > 0 ? 'libera ' + pc(o.lib) : 'travada: nada é pago')}${kpi('Atingimento total', pc(o.atTotal), `${brl(o.rTot)} de ${brl(o.mTot)}`)}${kpi('Bônus', o.bonus ? brl(o.bonus) : '—', o.bonusBruto ? 'conquistado' : 'abaixo de ' + pc(S.cfg.bonus[0].a))}</div>${verServ() ? '' : '<div class="callout">Serviços entram no cálculo só depois que o dono libera o pagamento.</div>'}` : '<div class="note">Ajuste a meta e o realizado de cada indicador e toque em Calcular.</div>';
+  const ev = EVENTOS[S.sim.ev], atual = S.cfg.classe || 'Select', selC = S.sim.classe || atual;
+  const R = simulate(S.sim, selC, S.cfg), meta = B.metaEmp[ev.ind] || 0;
+  const lin = CLASSES.map(c => { const r = simulate(S.sim, c, S.cfg), d = r.receita - simulate(S.sim, atual, S.cfg).receita;
+    return `<tr class="${c === selC ? 'sel' : ''}"><td><b>${c}</b> ${c === atual ? '<span class="pill ok">Classificação atual</span>' : ''}${c === selC && c !== atual ? '<span class="pill mid">Simulada</span>' : ''}</td><td>${num(r.fator)}</td><td>${brl2(r.rec)}</td><td>${r.port ? brl2(r.port) : '—'}</td><td><b>${brl2(r.receita)}</b></td><td>${c === atual ? '—' : (d >= 0 ? '+' : '−') + brl2(Math.abs(d))}</td></tr>`; }).join('');
+  const fx = CLASSES.map(c => `<tr class="${c === atual ? 'sel' : ''}"><td><b>${c}</b> ${c === atual ? '<span class="pill ok">Atual</span>' : ''}</td><td>${num(FATOR[c].s, 1)}</td><td>${num(FATOR[c].mm, 1)}</td><td>${num(FATOR[c].mr, 1)}</td><td>${num(FATOR[c].up, 1)}</td><td>${num(FATOR[c].tr, 2)}</td><td>${num(FATOR[c].pt, 2)}</td></tr>`).join('');
+  const gt = R.gat;
+  return `<section class="panel"><header><h2>Simulador do vendedor</h2><span class="n">Escolha o vendedor: a meta e o realizado atual já vêm preenchidos. Mude o realizado (ou a meta) e toque em Calcular.</span></header>
+    <div class="pad" style="display:grid;gap:14px">
+      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap"><label class="fld">Vendedor<select data-act="simvsel" style="min-width:260px">${lista.map(v => `<option value="${esc(v.nome)}" ${v.nome === sel ? 'selected' : ''}>${esc(v.nome)}${isDono() ? ' · ' + esc(v.loja) : ''}</option>`).join('')}</select></label>
+        <button class="btn primary" data-act="calcsimv">Calcular</button><button class="btn" data-act="bater">Simular bater a meta</button><button class="btn" data-act="resetsimv">Voltar ao realizado</button></div>
+      <div class="scroll"><table><thead><tr><th>Indicador</th><th>Meta</th><th>Realizado</th><th>Ating.</th><th>Faixa</th><th>Comissão</th></tr></thead><tbody>${linhas}</tbody></table></div>${res}
+    </div></section>
+  <section class="panel"><header><h2>Simulador de venda</h2><span class="n">Quanto a Claro paga ao parceiro e quanto fica para vendedor e gerente, pelo Anexo I do manual.</span></header>
+  <div class="pad" style="display:grid;gap:14px">
+    <div style="display:flex;gap:10px 16px;flex-wrap:wrap;align-items:end">
+      <label class="fld">Evento<select data-sim="ev">${Object.entries(EVENTOS).map(([k, x]) => `<option value="${k}" ${k === S.sim.ev ? 'selected' : ''}>${x.n}</option>`).join('')}</select></label>
+      <label class="fld">${ev.lp}<input type="number" step="0.1" min="0" value="${esc(S.sim.preco)}" data-sim="preco"></label>
+      ${ev.kind ? '' : `<label class="fld">Modalidade<select data-sim="multi"><option value="0" ${S.sim.multi ? '' : 'selected'}>Single</option><option value="1" ${S.sim.multi ? 'selected' : ''}>Multi (fatura única)</option></select></label>`}
+      ${ev.port ? `<label class="chk"><input type="checkbox" data-sim="port" ${S.sim.port ? 'checked' : ''}> Com portabilidade</label>` : ''}
+      <label class="fld">Quantidade<input type="number" step="1" min="1" value="${esc(S.sim.qtd)}" data-sim="qtd" style="width:70px"></label>
+      <label class="fld">Classificação simulada<select data-sim="classe">${CLASSES.map(c => `<option value="${c}" ${c === selC ? 'selected' : ''}>${c}${c === atual ? ' (atual)' : ''}</option>`).join('')}</select></label></div>
+    <div class="kpis">
+      ${kpi('Claro paga ao parceiro', brl2(R.receita), `fator ${num(R.fator)} × ${brl2(+S.sim.preco || 0)}${R.port ? ' + portabilidade' : ''}${+S.sim.qtd > 1 ? ' · ' + S.sim.qtd + ' vendas' : ''}`)}
+      ${kpi('Vendedor recebe', brl2(R.vend[gt.length - 1]), `${R.vend.map(x => brl2(x)).join(' / ')} nas faixas ${gt.map(pc).join(' / ')}`)}
+      ${kpi('Gerente recebe', brl2(R.ger[gt.length - 1]), `${R.ger.map(x => brl2(x)).join(' / ')} nas mesmas faixas`)}
+      ${kpi('Sobra para a empresa', brl2(R.receita - R.vend[gt.length - 1] - R.ger[gt.length - 1]), `na faixa máxima · ${brl2(R.receita - R.vend[0] - R.ger[0])} na primeira`)}</div>
+    <div class="callout">${meta > 0 ? `Esta venda soma ${brl2(R.receita)} de receita, ${pc1(R.receita / meta)} da meta de ${INDN[ev.ind]} do mês (${brl(meta)}). ` : ''}A comissão é calculada sobre ${R.baseTipo === 'franquia' ? 'a franquia total' : 'a receita'} da venda (${brl2(R.base)}). Valores com a trava de BL liberada${R.ind === 'servico' && !verServ() ? ' e serviços já liberados pelo dono' : ''}.</div>
+    <div class="scroll"><table><thead><tr><th>Classificação</th><th>Fator</th><th>Comissão Claro</th><th>Portabilidade</th><th>Total</th><th>Diferença vs atual</th></tr></thead><tbody>${lin}</tbody></table></div>
+    <details><summary class="note" style="cursor:pointer">Fatores do Anexo I por classificação</summary><div class="scroll" style="margin-top:8px"><table><thead><tr><th>Classificação</th><th>Single</th><th>Multi móvel</th><th>Multi residencial</th><th>Upgrade</th><th>Troca de aparelho</th><th>Portabilidade</th></tr></thead><tbody>${fx}</tbody></table></div>
+      <p class="note">Receita = fator × preço do plano (upgrade: sobre o aumento de receita, mínimo ${brl(MIN_UP)}; portabilidade: mínimo ${brl(MIN_PORT)}). Troca de aparelho: franquia estimada em 42,3% do plano, como aparece na base.</p></details></div></section>`;
+}
+
+// ---------- Regras ----------
+function escTable(titulo, caminho, rotuloBase) {
+  const e = S.cfg.esc[caminho], qtd = caminho === 'ap' && e.modo === 'qtd', fr = caminho === 'fr';
+  const modo = caminho === 'ap' ? `<div class="form" style="grid-template-columns:auto 1fr;margin-bottom:8px"><span>Base da comissão</span><select data-p='["esc","ap","modo"]' data-t="txt" ${isDono() ? '' : 'disabled'}><option value="fat" ${qtd ? '' : 'selected'}>% sobre o faturamento</option><option value="qtd" ${qtd ? 'selected' : ''}>R$ por aparelho vendido</option></select></div>` : '';
+  const vcell = n => qtd ? `${inp(['esc', 'ap', 'q', 'v', n], e.q.v[n], 'num', '0.5', '80px')}<span class="sub"> R$</span>` : inp(['esc', caminho, 'v', n], e.v[n], 'pct', '0.1');
+  const gcell = n => qtd ? `${inp(['esc', 'ap', 'q', 'g', n], e.q.g[n], 'num', '0.5', '80px')}<span class="sub"> R$</span>` : inp(['esc', caminho, 'g', n], e.g[n], 'pct', '0.1');
+  const mh = fr ? '<th>Vendedor multi</th><th>Gerente multi</th>' : '';
+  const mc = n => fr ? `<td>${inp(['esc', 'fr', 'vm', n], (e.vm || e.v)[n], 'pct', '0.1')}</td><td>${inp(['esc', 'fr', 'gm', n], (e.gm || e.g)[n], 'pct', '0.1')}</td>` : '';
+  return `<div><div class="note" style="margin-bottom:6px"><b>${titulo}</b> · ${qtd ? 'valor em reais por aparelho vendido, conforme a faixa de atingimento do faturamento' : rotuloBase}</div>${modo}<div class="scroll"><table><thead><tr><th></th><th>Atingimento da meta</th><th>Vendedor</th><th>Gerente</th>${mh}</tr></thead><tbody>${e.gat.map((a, n) => `<tr><td>Faixa ${n + 1}</td><td>${inp(['esc', caminho, 'gat', n], a, 'pct', '1')}</td><td>${vcell(n)}</td><td>${gcell(n)}</td>${mc(n)}</tr>`).join('')}</tbody></table></div></div>`;
+}
+
+// ---------- acesso e base (dono) ----------
+function viewAcesso() {
+  const D = S.data;
+  const rows = D.L.map(l => `<tr><td class="name"><b>${esc(l)}</b></td><td style="text-align:left"><input type="text" data-act="pwloja" data-v="${esc(l)}" value="${esc(S.pws[l] || '')}" placeholder="definir senha" autocomplete="off" style="width:200px"></td><td>${S.pws[l] ? '<span class="pill ok">com acesso</span>' : '<span class="pill zero">sem acesso</span>'}</td></tr>`).join('');
+  const ult = D.M[D.M.length - 1];
+  return `<section class="panel"><header><h2>Senhas das lojas</h2><span class="n">Cada gerente (e os vendedores da loja) entra com a senha da própria loja. Loja sem senha fica sem acesso.</span></header>
+    <div class="scroll"><table><thead><tr><th>Loja</th><th style="text-align:left">Senha</th><th>Situação</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="pad grid2"><div class="form"><span>Nova senha do dono</span><input type="text" id="pwdono" value="${esc(S.pwNovo)}" placeholder="deixe vazio para manter" autocomplete="off" data-act="pwdono"></div>
+    <div><button class="btn primary" data-act="pubacesso" ${S.busy ? 'disabled' : ''}>Publicar senhas e base</button><div class="note" style="margin-top:6px">${S.dirty ? '<span class="err">Há alterações ainda não publicadas.</span>' : 'Nada pendente.'} Senhas só valem para os gerentes depois de publicadas.</div></div></div></section>
+  <section class="panel"><header><h2>Atualizar base do Controle Celular</h2><span class="n">Base atual: ${D.M.map(mlabel).join(', ')} · até ${String(D.D[ult]).padStart(2, '0')}/${ult.slice(5)}</span></header>
+    <div class="pad" style="display:grid;gap:10px;max-width:80ch"><input type="file" accept=".xlsx,.xls" data-act="xlsx" aria-label="Planilha do Controle Celular">
+    <div class="note">Envie a exportação acumulada do mês (do dia 1 até o dia mais recente). Os meses que estiverem na planilha substituem os mesmos meses já carregados; os demais ficam como estão. Depois confira os números e toque em Publicar.</div>
+    ${S.up ? `<div class="callout">${esc(S.up)}</div>` : ''}</div></section>`;
+}
+
+function viewRegras() {
+  if (!isDono()) return '';
+  const c = S.cfg, t = c.trava, b = c.bonus, atual = c.classe || 'Select';
+  return `${isDono() ? '' : '<div class="callout">Estas são as regras definidas pelo dono. Só ele altera as escalas.</div>'}
+  <section class="panel"><header><h2>Escala de comissão e ganho</h2><span class="n">${isDono() ? 'Edite os percentuais e os gatilhos. A edição é exclusiva da senha do dono.' : 'Somente leitura.'}</span></header><div class="pad grid1">
+    ${escTable('Controle, Pós, BL e TV', 'fr', 'percentual sobre a franquia total (coluna BT). Venda multi (coluna Combo) paga o percentual da coluna Multi')}
+    <div><div class="note" style="margin-bottom:6px"><b>Serviços</b> · percentual fixo sobre a comissão e a comissão residencial (colunas Comissão e Comissão Res). Sem meta e sem faixa.</div>
+      <div class="form" style="grid-template-columns:auto auto;max-width:300px"><span>Vendedor</span>${inp(['svp', 'v'], (c.svp || {}).v || 0, 'pct', '0.5')}<span>Gerente</span>${inp(['svp', 'g'], (c.svp || {}).g || 0, 'pct', '0.5')}</div></div>
+    ${escTable('Aparelho', 'ap', 'percentual sobre o faturamento (coluna N, itens acima de ' + brl(AP_MIN) + ')')}
+    <div class="form"><span>Trava de BL: abaixo de</span>${inp(['trava', 'min'], t.min, 'pct', '1')}<span>libera até 100% o percentual de</span>${inp(['trava', 'parcial'], t.parcial, 'pct', '1')}<span>libera tudo a partir de</span>${inp(['trava', 'pleno'], t.pleno, 'pct', '1')}
+      <span>Bônus 1 acima de (ating. total)</span>${inp(['bonus', 0, 'a'], b[0].a, 'pct', '1')}<span>Valor do bônus 1 (R$)</span>${inp(['bonus', 0, 'valor'], b[0].valor, 'num', '10', '90px')}
+      <span>Bônus 2 acima de (ating. total)</span>${inp(['bonus', 1, 'a'], b[1].a, 'pct', '1')}<span>Valor do bônus 2 (R$)</span>${inp(['bonus', 1, 'valor'], b[1].valor, 'num', '10', '90px')}
+      <span>Classificação do parceiro</span><select data-p='["classe"]' data-t="txt" ${isDono() ? '' : 'disabled'}>${CLASSES.map(x => `<option ${x === atual ? 'selected' : ''}>${x}</option>`).join('')}</select></div></div>
+    ${isDono() ? '<div class="pad note">As alterações valem nesta tela na hora. Para os gerentes receberem, use Publicar para os gerentes em Metas e custo.</div>' : ''}</section>
+  <section class="panel"><header><h2>Regras de elegibilidade</h2></header><div class="pad" style="display:grid;gap:8px;max-width:90ch">
+    <p>1. Controle, Pós, BL e TV pagam o percentual da faixa atingida sobre a franquia total da venda. A faixa vem do atingimento da receita de cada indicador contra a meta dele.</p>
+    <p>1b. Venda multi (coluna Combo) paga percentual maior que a venda single, na mesma faixa: ${c.esc.fr.gat.map((x, i) => `${pc(x)} da meta paga ${pc1(c.esc.fr.v[i])} single e ${pc1((c.esc.fr.vm || c.esc.fr.v)[i])} multi`).join('; ')} (vendedor).</p>
+    <p>2. Nada é pago abaixo do primeiro gatilho (${pc(c.esc.fr.gat[0])} da meta). Entre os gatilhos vale o percentual da faixa mais alta já alcançada.</p>
+    <p>3. Trava de BL: com BL abaixo de ${pc(t.min)} da meta ninguém recebe comissão. De ${pc(t.min)} a ${pc(t.pleno)} libera ${pc(t.parcial)} do valor; a partir de ${pc(t.pleno)} libera tudo. A trava vale para franquia, serviços, aparelho e bônus.</p>
+    <p>4. Serviços (Troca de aparelho, Upgrade, Pré-pago, Adicionais e demais) não têm meta e não entram no atingimento: pagam um percentual fixo (vendedor ${pc1((c.svp || {}).v)}, gerente ${pc1((c.svp || {}).g)}) sobre a comissão e a comissão residencial, e só são pagos depois que o dono libera o mês. Hoje: <b>${servLiberado() ? 'liberados' : 'aguardando liberação'}</b> em ${mlabel(S.mk)}.</p>
+    <p>5. Aparelho paga ${c.esc.ap.modo === 'qtd' ? 'um valor em reais por aparelho vendido' : 'percentual sobre o faturamento'} de itens acima de ${brl(AP_MIN)}; a faixa vem do atingimento da meta de faturamento de aparelho.</p>
+    <p>6. Bônus do vendedor: ${brl(b[0].valor)} ao passar de ${pc(b[0].a)} da meta total e ${brl(b[1].valor)} ao passar de ${pc(b[1].a)}. Vale o maior gatilho atingido.</p>
+    <p>7. Gerente recebe o percentual da escala dele sobre o resultado da loja, com as mesmas travas.</p>
+    <p>8. Tipos que não entram: Ativação Dependente Base e Substituição de Aparelho. A venda conta na loja onde o vendedor mais vendeu no mês.</p></div></section>`;
+}
+
+function render() {
+  if (!S.role && S.cands) {
+    $app.innerHTML = `<div class="top"><div class="wrap"><div class="brand"><span class="dot"></span><h1>Comissão e Meta</h1></div></div></div>
+      <div class="wrap"><div class="panel pad" style="max-width:380px;margin:40px auto;display:grid;gap:10px"><b>Qual loja?</b><div class="note">Esta senha abre mais de uma loja.</div>${S.cands.map((c, i) => `<button class="btn" data-act="pickloja" data-v="${i}">${esc(c.data.L[0])}</button>`).join('')}<button class="btn" data-act="pickvoltar">Voltar</button></div></div>`;
+    return;
+  }
+  if (!S.role) {
+    $app.innerHTML = `<div class="top"><div class="wrap"><div class="brand"><span class="dot"></span><h1>Comissão e Meta</h1></div></div></div>
+      <div class="wrap"><form id="login" class="panel pad" style="max-width:380px;margin:40px auto;display:grid;gap:10px"><label class="fld" for="pw">Senha de acesso</label><input id="pw" type="password" autocomplete="current-password" autofocus style="width:100%"><button class="btn primary" type="submit" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Verificando...' : 'Entrar'}</button><div class="err" role="alert">${esc(S.msg)}</div></form></div>`;
+    return;
+  }
+  if (!isDono() && (S.tab === 'regras' || S.tab === 'receita' || S.tab === 'acesso' || S.tab === 'sim' || S.tab === 'aparelho' || S.tab === 'simc')) S.tab = 'painel';
+  const v = { painel: viewPainel, aparelho: viewAparelho, receita: viewReceita, metas: viewMetas, sim: viewSim, simc: viewSimc, regras: viewRegras, acesso: viewAcesso }[S.tab];
+  const keep = document.activeElement && document.activeElement.id;
+  $app.innerHTML = header() + `<div class="wrap"><main>${v()}<p class="note">${isDono() ? 'Receita = coluna Comissão + Comissão Res da base do Controle Celular, por data da venda. ' : 'Comissão calculada sobre a franquia dos planos vendidos. '}Os valores seguem as regras da aba Regras.</p></main></div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+  if (keep) { const el = document.getElementById(keep); if (el) el.focus(); }
+}
+
+// ---------- eventos ----------
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'login') return; e.preventDefault();
+  const pw = document.getElementById('pw').value.trim(); if (!pw) return;
+  S.busy = true; S.msg = ''; render();
+  const err = await entrar(pw); S.busy = false; S.msg = err || ''; render();
+});
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'tab') { S.tab = t.dataset.v; render(); window.scrollTo(0, 0); }
+  else if (a === 'sair') sair();
+  else if (a === 'tg') { const o = S.openInd || (S.openInd = {}); o[t.dataset.v] = !o[t.dataset.v]; render(); }
+  else if (a === 'pl') { S.pSel = { li: +t.dataset.v, who: '' }; render(); }
+  else if (a === 'pvrow') { S.pSel.who = t.dataset.v; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  else if (a === 'pickloja') { await concluir(S.cands[+t.dataset.v], 'gerente', null); render(); }
+  else if (a === 'pickvoltar') { S.cands = null; render(); }
+  else if (a === 'mode') { S.mode = t.dataset.v; S.projCalc = false; render(); }
+  else if (a === 'calcproj') { S.mode = 'proj'; S.projCalc = true; render(); }
+  else if (a === 'goV') { simcLoad(model(1), 'V|' + t.dataset.v); S.tab = 'simc'; render(); window.scrollTo(0, 0); }
+  else if (a === 'simcreset') { simcLoad(model(1), S.simc.who); render(); }
+  else if (a === 'simcall') { simcLoad(model(1), S.simc.who, +t.dataset.v); render(); }
+  else if (a === 'aplicarsug') aplicarSug();
+  else if (a === 'rv') { S.rv = t.dataset.v; render(); }
+  else if (a === 'open') { S.open[t.dataset.v] = !S.open[t.dataset.v]; render(); }
+  else if (a === 'calcsimv') { calcSimV(); render(); }
+  else if (a === 'bater') { for (const { k } of IND) S.simV.in[k].real = S.simV.in[k].meta; S.simV.ap.real = S.simV.ap.meta; calcSimV(); render(); }
+  else if (a === 'resetsimv') { carregarSimV(S.simV.vend); render(); }
+  else if (a === 'liberar') { const l = (S.cfg.lib[S.mk] = S.cfg.lib[S.mk] || {}); l.servicos = !l.servicos; saveDono(); render(); say(l.servicos ? 'Serviços liberados. Publique para os gerentes verem.' : 'Serviços bloqueados. Publique para os gerentes.'); }
+  else if (a === 'publicar') { await publicar(); render(); }
+  else if (a === 'lojaigual' || a === 'lojahc') {
+    const B = model(1), M = metaW(); M.lojaPct = M.lojaPct || {};
+    const hc = B.lojas.map(l => a === 'lojahc' ? Math.max(l.hc, 0) : 1), sum = hc.reduce((x, y) => x + y, 0) || 1;
+    B.lojas.forEach((l, i) => { M.lojaPct[l.nome] = Math.round(hc[i] / sum * 1000) / 10; }); saveDono(); render();
+  }
+  else if (a === 'vwigual') { const B = model(1), l = B.lojas[0]; S.vw[S.loja] = {}; l.vends.forEach(v => { S.vw[S.loja][v.nome] = v.w > 0 ? 1 : 0; }); await Store.set('vw-' + S.loja, JSON.stringify(S.vw[S.loja])); render(); }
+  else if (a === 'pubacesso') await publicarAcesso();
+  else if (a === 'impkt') { await importarPacote(document.getElementById('pkt').value); render(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('tr.click')) e.target.click(); });
+function aplicarSug() {
+  if (!isDono()) return;
+  const Z = sugestao(), M = metaW(), ks = FRK.slice(); M.mix.servico = 0;
+  M.total = Math.max(0, Math.round(Z.sug / 1000) * 1000);
+  const tot = ks.reduce((s, k) => s + Z.potI[k], 0) || 1; let acc = 0;
+  ks.forEach((k, i) => { M.mix[k] = i < ks.length - 1 ? Math.round(Z.potI[k] / tot * 100) : 100 - acc; acc += M.mix[k]; });
+  M.lojaPct = M.lojaPct || {}; let ac2 = 0; const L = Z.D.L;
+  L.forEach((l, li) => { M.lojaPct[l] = li < L.length - 1 ? Math.round((Z.potL[li] / tot) * 1000) / 10 : Math.round((100 - ac2) * 10) / 10; ac2 += M.lojaPct[l]; });
+  saveDono(); say('Meta de ' + mlabel(S.mk) + ' atualizada pela sugestão. Revise em Metas e custo e publique.');
+}
+async function publicarAcesso() {
+  S.busy = true; render();
+  try {
+    const at = Date.now(), D = S.data, lojas = [];
+    for (let li = 0; li < D.L.length; li++) { const pw = (S.pws[D.L[li]] || '').trim(); if (pw) lojas.push(await encBlob({ data: subsetByLoja(D, li) }, pw)); }
+    const dono = await encBlob({ data: D, priv: S.priv, pws: S.pws }, S.pwDono);
+    const sig = await signText(S.priv, JSON.stringify({ at, dono, lojas }));
+    const txt = JSON.stringify({ at, dono, lojas, sig });
+    const ok = await Store.set('blobs', txt); S.blobsAt = at; S.dirty = false;
+    say(hasServer() ? (ok ? 'Publicado. Os gerentes já entram com as senhas novas.' : 'Não consegui gravar no servidor.') : 'Salvo neste navegador (sem servidor Apps Script).');
+  } catch (e) { say('Falha ao publicar: ' + e.message); }
+  S.busy = false; render();
+}
+async function lerXlsx(file) {
+  try {
+    if (typeof XLSX === 'undefined') throw new Error('leitor de planilha indisponível');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+    const nw = aggregateRows(json);
+    if (!nw.M.length) { S.up = 'Não encontrei vendas com data válida nessa planilha.'; return; }
+    const ruim = nw.M.filter(m => S.data.M.includes(m) && (nw.MN[m] || 1) > 1);
+    if (ruim.length) { S.up = 'Essa planilha começa depois do dia 1 em ' + ruim.map(mlabel).join(', ') + '. Envie a exportação do mês inteiro (dia 1 até hoje) para não perder vendas já carregadas.'; return; }
+    const antes = S.data; S.data = mergeData(antes, nw); S.dirty = true;
+    const novas = S.data.L.filter(l => !antes.L.includes(l));
+    S.mk = S.data.M[S.data.M.length - 1];
+    S.up = 'Base atualizada: ' + nw.M.map(m => mlabel(m) + ' até dia ' + nw.D[m]).join(' · ') + ' (' + json.length + ' linhas lidas).' + (novas.length ? ' Lojas novas: ' + novas.join(', ') + ' (defina a senha).' : '') + (Object.keys(nw.unmapped).filter(Boolean).length ? ' Tipos sem mapeamento ignorados: ' + Object.keys(nw.unmapped).join(', ') + '.' : '') + ' Toque em Publicar.';
+  } catch (e) { S.up = 'Não consegui ler a planilha: ' + e.message; }
+}
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.dataset.act === 'pv') { S.pSel.who = t.value; return render(); }
+  if (t.dataset.act === 'simcwho') { simcLoad(model(1), t.value); return render(); }
+  if (t.dataset.act === 'simcmm') { S.simc.mm[t.dataset.k] = Math.min(100, Math.max(0, parseFloat(String(t.value).replace(',', '.')) || 0)); return render(); }
+  if (t.dataset.act === 'simcsv') { S.simc.svq = Math.max(0, Math.round(parseFloat(String(t.value).replace(',', '.')) || 0)); return render(); }
+  if (t.dataset.act === 'simcmeta') { S.simc.meta[t.dataset.k] = Math.max(0, Math.round(parseFloat(String(t.value).replace(',', '.')) || 0)); return render(); }
+  if (t.dataset.act === 'simcvend') { S.simc.vend[t.dataset.k] = Math.max(0, Math.round(parseFloat(String(t.value).replace(',', '.')) || 0)); return render(); }
+  if (t.dataset.act === 'simcma') { S.simc.ma = Math.max(0, parseFloat(String(t.value).replace(',', '.')) || 0); return render(); }
+  if (t.dataset.act === 'simcfa') { S.simc.fa = Math.max(0, parseFloat(String(t.value).replace(',', '.')) || 0); return render(); }
+  if (t.dataset.act === 'selloja') { S.selLoja = t.value; return render(); }
+  if (t.dataset.act === 'pwloja') { S.pws[t.dataset.v] = t.value.trim(); S.dirty = true; return render(); }
+  if (t.dataset.act === 'pwdono') { S.pwNovo = t.value; if (t.value.trim().length >= 8) { S.pwDono = t.value.trim(); S.dirty = true; } else if (t.value.trim()) say('A senha do dono precisa de ao menos 8 caracteres.'); return render(); }
+  if (t.dataset.act === 'xlsx') { if (t.files[0]) { S.up = 'Lendo planilha...'; render(); await lerXlsx(t.files[0]); } return render(); }
+  if (t.dataset.act === 'mk') { S.mk = t.value; S.projCalc = false; render(); }
+  else if (t.dataset.act === 'simvsel') { carregarSimV(t.value); render(); }
+  else if (t.dataset.act === 'sv') { const f = t.dataset.f, k = t.dataset.k, v = Math.max(0, parseFloat(String(t.value).replace(',', '.')) || 0); if (k === 'ap') S.simV.ap[f] = v; else S.simV.in[k][f] = v; }
+  else if (t.dataset.act === 'vw') {
+    const B = model(1), l = B.lojas[0], w = (S.vw[S.loja] = S.vw[S.loja] || {});
+    l.vends.forEach(v => { if (w[v.nome] == null) w[v.nome] = v.w; }); w[t.dataset.v] = Math.max(0, parseFloat(t.value) || 0);
+    await Store.set('vw-' + S.loja, JSON.stringify(w)); render();
+  }
+  else if (t.dataset.sim) {
+    const k = t.dataset.sim; let v = t.type === 'checkbox' ? t.checked : t.value;
+    if (k === 'ev') { S.sim.ev = v; S.sim.preco = EVENTOS[v].preco; S.sim.multi = false; if (!EVENTOS[v].port) S.sim.port = false; }
+    else if (k === 'multi') S.sim.multi = v === '1'; else if (k === 'port') S.sim.port = v; else if (k === 'classe') S.sim.classe = v;
+    else { v = parseFloat(String(v).replace(',', '.')); S.sim[k] = isFinite(v) && v >= 0 ? v : 0; }
+    render();
+  }
+  else if (t.dataset.p && editavel()) {
+    const p = JSON.parse(t.dataset.p); let v = t.dataset.t === 'txt' ? t.value : parseFloat(String(t.value).replace(',', '.'));
+    if (t.dataset.t !== 'txt') { if (!isFinite(v) || v < 0) v = 0; if (t.dataset.t === 'pct') v = v / 100; }
+    if (p[0] === 'metas') metaW();
+    if (p[0] === 'metas' && p[2] === 'lojaPct') v = v * 100;
+    setPath(p, v); saveDono(); render();
+  }
+});
+$app.innerHTML = '<div class="wrap"><p class="note" style="padding:40px">Carregando…</p></div>';
+(async () => {
+  try {
+    const I = await parent.__painel.comissaoInit();
+    S.role = I.role; S.data = I.data; S.cfg = mergeCfg(defaultCfg(), I.cfg || null); S.vw = I.vw || {}; S.pws = {};
+    S.loja = I.role === 'gerente' ? I.data.L[0] : null; S.mk = I.data.M[I.data.M.length - 1]; S.tab = 'painel';
+    if (I.role === 'dono') { try { const t = lsGet('cm2-cfg-dono'); if (t) { const d = JSON.parse(t); if (d.at > (I.cfgAt || 0)) S.cfg = mergeCfg(defaultCfg(), d.cfg); } } catch (e) { } }
+    render();
+  } catch (e) { $app.innerHTML = '<div class="wrap"><p class="note" style="padding:40px">Não consegui abrir: ' + esc(e && e.message || e) + '</p></div>'; }
+})();
+</script>

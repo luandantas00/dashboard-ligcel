@@ -2151,7 +2151,7 @@ function renderRef(){
   renderRegras();
   const c=RAW.colunas||{},mk2=RAW.marcadores||{};
   document.getElementById('tblRegrasLeitura').innerHTML=[
-    ['Aparelho','<b>'+esc(c.valor||'Valor Venda')+'</b> acima de R$ '+nf1.format(RAW.limiteAparelho||63)],
+    ['Aparelho','<b>'+esc(c.valor||'Valor Venda')+'</b> acima de R$ '+nf1.format(RAW.limiteAparelho||60)],
     ['Seguro','<b>'+esc(c.plano||'Plano/Serviço')+'</b> = '+esc(mk2.seg||'')],
     ['Portabilidade','<b>'+esc(c.plano||'Plano/Serviço')+'</b> = '+esc(mk2.port||'')],
     ['Operadora de origem','<b>'+esc(c.oper||'Operadora')+'</b> — TIM, VIVO e Outros'],
@@ -2194,7 +2194,7 @@ function lerPlanilha(ab){
     }
   });
   if(!best)throw new Error('Não encontrei as colunas da base. Esperado: '+['data','atend','tipo','plano','valor','motivo','oper','vend','loja'].map(k=>C[k]||k).join(', ')+'.');
-  const ix=best.ix,LIM=RAW.limiteAparelho||63,MK=RAW.marcadores||{},DP=RAW.depara||{};
+  const ix=best.ix,LIM=RAW.limiteAparelho||60,MK=RAW.marcadores||{},DP=RAW.depara||{};
   const get=(r,k)=>ix[k]>=0?r[ix[k]]:'';
   const linhas=[];
   best.rows.forEach(r=>{

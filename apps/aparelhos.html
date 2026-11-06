@@ -849,10 +849,10 @@ async function readFile(file){
     const k=dayKey(r[C.data]);if(!k)continue;
     lidas++;const loja=storeName(r[C.loja]);
     if(!loja||!D.stores.includes(loja)){fora++;continue;}
-    // regra do unificado: Seguro Proteção Móvel fica fora; Valor Venda > R$ 50 = aparelho; R$ 10 a R$ 50 = chip
+    // regra do unificado: Seguro Proteção Móvel fica fora; Valor Venda > R$ 60 = aparelho; R$ 10 a R$ 60 = chip
     if(norm(r[C.plano])==='SEGURO PROTECAO MOVEL'){seg++;continue;}
     const v=numOf(r[C.val]);let ty;
-    if(v>50)ty=0;else if(v>=10)ty=1;else{ign++;continue;}
+    if(v>60)ty=0;else if(v>=10)ty=1;else{ign++;continue;}
     ty?ch++:ap++;
     const vend=C.vend>=0&&r[C.vend]?tcase(r[C.vend]):'Sem vendedor',br=ty?'-':brandOf(r[C.desc]);
     if(!agg.has(k))agg.set(k,new Map());const g=agg.get(k),kk=loja+'|'+vend+'|'+ty+'|'+br;
@@ -914,7 +914,7 @@ seg('segQ1','q1',renderQ1);seg('segQ2','q2',renderQ2);seg('segQ4','q4',renderQ4)
 document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;S.tab=t.dataset.t;S.all=false;save();renderQ2();});
 document.getElementById('moreBtn').addEventListener('click',()=>{S.all=!S.all;renderQ2();});
 bindStoreRows('tStores');bindStoreRows('tChip');
-document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 50 = aparelho, de R$ 10 a R$ 50 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
+document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 60 = aparelho, de R$ 10 a R$ 60 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
 setDbState();renderLog();render();paintPub();
 document.getElementById('btnPub').addEventListener('click',publicar);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();renderExec();renderRt();},150);});

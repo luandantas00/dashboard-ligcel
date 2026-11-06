@@ -185,7 +185,7 @@ async function abrirRitmo(visao) {
       window.google={script:{run:{withSuccessHandler:function(f){return run().withSuccessHandler(f);},withFailureHandler:function(f){return run().withFailureHandler(f);}},
         url:{getLocation:function(cb){cb({parameter:{p:${JSON.stringify(p)}}});}}}};
     })();`;
-    let css = '.trocar{display:none!important}';
+    let css = '.trocar{display:none!important}#btnBase{display:none!important}';
     if (!gestao()) css += '#btnCfg,#btnBase,#vCfg,#cfg{display:none!important}';
     const html = await texto('apps/ritmo.html');
     colocarIframe(montarDoc(html.replace('Publicado.</b> A planilha foi gravada no Drive — quem abrir o link já vê a base nova.', 'Publicado.</b> Todos os acessos já veem a base nova.'), prelude, css));
@@ -204,18 +204,64 @@ async function abrirAparelhos() {
       window.claude={use:function(){return Promise.resolve({publish:function(doc){return parent.__painel.aparelhosSalvar(doc);}});}};`;
     let html = await texto('apps/aparelhos.html');
     html = html.replace('<script id="pagedata" type="application/json">{}</script>', '<script id="pagedata" type="application/json">' + jsonSeguro(payload.page || {}) + '</script>');
-    colocarIframe(montarDoc(html, prelude, ''));
+    colocarIframe(montarDoc(html, prelude, '#btnUp{display:none!important}'));
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 
-function abrirComissao() {
-  aviso('Comissão e Meta', 'Esta seção será ligada na próxima etapa. Ela já está no menu para <b>dono, administrador e gerente</b>, e o gerente verá somente a própria loja.');
+async function abrirComissao() {
+  carregando();
+  try {
+    const chave = gestao() ? 'comissao' : 'comissao:' + S.me.loja_id;
+    const payload = await lerDataset(chave);
+    if (!payload || !payload.data || !payload.data.M || !payload.data.M.length) {
+      return aviso('Ainda sem dados', gestao()
+        ? 'A base do Comissão e Meta ainda não foi carregada. Vá em <b>Importar dados</b> e envie o Excel do Controle Celular.'
+        : 'A gestão ainda não publicou os dados da sua loja.');
+    }
+    S.comissao = payload;
+    colocarIframe(montarDoc(await texto('apps/comissao.html'), '', ''));
+  } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
+}
+function indiceLoja(D, l) {
+  const alvo = new Set([l.nome].concat(l.apelidos || []).map(nomeBase));
+  return D.L.findIndex(n => alvo.has(nomeBase(n)));
+}
+async function salvarComissao(data, cfg, cfgAt) {
+  const linhas = [{ chave: 'comissao', loja_id: null, payload: { data, cfg, cfgAt } }];
+  for (const l of S.lojas.filter(x => x.ativa)) {
+    const li = indiceLoja(data, l); if (li < 0) continue;
+    linhas.push({ chave: 'comissao:' + l.id, loja_id: l.id, payload: { data: ComissaoNucleo.subsetByLoja(data, li), cfg, cfgAt } });
+  }
+  await gravar(linhas);
+  return linhas.length - 1;
 }
 
 /* ====================== ponte com os apps ====================== */
 window.__painel = {
   lerBase: async () => S.ritmoTxt || '',
   salvarBase: async (txt) => { await salvarRitmo(JSON.parse(txt)); return true; },
+  comissaoInit: async () => {
+    const p = S.comissao; if (!p) throw new Error('Sem dados do Comissão e Meta.');
+    const vw = {};
+    if (gestao()) {
+      const { data: rs, error } = await sb.from('datasets').select('loja_id,payload').like('chave', 'comissao-vw:%'); if (error) throw error;
+      (rs || []).forEach(r => { const l = S.lojas.find(x => x.id === r.loja_id); if (!l) return; const li = indiceLoja(p.data, l); if (li >= 0 && r.payload && r.payload.vw) vw[p.data.L[li]] = r.payload.vw; });
+      return { role: 'dono', data: p.data, cfg: p.cfg, cfgAt: p.cfgAt || 0, vw };
+    }
+    const v = await lerDataset('comissao-vw:' + S.me.loja_id); if (v && v.vw) vw[p.data.L[0]] = v.vw;
+    return { role: 'gerente', data: p.data, cfg: p.cfg, cfgAt: p.cfgAt || 0, vw };
+  },
+  comissaoSalvarVw: async (nome, json) => {
+    let id = S.me.loja_id;
+    if (gestao()) { const l = S.lojas.find(x => nomeBase(nome) === nomeBase(x.nome) || (x.apelidos || []).some(a => nomeBase(a) === nomeBase(nome))); if (!l) throw new Error('Loja não encontrada.'); id = l.id; }
+    await gravar([{ chave: 'comissao-vw:' + id, loja_id: id, payload: { vw: JSON.parse(json) } }]);
+    return true;
+  },
+  comissaoPublicarCfg: async (cfg) => {
+    if (!gestao()) throw new Error('Só dono e administrador publicam.');
+    const p = await lerDataset('comissao'); if (!p || !p.data) throw new Error('Não há base do Comissão carregada.');
+    const at = Date.now(); await salvarComissao(p.data, cfg, at); S.comissao = Object.assign({}, p, { cfg, cfgAt: at }); return true;
+  },
   aparelhosSeed: () => (S.aparelhos && S.aparelhos.seed) || { stores: [], vends: [], brands: [], rows: [] },
   aparelhosExcl: () => (S.aparelhos && S.aparelhos.excl) || [],
   aparelhosSalvar: async (doc) => {
@@ -269,19 +315,219 @@ async function salvarRitmo(raw) {
   return linhas.length - 1;
 }
 
+/* ====================== entrada única: Excel do Controle Celular ====================== */
+const LIM_APARELHO = 60;   // aparelho = Valor Venda acima de R$ 60; chip = de R$ 10 a R$ 60
+function carregarXLSX() {
+  return window.XLSX ? Promise.resolve() : new Promise((ok, no) => {
+    const t = document.createElement('script'); t.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    t.onload = ok; t.onerror = () => no(new Error('Não consegui carregar o leitor de Excel. Verifique a conexão e tente de novo.')); document.head.appendChild(t);
+  });
+}
+const nomeBase = v => norm(String(v || '').replace(/\s*\(.*\)\s*/, ''));   // "IPIRA (9MVY)" -> "IPIRA"
+function isoDe(v) {
+  if (v instanceof Date) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number') return new Date(Math.round((v - 25569) * 86400000)).toISOString().slice(0, 10);
+  const t = String(v || '').trim(); let m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : null;
+}
+function numBR(v) {
+  if (typeof v === 'number') return v;
+  const t = String(v || '').replace(/[R$\s]/g, ''); if (!t) return 0;
+  return Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t) || 0;
+}
+const tcase = v => String(v).trim().split(/\s+/).map(w => ['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+function marcaDe(desc) { const t = norm(desc); for (const k of ['SAMSUNG', 'MOTOROLA', 'APPLE']) if (t.includes(k)) return k; return t.includes('IPHONE') ? 'APPLE' : 'DEMAIS'; }
+
+/* lê o Excel uma única vez e devolve as linhas já limpas */
+function lerLinhas(wb, raw) {
+  const C = raw.colunas || {};
+  const alvo = {}; ['data', 'atend', 'tipo', 'plano', 'valor', 'motivo', 'oper', 'vend', 'loja'].forEach(k => alvo[k] = norm(C[k] || k));
+  alvo.desc = 'DESCRICAO DO PRODUTO';
+  let best = null;
+  wb.SheetNames.forEach(nm => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[nm], { header: 1, raw: true, blankrows: false });
+    for (let i = 0; i < Math.min(8, rows.length); i++) {
+      const hd = (rows[i] || []).map(norm), ix = {};
+      Object.keys(alvo).forEach(k => { ix[k] = hd.indexOf(alvo[k]); });
+      if (ix.data >= 0 && ix.vend >= 0 && ix.loja >= 0 && ix.tipo >= 0 && ix.valor >= 0) {
+        const sc = Object.keys(ix).filter(k => ix[k] >= 0).length;
+        if (!best || sc > best.sc) best = { sc, rows: rows.slice(i + 1), ix };
+      }
+    }
+  });
+  if (!best) throw new Error('Não encontrei as colunas da base (Data, Tipo de Ativação, Valor Venda, Vendedor, Loja (Venda)). Envie a planilha do Controle Celular no formato de sempre.');
+  const g = (r, k) => best.ix[k] >= 0 ? r[best.ix[k]] : '';
+  const out = [];
+  best.rows.forEach(r => {
+    if (!r || !r.length) return;
+    const ds = isoDe(g(r, 'data')); if (!ds) return;
+    const loja = String(g(r, 'loja') || '').trim(); if (!loja) return;
+    out.push({
+      ds, loja, vend: String(g(r, 'vend') || '').trim().toUpperCase(), tipo: String(g(r, 'tipo') || '').trim(),
+      plano: String(g(r, 'plano') || '').trim(), motivo: String(g(r, 'motivo') || '').trim(), valor: numBR(g(r, 'valor')),
+      oper: String(g(r, 'oper') || '').trim().toUpperCase(), atend: String(g(r, 'atend') || '').trim(), desc: String(g(r, 'desc') || '')
+    });
+  });
+  if (!out.length) throw new Error('A planilha não trouxe nenhuma linha com data válida.');
+  return out;
+}
+
+/* --- Ritmo Comercial: mesma regra do painel, com aparelho acima de R$ 60 --- */
+function montarRitmo(linhas, raw, modo) {
+  const L0 = raw.lojas || [], V0 = raw.vendedores || [];
+  const porNome = new Map(L0.map(l => [nomeBase(l), l]));
+  const canon = l => porNome.get(nomeBase(l)) || l;
+  const regras = (raw.regrasLoja || []).map(r => ({ loja: r.loja, desde: r.desde || '0000-00-00', vends: (r.vendedores || []).map(v => String(v).toUpperCase()) }));
+  const lojaDe = (vend, ds, loja) => { for (const r of regras) if (r.vends.indexOf(vend) >= 0 && ds >= r.desde) return r.loja; return loja; };
+  const MK = raw.marcadores || {}, DP = raw.depara || {}, KPIS = raw.kpis, OPERS = raw.opers || ['TIM', 'VIVO', 'OUTROS'];
+  const vol = {}, kpiAt = {};
+  linhas.forEach(x => {
+    x.loja = canon(x.loja);
+    const k = x.ds + '|' + lojaDe(x.vend, x.ds, x.loja), b = vol[k] || (vol[k] = { at: new Set(), n: 0 });
+    b.n++; if (x.atend) b.at.add(x.atend);
+    const kp = DP[x.tipo]; if (kp && kp !== 'NAO CONSIDERAR' && x.atend) (kpiAt[x.atend] = kpiAt[x.atend] || new Set()).add(kp);
+  });
+  const volume = {}; Object.keys(vol).forEach(k => { volume[k] = [vol[k].at.size || vol[k].n, vol[k].n]; });
+  const classeDe = at => { const t = kpiAt[at]; if (!t) return 2; if (t.has('CONTROLE')) return 0; if (t.has('POS')) return 1; return 2; };
+  const oOK = o => OPERS.indexOf(o) >= 0 && o !== 'OUTROS' ? o : 'OUTROS';
+  const novos = [];
+  linhas.forEach(x => {
+    const kp = DP[x.tipo], ki = (kp && kp !== 'NAO CONSIDERAR') ? KPIS.indexOf(kp) : -1;
+    const ap = x.valor > LIM_APARELHO, seg = x.plano === MK.seg, port = x.plano === MK.port, troca = x.motivo === MK.troca;
+    if (ki < 0 && !ap && !seg && !port && !troca) return;
+    let op = -1, cl = -1; if (port) { op = OPERS.indexOf(oOK(x.oper)); cl = classeDe(x.atend); }
+    novos.push({ ds: x.ds, loja: x.loja, vend: x.vend, ki, f: (ap ? 1 : 0) | (seg ? 2 : 0) | (port ? 4 : 0) | (troca ? 8 : 0), valor: ap ? Math.round(x.valor * 100) / 100 : 0, op, cl });
+  });
+  const ini = linhas.reduce((a, x) => x.ds < a ? x.ds : a, '9999-99-99'), fim = linhas.reduce((a, x) => x.ds > a ? x.ds : a, '0000-00-00');
+  let objs = novos.slice(), vols = Object.assign({}, volume), trocados = 0;
+  const antes = (raw.recs || []).length;
+  if (modo !== 'tudo') {
+    const antigos = (raw.recs || []).map(r => ({ ds: r[0], loja: L0[r[1]], vend: V0[r[2]], ki: r[3], f: r[4], valor: r[5] || 0, op: r[6], cl: r[7] }));
+    const fora = antigos.filter(o => o.ds < ini || o.ds > fim);
+    trocados = antigos.length - fora.length; objs = fora.concat(objs);
+    vols = {}; Object.keys(raw.volume || {}).forEach(k => { const d = k.slice(0, 10); if (d < ini || d > fim) vols[k] = raw.volume[k]; });
+    Object.keys(volume).forEach(k => vols[k] = volume[k]);
+  }
+  const lojas = [...new Set(objs.map(o => o.loja))].sort(), vends = [...new Set(objs.map(o => o.vend))].sort();
+  const li = {}, vi = {}; lojas.forEach((l, i) => li[l] = i); vends.forEach((v, i) => vi[v] = i);
+  objs.sort((a, b) => a.ds < b.ds ? -1 : a.ds > b.ds ? 1 : 0);
+  const novo = Object.assign({}, raw, { lojas, vendedores: vends, volume: vols, limiteAparelho: LIM_APARELHO, recs: objs.map(o => [o.ds, li[o.loja], vi[o.vend], o.ki, o.f, o.valor, o.op, o.cl]) });
+  return { raw: novo, antes, depois: novo.recs.length, trocados, consideradas: novos.length };
+}
+
+/* --- Aparelhos e Chip: aparelho acima de R$ 60, chip de R$ 10 a R$ 60, seguro fora --- */
+function montarAparelhos(linhas, pay, modo) {
+  const seed = pay.seed, lojasSeed = seed.stores || [];
+  const porNome = new Map(lojasSeed.map(l => [nomeBase(l), l]));
+  const dias = new Map(); let ap = 0, ch = 0, seg = 0, fora = 0, ign = 0;
+  linhas.forEach(x => {
+    const loja = porNome.get(nomeBase(x.loja)); if (!loja) { fora++; return; }
+    if (norm(x.plano) === 'SEGURO PROTECAO MOVEL') { seg++; return; }
+    const v = x.valor; let ty; if (v > LIM_APARELHO) ty = 0; else if (v >= 10) ty = 1; else { ign++; return; }
+    ty ? ch++ : ap++;
+    const k = Number(x.ds.replace(/-/g, '')), vend = x.vend ? tcase(x.vend) : 'Sem vendedor', br = ty ? '-' : marcaDe(x.desc);
+    if (!dias.has(k)) dias.set(k, new Map());
+    const m = dias.get(k), kk = loja + '|' + vend + '|' + ty + '|' + br, o = m.get(kk) || [loja, vend, ty, br, 0, 0];
+    o[4]++; o[5] = Math.round((o[5] + v) * 100) / 100; m.set(kk, o);
+  });
+  const ks = [...dias.keys()].sort((a, b) => a - b);
+  const novo = JSON.parse(JSON.stringify(pay)); novo.page = novo.page || {}; novo.page.upd = novo.page.upd || {};
+  if (modo === 'tudo') {
+    const vends = [], vIdx = new Map(), brands = ['SAMSUNG', 'MOTOROLA', 'APPLE', 'DEMAIS', '-'], rows = [];
+    ks.forEach(k => dias.get(k).forEach(o => {
+      let vi = vIdx.get(o[1]); if (vi === undefined) { vi = vends.length; vIdx.set(o[1], vi); vends.push(o[1]); }
+      rows.push([k, lojasSeed.indexOf(o[0]), vi, o[2], brands.indexOf(o[3]), o[4], o[5]]);
+    }));
+    novo.seed = { stores: lojasSeed, vends, brands, rows }; novo.page.upd = {};
+  } else ks.forEach(k => { novo.page.upd[String(k)] = [...dias.get(k).values()]; });
+  novo.page.log = [{ em: new Date().toISOString(), arquivo: pay.__arquivo || 'Excel', de: ks[0], ate: ks[ks.length - 1], dias: ks.length, aparelhos: ap, chips: ch }].concat(novo.page.log || []).slice(0, 60);
+  delete novo.__arquivo;
+  return { pay: novo, ap, ch, seg, fora, ign, dias: ks.length };
+}
+
+function montarComissao(wb, antigo, modo) {
+  const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+  const nw = ComissaoNucleo.aggregateRows(json);
+  if (!nw.M.length) return { erro: 'Não achei vendas com data válida para a comissão.' };
+  const velho = antigo && antigo.data;
+  if (modo === 'tudo' || !velho) return { data: nw, nw, linhas: json.length };
+  const ruim = nw.M.filter(m => velho.M.includes(m) && (nw.MN[m] || 1) > 1);
+  if (ruim.length) return { pulou: ruim, nw, linhas: json.length };
+  return { data: ComissaoNucleo.mergeData(velho, nw), nw, linhas: json.length };
+}
+const mesRot = mk => { const [y, m] = mk.split('-'); return ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][+m - 1] + '/' + y; };
+let PREVIA = null;
+const brData = iso => iso.split('-').reverse().join('/');
+async function lerExcelUnico(file) {
+  const m = $('#xlMsg'), pv = $('#xlPrev');
+  m.className = 'msg'; m.textContent = 'Lendo ' + file.name + '…'; pv.innerHTML = ''; PREVIA = null;
+  try {
+    await carregarXLSX();
+    const raw = await lerDataset('ritmo');
+    if (!raw || !raw.recs) throw new Error('Antes da primeira entrada pelo Excel, carregue o ritmo.json (cartão abaixo): ele traz as regras de leitura do Ritmo.');
+    const apar = await lerDataset('aparelhos');
+    const wb = XLSX.read(new Uint8Array(await file.arrayBuffer()), { type: 'array', cellDates: true });
+    const linhas = lerLinhas(wb, raw);
+    const comis = await lerDataset('comissao');
+    const ini = linhas.reduce((a, x) => x.ds < a ? x.ds : a, '9999'), fim = linhas.reduce((a, x) => x.ds > a ? x.ds : a, '0000');
+    PREVIA = { file: file.name, linhas, raw, apar, comis, wb, ini, fim };
+    const modo = ($('input[name="xlModo"]:checked') || {}).value || 'periodo';
+    const r = montarRitmo(linhas.map(x => ({ ...x })), raw, modo);
+    let ha = '';
+    if (apar && apar.seed) { const a = montarAparelhos(linhas, Object.assign({ __arquivo: file.name }, apar), modo); ha = `<li><b>Aparelhos e Chip:</b> ${a.ap} aparelhos e ${a.ch} chips em ${a.dias} dia(s)${a.seg ? ` · ${a.seg} seguro(s) fora da conta` : ''}${a.fora ? ` · ${a.fora} linha(s) de lojas fora desta visão (Ipirá e Serrinha ficam só no Ritmo)` : ''}</li>`; }
+    else ha = '<li>Aparelhos e Chip ainda não tem base carregada: só o Ritmo será atualizado.</li>';
+    const c = montarComissao(wb, comis, modo);
+    const hc = c.erro ? `<li><b>Comissão e Meta:</b> ${c.erro}</li>` : c.pulou
+      ? `<li><b>Comissão e Meta não será atualizado:</b> o arquivo começa depois do dia 1 em ${c.pulou.map(mesRot).join(', ')}. Para a comissão, envie o acumulado do mês (dia 1 até hoje), ou o ano inteiro.</li>`
+      : `<li><b>Comissão e Meta:</b> ${c.nw.M.map(k => mesRot(k) + ' até o dia ' + c.nw.D[k]).join(' · ')}${modo === 'tudo' ? ' (substituição total)' : ''}${Object.keys(c.nw.unmapped || {}).length ? ' · tipos sem regra: ' + Object.keys(c.nw.unmapped).join(', ') : ''}</li>`;
+    ha += hc;
+    m.className = 'msg ok'; m.textContent = 'Arquivo lido. Confira e confirme abaixo.';
+    pv.innerHTML = `<div class="destaque"><ul>
+      <li><b>${linhas.length}</b> linhas lidas · período <b>${brData(ini)} a ${brData(fim)}</b></li>
+      <li><b>Ritmo Comercial:</b> ${r.consideradas} registros considerados · a base passa de ${r.antes} para <b>${r.depois}</b>${modo === 'tudo' ? ' (substituição total)' : ` (${r.trocados} registros desse período foram trocados)`}</li>${ha}
+      <li>Regra de aparelho: Valor Venda acima de <b>R$ ${LIM_APARELHO}</b> nos dois painéis.</li></ul>
+      <button class="btn pri" id="xlOk">Incluir nos painéis</button> <button class="btn" id="xlCancel">Cancelar</button></div>`;
+    $('#xlOk').addEventListener('click', confirmarExcel); $('#xlCancel').addEventListener('click', () => { PREVIA = null; pv.innerHTML = ''; m.textContent = ''; $('#arqXl').value = ''; });
+  } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); }
+}
+async function confirmarExcel() {
+  const P = PREVIA; if (!P) return; const m = $('#xlMsg'); $('#xlOk').disabled = true; m.className = 'msg'; m.textContent = 'Gravando nos dois painéis e refazendo os recortes por loja…';
+  try {
+    const modo = ($('input[name="xlModo"]:checked') || {}).value || 'periodo';
+    const r = montarRitmo(P.linhas.map(x => ({ ...x })), P.raw, modo);
+    const n = await salvarRitmo(r.raw);
+    if (P.apar && P.apar.seed) { const a = montarAparelhos(P.linhas, Object.assign({ __arquivo: P.file }, P.apar), modo); await gravar([{ chave: 'aparelhos', loja_id: null, payload: a.pay }]); }
+    const c = montarComissao(P.wb, P.comis, modo); let txtC = '';
+    if (c.data) { await salvarComissao(c.data, (P.comis && P.comis.cfg) || ComissaoNucleo.defaultCfg(), (P.comis && P.comis.cfgAt) || 0); txtC = ' e Comissão e Meta'; }
+    m.className = 'msg ok'; m.textContent = `Pronto. Ritmo (${r.depois} registros, ${n} recortes de loja)${P.apar && P.apar.seed ? ', Aparelhos e Chip' : ''}${txtC} atualizados. Base agora até ${brData(P.fim)}.${c.pulou ? ' A comissão ficou como estava (arquivo não começa no dia 1).' : ''}`;
+    $('#xlPrev').innerHTML = ''; PREVIA = null; $('#arqXl').value = '';
+  } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); $('#xlOk') && ($('#xlOk').disabled = false); }
+}
+
 /* ====================== importar dados ====================== */
 function abrirDados() {
   $('#palco').innerHTML = `<div class="pagina">
+    <div class="cartao"><header><h2>Atualizar pelo Excel do Controle Celular</h2><span>Uma entrada só alimenta Ritmo Comercial, Aparelhos e Chip e Comissão e Meta</span></header>
+    <div class="corpo">
+      <div class="solta"><b>Escolha a planilha (.xlsx)</b><br><span class="nota">Ideal: o acumulado do ano (ou do mês, do dia 1 até hoje). Alimenta Ritmo, Aparelhos e Chip e Comissão e Meta. Aparelho = Valor Venda acima de R$ 60.</span><br>
+      <input type="file" id="arqXl" accept=".xlsx,.xlsm,.xls"></div>
+      <div class="nota" style="margin:8px 0"><label><input type="radio" name="xlModo" value="periodo" checked> Atualizar só os dias do arquivo (o resto do ano fica como está)</label><br>
+      <label><input type="radio" name="xlModo" value="tudo"> Substituir tudo (use só com a base do ano inteiro: apaga o que não estiver no arquivo)</label></div>
+      <p class="msg" id="xlMsg" role="status"></p><div id="xlPrev"></div>
+    </div></div>
     <div class="cartao"><header><h2>Importar dados</h2><span>Carrega os arquivos de dados no servidor (somente dono e administrador)</span></header>
     <div class="corpo">
       <div class="solta"><b>Escolha o arquivo de dados</b><br><span class="nota">Aceita o arquivo do Ritmo Comercial (<code>ritmo.json</code>) ou de Aparelhos e Chip (<code>aparelhos.json</code>).</span><br>
       <input type="file" id="arqDados" accept=".json,application/json"></div>
       <p class="msg" id="dadosMsg" role="status"></p>
-      <p class="nota">Depois da primeira carga, as atualizações do dia a dia são feitas dentro de cada painel (botão “Atualizar base” e “Publicar versão atualizada”).</p>
+      <p class="nota">Este cartão serve só para a primeira carga. As atualizações do dia a dia entram pelo Excel, no cartão acima.</p>
     </div></div>
     <div class="cartao"><header><h2>Refazer os recortes por loja</h2><span>Use depois de cadastrar uma loja nova ou mudar os nomes (apelidos) de uma loja</span></header>
     <div class="corpo"><button class="btn" id="btnRefazer">Refazer recortes do Ritmo Comercial</button><p class="msg" id="refMsg" role="status"></p></div></div>
   </div>`;
+  $('#arqXl').addEventListener('change', e => { const f = e.target.files[0]; if (f) lerExcelUnico(f); });
+  document.querySelectorAll('input[name="xlModo"]').forEach(r => r.addEventListener('change', () => { const f = $('#arqXl').files[0]; if (f) lerExcelUnico(f); }));
   $('#arqDados').addEventListener('change', async (e) => {
     const f = e.target.files[0]; if (!f) return; const m = $('#dadosMsg'); m.className = 'msg'; m.textContent = 'Lendo o arquivo…';
     try {
