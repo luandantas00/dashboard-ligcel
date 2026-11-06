@@ -417,12 +417,18 @@ function montarRitmo(linhas, raw, modo) {
 }
 
 /* --- Aparelhos e Chip: aparelho acima de R$ 60, chip de R$ 10 a R$ 60, seguro fora --- */
-function montarAparelhos(linhas, pay, modo) {
-  const seed = pay.seed, lojasSeed = seed.stores || [];
-  const porNome = new Map(lojasSeed.map(l => [nomeBase(l), l]));
+function montarAparelhos(linhas, pay, modo, raw) {
+  const seed = pay.seed, lojasSeed = (seed.stores || []).slice();
+  const porNome = new Map(); S.lojas.filter(l => l.ativa).forEach(l => [l.nome].concat(l.apelidos || []).forEach(n => porNome.set(nomeBase(n), l.nome)));
+  lojasSeed.forEach(l => { if (!porNome.has(nomeBase(l))) porNome.set(nomeBase(l), l); });
+  const regras = ((raw && raw.regrasLoja) || []).map(r => ({ loja: r.loja, desde: r.desde || '0000-00-00', vends: (r.vendedores || []).map(v => String(v).toUpperCase()) }));
   const dias = new Map(); let ap = 0, ch = 0, seg = 0, fora = 0, ign = 0;
   linhas.forEach(x => {
-    const loja = porNome.get(nomeBase(x.loja)); if (!loja) { fora++; return; }
+    let loja = null;
+    for (const r of regras) if (r.vends.indexOf(x.vend) >= 0 && x.ds >= r.desde) { loja = porNome.get(nomeBase(r.loja)); break; }
+    if (!loja) loja = porNome.get(nomeBase(x.loja));
+    if (!loja) { fora++; return; }
+    if (lojasSeed.indexOf(loja) < 0) lojasSeed.push(loja);
     if (norm(x.plano) === 'SEGURO PROTECAO MOVEL') { seg++; return; }
     const v = x.valor; let ty; if (v > LIM_APARELHO) ty = 0; else if (v >= 10) ty = 1; else { ign++; return; }
     ty ? ch++ : ap++;
@@ -432,7 +438,7 @@ function montarAparelhos(linhas, pay, modo) {
     o[4]++; o[5] = Math.round((o[5] + v) * 100) / 100; m.set(kk, o);
   });
   const ks = [...dias.keys()].sort((a, b) => a - b);
-  const novo = JSON.parse(JSON.stringify(pay)); novo.page = novo.page || {}; novo.page.upd = novo.page.upd || {};
+  const novo = JSON.parse(JSON.stringify(pay)); novo.page = novo.page || {}; novo.page.upd = novo.page.upd || {}; novo.seed.stores = lojasSeed;
   if (modo === 'tudo') {
     const vends = [], vIdx = new Map(), brands = ['SAMSUNG', 'MOTOROLA', 'APPLE', 'DEMAIS', '-'], rows = [];
     ks.forEach(k => dias.get(k).forEach(o => {
@@ -440,7 +446,13 @@ function montarAparelhos(linhas, pay, modo) {
       rows.push([k, lojasSeed.indexOf(o[0]), vi, o[2], brands.indexOf(o[3]), o[4], o[5]]);
     }));
     novo.seed = { stores: lojasSeed, vends, brands, rows }; novo.page.upd = {};
-  } else ks.forEach(k => { novo.page.upd[String(k)] = [...dias.get(k).values()]; });
+  } else {
+    // o período do arquivo substitui tudo o que já havia nele: dias antigos dentro do intervalo que não vieram no arquivo também saem
+    const k0 = ks[0], k1 = ks[ks.length - 1];
+    novo.seed.rows = (novo.seed.rows || []).filter(r => r[0] < k0 || r[0] > k1);
+    Object.keys(novo.page.upd).forEach(k => { if (+k >= k0 && +k <= k1) delete novo.page.upd[k]; });
+    ks.forEach(k => { novo.page.upd[String(k)] = [...dias.get(k).values()]; });
+  }
   novo.page.log = [{ em: new Date().toISOString(), arquivo: pay.__arquivo || 'Excel', de: ks[0], ate: ks[ks.length - 1], dias: ks.length, aparelhos: ap, chips: ch }].concat(novo.page.log || []).slice(0, 60);
   delete novo.__arquivo;
   return { pay: novo, ap, ch, seg, fora, ign, dias: ks.length };
@@ -475,7 +487,7 @@ async function lerExcelUnico(file) {
     const modo = ($('input[name="xlModo"]:checked') || {}).value || 'periodo';
     const r = montarRitmo(linhas.map(x => ({ ...x })), raw, modo);
     let ha = '';
-    if (apar && apar.seed) { const a = montarAparelhos(linhas, Object.assign({ __arquivo: file.name }, apar), modo); ha = `<li><b>Aparelhos e Chip:</b> ${a.ap} aparelhos e ${a.ch} chips em ${a.dias} dia(s)${a.seg ? ` · ${a.seg} seguro(s) fora da conta` : ''}${a.fora ? ` · ${a.fora} linha(s) de lojas fora desta visão (Ipirá e Serrinha ficam só no Ritmo)` : ''}</li>`; }
+    if (apar && apar.seed) { const a = montarAparelhos(linhas, Object.assign({ __arquivo: file.name }, apar), modo, raw); ha = `<li><b>Aparelhos e Chip:</b> ${a.ap} aparelhos e ${a.ch} chips em ${a.dias} dia(s)${a.seg ? ` · ${a.seg} seguro(s) fora da conta` : ''}${a.fora ? ` · ${a.fora} linha(s) de loja não cadastrada` : ''}</li>`; }
     else ha = '<li>Aparelhos e Chip ainda não tem base carregada: só o Ritmo será atualizado.</li>';
     const c = montarComissao(wb, comis, modo);
     const hc = c.erro ? `<li><b>Comissão e Meta:</b> ${c.erro}</li>` : c.pulou
@@ -497,7 +509,7 @@ async function confirmarExcel() {
     const modo = ($('input[name="xlModo"]:checked') || {}).value || 'periodo';
     const r = montarRitmo(P.linhas.map(x => ({ ...x })), P.raw, modo);
     const n = await salvarRitmo(r.raw);
-    if (P.apar && P.apar.seed) { const a = montarAparelhos(P.linhas, Object.assign({ __arquivo: P.file }, P.apar), modo); await gravar([{ chave: 'aparelhos', loja_id: null, payload: a.pay }]); }
+    if (P.apar && P.apar.seed) { const a = montarAparelhos(P.linhas, Object.assign({ __arquivo: P.file }, P.apar), modo, P.raw); await gravar([{ chave: 'aparelhos', loja_id: null, payload: a.pay }]); }
     const c = montarComissao(P.wb, P.comis, modo); let txtC = '';
     if (c.data) { await salvarComissao(c.data, (P.comis && P.comis.cfg) || ComissaoNucleo.defaultCfg(), (P.comis && P.comis.cfgAt) || 0); txtC = ' e Comissão e Meta'; }
     m.className = 'msg ok'; m.textContent = `Pronto. Ritmo (${r.depois} registros, ${n} recortes de loja)${P.apar && P.apar.seed ? ', Aparelhos e Chip' : ''}${txtC} atualizados. Base agora até ${brData(P.fim)}.${c.pulou ? ' A comissão ficou como estava (arquivo não começa no dia 1).' : ''}`;
