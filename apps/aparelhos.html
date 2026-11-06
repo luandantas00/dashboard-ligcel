@@ -183,6 +183,40 @@ td.sl,th.sl{border-left:1px solid var(--line)}
 .logl div{display:flex;flex-wrap:wrap;gap:4px 12px;padding:6px 0;border-bottom:1px solid var(--grid)}
 footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;padding-top:4px}
 @media (prefers-reduced-motion:no-preference){.rbar i,.bl .fill{transition:width .35s ease}}
+
+/* análise do mês */
+.exlead{margin:0;font-size:15px;line-height:1.55;color:var(--ink);max-width:78ch;text-wrap:pretty}
+.excards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.exc{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.exc.hero1{grid-column:span 2;border-left:4px solid var(--red)}
+.exc .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.exc .v{font-family:var(--disp);font-weight:700;font-size:21px}
+.exc.hero1 .v{font-size:26px}
+.exc .dl{min-height:20px}
+.exs{font-size:11.5px;color:var(--ink2)} .exs b{color:var(--ink)}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.exbox{min-width:0;display:flex;flex-direction:column;gap:8px}
+.exbox h3,.exh{font-family:var(--disp);font-size:14px;margin:0;font-weight:700}
+.dv{display:flex;flex-direction:column;gap:7px}
+.dv-row{display:grid;grid-template-columns:minmax(70px,26%) 1fr auto;align-items:center;gap:8px;font-size:12.5px}
+.dv-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dv-bar{height:16px;background:var(--surface2);border-radius:4px;position:relative;display:flex}
+.dv-bar i{display:block;height:100%;border-radius:4px}
+.dv-bar i.n{background:var(--down)} .dv-bar i.p{background:var(--up)}
+.dv-v{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;white-space:nowrap}
+.dv-v small{display:block;font-size:10.5px;font-weight:600;opacity:.8}
+.neg{color:var(--down)} .pos{color:var(--up)}
+.dv-sum{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;margin-top:2px}
+.oppgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px}
+.opp{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:4px;background:var(--surface)}
+.opp.down{border-left-color:var(--down)} .opp.up{border-left-color:var(--up)} .opp.info{border-left-color:var(--warn)}
+.opp .oh{font-family:var(--disp);font-weight:700;font-size:20px}
+.opp.down .oh{color:var(--down)} .opp.up .oh{color:var(--up)} .opp.info .oh{color:var(--warn)}
+.opp .ot{font-weight:700;font-size:13px}
+.opp .otx{font-size:12.5px;color:var(--ink2);line-height:1.45}
+.opp .oc{font-size:11px;color:var(--muted);line-height:1.4;margin-top:2px}
+@media (max-width:980px){.exgrid{grid-template-columns:1fr}}
+@media (max-width:640px){.dv-row{grid-template-columns:96px 1fr auto}.excards{grid-template-columns:repeat(2,1fr)}.exc.hero1{grid-column:1/-1}.exc .v{font-size:18px}.exc.hero1 .v{font-size:23px}.exlead{font-size:14px}}
 </style>
 
 <div class="wrap">
@@ -212,29 +246,18 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div><div class="qtag" style="color:var(--muted);margin-bottom:6px">Cargas incluídas</div><div class="logl" id="upLog"></div></div>
   </section>
 
-  <section class="q" aria-labelledby="h-mt">
+  <section class="q exec" id="secExec" aria-labelledby="h-ex">
     <div class="qhead">
-      <div><div class="qtag">Aparelho · loja no mês</div><h2 id="h-mt">Meta, atingimento e projeção</h2><div class="sub" id="mtSub"></div></div>
-      <div class="seg" id="segMt" role="group" aria-label="Métrica da meta">
-        <button data-m="q" aria-pressed="true">Quantidade</button><button data-m="r" aria-pressed="false">Receita</button>
-      </div>
+      <div><div class="qtag">Análise do mês</div><h2 id="h-ex">Onde estamos perdendo e onde estamos ganhando</h2><div class="sub" id="exSub"></div></div>
     </div>
-    <div class="lm" id="refA" role="group" aria-label="Mês de referência"></div>
-    <div class="dias" id="mtDias"></div>
-    <div class="tbl"><table id="tMeta"></table></div>
-    <div class="mnote" id="mtNote"></div>
-  </section>
-
-  <section class="q" aria-labelledby="h-cp">
-    <div class="qhead">
-      <div><div class="qtag">Aparelho · loja no mês</div><h2 id="h-cp">Comparativo com o mês anterior</h2><div class="sub" id="cpSub"></div></div>
-      <div class="seg" id="segCp" role="group" aria-label="Base de comparação">
-        <button data-m="p" aria-pressed="true">Mesmo período</button><button data-m="f" aria-pressed="false">Mês anterior fechado</button>
-      </div>
+    <div class="lm" id="refC" role="group" aria-label="Mês analisado"></div>
+    <p class="exlead" id="exLead"></p>
+    <div class="excards" id="exCards"></div>
+    <div class="exgrid">
+      <div class="exbox"><h3 id="exVarTitle"></h3><div id="exVar"></div></div>
+      <div class="exbox"><h3>Evolução da receita no ano (aparelho + chip)</h3><div class="chart" id="chEx"></div><div class="legend" style="margin-top:4px"><span><i style="background:var(--bar)"></i>Mês analisado</span><span><i style="background:var(--bar-dim)"></i>Demais meses</span><span>▲▼ variação sobre o mês anterior</span></div></div>
     </div>
-    <div class="lm" id="refB" role="group" aria-label="Mês de referência"></div>
-    <div class="tbl"><table id="tCmp"></table></div>
-    <div class="mnote">Mesmo período compara com os mesmos dias do mês anterior (ex.: 1 a 21 contra 1 a 21), o que deixa a comparação justa em mês ainda aberto. Mês anterior fechado usa o mês inteiro.</div>
+    <div><h3 class="exh">Oportunidades que estamos deixando na mesa</h3><div class="oppgrid" id="exOpp"></div><div class="mnote" style="margin-top:8px">Valores de oportunidade são estimativas para orientar a conversa, não somam entre si nem são meta. A conta de cada uma está em letra pequena no cartão.</div></div>
   </section>
 
   <section class="q" aria-labelledby="h-q1">
@@ -283,6 +306,32 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
       <div class="rule">Margem estimada sobre o valor de venda: Samsung 25% · Motorola 20% · Apple 15% · demais marcas 25%.</div>
     </section>
   </div>
+
+  <section class="q" aria-labelledby="h-mt">
+    <div class="qhead">
+      <div><div class="qtag">Ritmo comercial · aparelho</div><h2 id="h-mt">Ritmo comercial: meta, atingimento e projeção</h2><div class="sub" id="mtSub"></div></div>
+      <div class="seg" id="segMt" role="group" aria-label="Métrica da meta">
+        <button data-m="q" aria-pressed="true">Meta por quantidade</button><button data-m="r" aria-pressed="false">Meta por receita</button>
+      </div>
+    </div>
+    <div class="lm" id="refA" role="group" aria-label="Mês de referência"></div>
+    <div class="dias" id="mtDias"></div>
+    <div><div class="chart" id="chRt"></div><div class="legend" id="rtLeg" style="margin-top:6px"></div></div>
+    <div class="tbl"><table id="tMeta"></table></div>
+    <div class="mnote" id="mtNote"></div>
+  </section>
+
+  <section class="q" aria-labelledby="h-cp">
+    <div class="qhead">
+      <div><div class="qtag">Ritmo comercial · comparativo</div><h2 id="h-cp">Comparativo com o mês anterior</h2><div class="sub" id="cpSub"></div></div>
+      <div class="seg" id="segCp" role="group" aria-label="Base de comparação">
+        <button data-m="p" aria-pressed="true">Mesmo período</button><button data-m="f" aria-pressed="false">Mês anterior fechado</button>
+      </div>
+    </div>
+    <div class="lm" id="refB" role="group" aria-label="Mês de referência"></div>
+    <div class="tbl"><table id="tCmp"></table></div>
+    <div class="mnote">Mesmo período compara com os mesmos dias do mês anterior (ex.: 1 a 21 contra 1 a 21), o que deixa a comparação justa em mês ainda aberto. Mês anterior fechado usa o mês inteiro.</div>
+  </section>
 
   <section class="q" aria-labelledby="h-q4">
     <div class="qhead">
@@ -356,7 +405,7 @@ function rebuild(){
   S.mM=allMM?new Set(months):keep(S.mM);if(!S.mM.size)S.mM=new Set(months);
   if(S.ref==null||S.ref===oldLast||!months.includes(S.ref))S.ref=lastM;
   if(S.store>=stores.length)S.store=-1;
-  drawFilters();drawLM('lmR');drawLM('lmM');drawRef('refA');drawRef('refB');
+  drawFilters();drawLM('lmR');drawLM('lmM');drawRef('refA');drawRef('refB');drawRef('refC');
   const dd=String(maxDD).padStart(2,'0'),mm=String(lastM).padStart(2,'0');
   document.getElementById('baseInfo').innerHTML=`Base até <b style="color:#fff">${dd}/${mm}/${YR}</b>${partial?' · *'+MES[lastM-1]+' parcial':''}${UPD.size?` · ${UPD.size} dia(s) atualizados por carga`:''}`;
   document.getElementById('yr').textContent=YR;
@@ -424,8 +473,8 @@ function bindLM(id,key,fn){document.getElementById(id).addEventListener('click',
 function paintLM(id,set){const all=set.size===months.length;
   document.querySelectorAll('#'+id+' .mp').forEach(b=>b.setAttribute('aria-pressed',b.dataset.a?all:(!all&&set.has(+b.dataset.m))));}
 function drawRef(id){document.getElementById(id).innerHTML='<span class="lbl">Mês</span>'+months.map(m=>`<button class="mp" data-m="${m}">${MES[m-1]}${pmark(m)}</button>`).join('');}
-function bindRef(id){document.getElementById(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.ref=+b.dataset.m;renderMeta();renderCmp();});}
-function paintRef(){document.querySelectorAll('#refA .mp,#refB .mp').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.m===S.ref));}
+function bindRef(id){document.getElementById(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.ref=+b.dataset.m;renderMeta();renderCmp();renderExec();renderRt();});}
+function paintRef(){document.querySelectorAll('#refA .mp,#refB .mp,#refC .mp').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.m===S.ref));}
 
 /* ---------- KPIs ---------- */
 function renderKpis(){
@@ -434,13 +483,16 @@ function renderKpis(){
   const marg=a.mg, po=hasOpen(S.months);
   const tot=a.r+c.r;
   const P=v=>po?`<span class="p num">proj. <b>${v}</b></span>`:'';
+  const one=S.months.size===1?[...S.months][0]:null,pmk=one&&months.includes(one-1)?one-1:null,lim=one===lastM&&partial?maxDD:31;
+  const pa=pmk?agg(x=>x[3]===0&&inStore(x)&&x[0]===pmk&&x[7]<=lim):null,pc=pmk?agg(x=>x[3]===1&&inStore(x)&&x[0]===pmk&&x[7]<=lim):null;
+  const V=(cur,prev)=>pmk&&prev?`<span class="p">vs ${MES[pmk-1]}: ${varPill(cur,prev)}</span>`:'';
   document.getElementById('kpis').innerHTML=[
-    ['Aparelhos',nf.format(a.q),'unidades vendidas','',P(nf.format(Math.round(a.pq))+' un')],
-    ['Receita aparelho',short(a.r),pf(tot?a.r/tot:0)+' da receita total','',P(short(a.pr))],
-    ['Ticket médio',cf.format(a.t),'por aparelho','',''],
-    ['Margem estimada',short(marg),pf(a.r?marg/a.r:0)+' sobre a venda','marg',P(short(a.pmg))],
-    ['Chips',nf.format(c.q),'unidades vendidas','chipk',P(nf.format(Math.round(c.pq))+' un')],
-    ['Receita chip',short(c.r),'ticket '+cf2.format(c.t),'chipk',P(short(c.pr))]
+    ['Aparelhos',nf.format(a.q),'unidades vendidas','',P(nf.format(Math.round(a.pq))+' un')+V(a.q,pa&&pa.q)],
+    ['Receita aparelho',short(a.r),pf(tot?a.r/tot:0)+' da receita total','',P(short(a.pr))+V(a.r,pa&&pa.r)],
+    ['Ticket médio',cf.format(a.t),'por aparelho','',V(a.t,pa&&pa.t)],
+    ['Margem estimada',short(marg),pf(a.r?marg/a.r:0)+' sobre a venda','marg',P(short(a.pmg))+V(a.mg,pa&&pa.mg)],
+    ['Chips',nf.format(c.q),'unidades vendidas','chipk',P(nf.format(Math.round(c.pq))+' un')+V(c.q,pc&&pc.q)],
+    ['Receita chip',short(c.r),'ticket '+cf2.format(c.t),'chipk',P(short(c.pr))+V(c.r,pc&&pc.r)]
   ].map(k=>`<div class="kpi ${k[3]||''}"><span class="k">${k[0]}</span><span class="v num">${k[1]}</span><span class="s num">${k[2]}</span>${k[4]}</div>`).join('');
 }
 
@@ -457,7 +509,7 @@ function saveMeta(m,k,store,val,input){
   cur.atualizado=new Date().toISOString();
   METAS[key]=cur;
   saveDraft();
-  renderMeta(true);
+  renderMeta(true);renderExec();renderRt();
 }
 function renderMeta(keepFocus){
   if(!keepFocus&&document.activeElement&&document.activeElement.classList.contains('mi'))return;
@@ -484,7 +536,7 @@ function renderMeta(keepFocus){
       <td class="num">${nec==null?(meta&&!rem?'—':'—'):(k==='q'?nf1.format(nec):cf.format(nec))}</td></tr>`;};
   document.getElementById('tMeta').innerHTML=`<thead><tr><th>Loja</th><th>Meta</th><th>Realizado</th><th>% Ating.</th><th class="sl">Projeção</th><th>Proj. ÷ Meta</th><th class="sl">Falta p/ meta</th><th>Necess./dia</th></tr></thead><tbody>`+
     rows.map(r=>line(r,false)).join('')+line({real:T.real,proj:T.proj},true)+'</tbody>';
-  document.getElementById('mtNote').innerHTML=`Digite a meta de cada loja na coluna <b>Meta</b> (quantidade e receita têm metas separadas; troque no botão acima). ${PUB?'Depois de digitar, clique em <b>Publicar versão atualizada</b> (no topo) para todos que têm o link verem as metas.':'As metas digitadas aqui ficam só neste navegador; quem publica para o link é o dono do painel.'} % Ating. = realizado ÷ meta. Projeção = realizado ÷ dias úteis decorridos × dias úteis restantes + realizado. Proj. ÷ Meta: verde ≥ 100%, amarelo 90–99%, vermelho &lt; 90%.`;
+  document.getElementById('mtNote').innerHTML=`Digite a meta de cada loja na coluna <b>Meta</b> (quantidade e receita têm metas separadas; troque no botão acima). ${PUB?'Depois de digitar, clique em <b>Publicar versão atualizada</b> (no topo) para todos que têm o link verem as metas.':'As metas digitadas ficam salvas neste navegador até você publicar a versão atualizada.'} % Ating. = realizado ÷ meta. Projeção = realizado ÷ dias úteis decorridos × dias úteis restantes + realizado. Proj. ÷ Meta: verde ≥ 100%, amarelo 90–99%, vermelho &lt; 90%.`;
 }
 function bindMeta(){const t=document.getElementById('tMeta');
   const commit=inp=>{const [, k, m]=inp.id.split('-');const v=parseNum(inp.value);const cur=metaOf(+m,k,inp.dataset.s);
@@ -520,11 +572,11 @@ const tip=document.getElementById('tip');
 function showTip(e,html){tip.innerHTML=html;tip.hidden=false;const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY-h-10;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y<8)y=e.clientY+16;tip.style.left=x+'px';tip.style.top=y+'px';}
 function hideTip(){tip.hidden=true;}
 function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)))/5;return Math.ceil(v/p)*p;}
-function barChart(el,series,metric,colOn,colOff,hatchLast,tipFn){
+function barChart(el,series,metric,colOn,colOff,hatchLast,tipFn,selFn,marks){
   const W=Math.max(320,el.clientWidth), H=280, pl=8,pr=8,pt=26,pb=48;
   const showP=metric!=='t';
   const vals=series.map(s=>showP&&s.m===lastM&&partial?Math.max(s[metric],s[PK[metric]]):s[metric]);
-  const max=niceMax(Math.max(...vals)*1.1);
+  const max=niceMax(Math.max(...vals,...(marks?series.map(s=>marks(s.m)||0):[0]))*1.1);
   const cw=(W-pl-pr)/series.length, bw=Math.min(46,cw*.58);
   const y=v=>pt+(H-pt-pb)*(1-v/max);
   const ink2=css('--ink2'),muted=css('--muted'),grid=css('--grid'),ink=css('--ink'),on=css(colOn),off=css(colOff);
@@ -533,7 +585,7 @@ function barChart(el,series,metric,colOn,colOff,hatchLast,tipFn){
   const small=W<520;
   series.forEach((s,i)=>{
     const cx=pl+cw*i+cw/2,x=cx-bw/2,v=s[metric],yy=y(v),h=Math.max(0,H-pb-yy);
-    const sel=S.months.has(s.m), col=sel?on:off, isP=hatchLast&&s.m===lastM&&partial;
+    const sel=selFn?selFn(s.m):S.months.has(s.m), col=sel?on:off, isP=hatchLast&&s.m===lastM&&partial;
     const r=Math.min(4,h);
     const path=`M${x},${H-pb} V${yy+r} Q${x},${yy} ${x+r},${yy} H${x+bw-r} Q${x+bw},${yy} ${x+bw},${yy+r} V${H-pb} Z`;
     const hasPj=showP&&s.m===lastM&&partial;
@@ -544,6 +596,7 @@ function barChart(el,series,metric,colOn,colOff,hatchLast,tipFn){
     g+=`<text x="${cx}" y="${H-pb+16}" text-anchor="middle" font-size="12" font-weight="600" fill="${sel?ink2:muted}">${MES[s.m-1]}${pmark(s.m)}</text>`;
     if(i>0){const p=series[i-1][metric];const cur=hasPj?s[PK[metric]]:v;const vv=p?cur/p-1:0;const up=vv>=0;
       g+=`<text x="${cx}" y="${H-pb+33}" text-anchor="middle" font-size="${small?9.5:11}" font-weight="700" fill="${css(up?'--up':'--down')}">${up?'▲':'▼'}${Math.abs(vv*100).toFixed(0)}%${hasPj?' p':''}</text>`;}
+    if(marks){const mv=marks(s.m);if(mv){const my=y(mv);g+=`<line x1="${x-5}" x2="${x+bw+5}" y1="${my}" y2="${my}" stroke="${css('--red')}" stroke-width="2.5"/>`;}}
     g+=`<rect class="hit" data-i="${i}" x="${pl+cw*i}" y="${pt-20}" width="${cw}" height="${H-pt}" fill="transparent"/>`;
   });
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras por mês"><defs><pattern id="hp" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="${css('--surface')}"/><rect width="2" height="5" fill="${S.months.has(lastM)?on:off}"/></pattern></defs>${g}</svg>`;
@@ -622,12 +675,128 @@ function renderQ4(){
   document.getElementById('q4sub').textContent=storeTxt()+' · barras por mês; tabela no período '+monthsTxt();
   barChart(document.getElementById('chQ4'),ser,S.q4,'--chip','--chip-dim',false,(s,p)=>
     `<b>${MESL[s.m-1]}${s.m===lastM&&partial?' (parcial)':''}</b><br>Chips: ${nf.format(s.q)}<br>Receita: ${cf.format(s.r)}<br>Ticket: ${cf2.format(s.t)}${s.m===lastM&&partial?`<br>Projeção: ${nf.format(Math.round(s.pq))} un · ${cf.format(s.pr)}`:''}${p?`<br><span style="opacity:.75">vs ${MES[p.m-1]}: qtd ${pctTxt(s.q,p.q)} · receita ${pctTxt(s.r,p.r)}</span>`:''}`);
+  const sel4=[...S.months].sort((a,b)=>a-b);let lm4=sel4[sel4.length-1];if(lm4===lastM&&partial&&lm4>1)lm4--;
   const tot=agg(x=>x[3]===1&&inMonths(x));
   const rows=D.stores.map((n,i)=>({i,n,...agg(x=>x[3]===1&&x[1]===i&&inMonths(x))})).sort((a,b)=>b[S.q4]-a[S.q4]);
   const sp=partial,pj=i=>{const a=agg(x=>x[3]===1&&x[0]===lastM&&(i<0||x[1]===i));return S.q4==='q'?nf.format(Math.round(a.pq)):cf.format(a.pr);};
-  document.getElementById('tChip').innerHTML=`<thead><tr><th>Loja</th><th>Chips</th><th>Receita</th><th>Ticket</th><th>Part.</th>${sp?`<th class="pj">Proj. ${MES[lastM-1]}</th>`:''}</tr></thead><tbody>`+
-    rows.map(r=>`<tr tabindex="0" data-s="${r.i}" class="${S.store===r.i?'sel':''}"><td><b>${esc(r.n)}</b></td><td class="num">${nf.format(r.q)}</td><td class="num">${cf.format(r.r)}</td><td class="num">${cf2.format(r.t)}</td><td class="num">${pf(tot[S.q4]?r[S.q4]/tot[S.q4]:0)}</td>${sp?`<td class="num pj">${pj(r.i)}</td>`:''}</tr>`).join('')+
-    `<tr class="tot"><td>Total</td><td class="num">${nf.format(tot.q)}</td><td class="num">${cf.format(tot.r)}</td><td class="num">${cf2.format(tot.t)}</td><td class="num">100%</td>${sp?`<td class="num pj">${pj(-1)}</td>`:''}</tr></tbody>`;
+  document.getElementById('tChip').innerHTML=`<thead><tr><th>Loja</th><th>Chips</th><th>Receita</th><th>Ticket</th><th>Part.</th><th>Var. ${MES[lm4-1]}</th>${sp?`<th class="pj">Proj. ${MES[lastM-1]}</th>`:''}</tr></thead><tbody>`+
+    rows.map(r=>`<tr tabindex="0" data-s="${r.i}" class="${S.store===r.i?'sel':''}"><td><b>${esc(r.n)}</b></td><td class="num">${nf.format(r.q)}</td><td class="num">${cf.format(r.r)}</td><td class="num">${cf2.format(r.t)}</td><td class="num">${pf(tot[S.q4]?r[S.q4]/tot[S.q4]:0)}</td><td>${months.includes(lm4-1)?varPill(agg(x=>x[3]===1&&x[1]===r.i&&x[0]===lm4)[S.q4],agg(x=>x[3]===1&&x[1]===r.i&&x[0]===lm4-1)[S.q4]):'—'}</td>${sp?`<td class="num pj">${pj(r.i)}</td>`:''}</tr>`).join('')+
+    `<tr class="tot"><td>Total</td><td class="num">${nf.format(tot.q)}</td><td class="num">${cf.format(tot.r)}</td><td class="num">${cf2.format(tot.t)}</td><td class="num">100%</td><td>${months.includes(lm4-1)?varPill(agg(x=>x[3]===1&&x[0]===lm4)[S.q4],agg(x=>x[3]===1&&x[0]===lm4-1)[S.q4]):'—'}</td>${sp?`<td class="num pj">${pj(-1)}</td>`:''}</tr></tbody>`;
+}
+
+/* ---------- Análise do mês (visão do empresário) ---------- */
+const exPer=m=>{const open=m===lastM&&partial;return{m,pm:m-1,open,lim:open?maxDD:31,hasPrev:months.includes(m-1)};};
+const exMoney=v=>(v>=0?'+':'−')+short(Math.abs(v));
+const exDD=()=>String(maxDD).padStart(2,'0')+'/'+String(lastM).padStart(2,'0');
+function metaScope(m,k){ // soma das metas da loja (ou das lojas) no escopo; null se faltar alguma
+  const names=S.store<0?D.stores:[D.stores[S.store]];let t=0,n=0;
+  names.forEach(nm=>{const v=metaOf(m,k,nm);if(v){t+=v;n++;}});
+  return{total:t,n,of:names.length,all:n===names.length&&n>0,some:n>0};
+}
+function exOpps(P,cA,pA,fA){
+  const m=P.m,pm=P.pm,mes=MESL[m-1],opp=[];
+  const open=P.open;
+  // 1) ritmo contra o mês anterior
+  if(P.hasPrev){
+    if(open){const gap=fA.r-cA.pr;
+      opp.push(Math.abs(gap)<fA.r*0.02
+        ?{t:'info',h:'Em linha',title:'Ritmo igual ao mês anterior',txt:`No ritmo atual, ${mes} fecha em <b>${short(cA.pr)}</b>, praticamente igual a ${MESL[pm-1]} fechado (${short(fA.r)}).`,calc:'Projeção = vendido até hoje ÷ dias úteis decorridos × dias úteis do mês.'}
+        :gap>0
+        ?{t:'down',h:short(gap),title:'Ritmo abaixo do mês anterior',txt:`No ritmo atual, ${mes} fecha em <b>${short(cA.pr)}</b>, ${short(gap)} abaixo de ${MESL[pm-1]} fechado (${short(fA.r)}).`,calc:'Projeção = vendido até hoje ÷ dias úteis decorridos × dias úteis do mês.'}
+        :{t:'up',h:short(-gap),title:'Ritmo acima do mês anterior',txt:`No ritmo atual, ${mes} fecha em <b>${short(cA.pr)}</b>, ${short(-gap)} acima de ${MESL[pm-1]} fechado (${short(fA.r)}).`,calc:'Projeção = vendido até hoje ÷ dias úteis decorridos × dias úteis do mês.'});
+    } else {const gap=fA.r-cA.r;
+      if(gap>0)opp.push({t:'down',h:short(gap),title:'Mês fechou abaixo do anterior',txt:`${mes} fechou em <b>${short(cA.r)}</b>, ${short(gap)} abaixo de ${MESL[pm-1]} (${short(fA.r)}).`,calc:'Receita de aparelho, mês fechado contra mês fechado.'});}
+  }
+  // 2) meta
+  let mk=null;for(const k of ['r','q']){const s=metaScope(m,k);if(s.all){mk={k,total:s.total};break;}}
+  if(mk){const real=mk.k==='r'?cA.r:cA.q,proj=open?(mk.k==='r'?cA.pr:cA.pq):real,f=mk.k==='r'?short:(v=>nf.format(Math.round(v))+' un');
+    const ating=proj/mk.total;
+    opp.push(proj<mk.total
+      ?{t:'down',h:f(mk.total-proj),title:'Fica abaixo da meta',txt:`Meta de ${mes}: <b>${f(mk.total)}</b> (${mk.k==='r'?'receita':'quantidade'}). ${open?'Projeção':'Resultado'}: ${f(proj)}, ou <b>${pf(ating)}</b> da meta.`,calc:'Metas cadastradas na seção Ritmo comercial, abaixo.'}
+      :{t:'up',h:pf(ating),title:'Meta no caminho',txt:`Meta de ${mes}: <b>${f(mk.total)}</b>. ${open?'Projeção':'Resultado'}: ${f(proj)}.`,calc:'Metas cadastradas na seção Ritmo comercial, abaixo.'});
+  } else opp.push({t:'info',h:'Sem meta',title:'Meta não cadastrada',txt:`Sem meta de ${mes}${S.store>=0?' para esta loja':' para todas as lojas'}, não dá para cobrar o ritmo. Cadastre na seção Ritmo comercial, abaixo.`,calc:''});
+  // 3) ticket médio contra a melhor loja (só no consolidado)
+  if(S.store<0){
+    const L=D.stores.map((n,i)=>{const a=agg(x=>x[3]===0&&x[1]===i&&x[0]===m);return{n,q:open?a.pq:a.q,rq:a.q,t:a.t};}).filter(o=>o.rq>=5);
+    if(L.length>=2){const best=L.reduce((a,b)=>b.t>a.t?b:a);let pot=0,worst=null;
+      L.forEach(o=>{if(o.t<best.t){pot+=(best.t-o.t)*o.q;if(!worst||o.t<worst.t)worst=o;}});
+      if(pot>0)opp.push({t:'down',h:short(pot),title:'Ticket médio abaixo da melhor loja',txt:`Se as demais lojas vendessem no ticket de <b>${esc(best.n)}</b> (${cf.format(best.t)}), a receita de aparelho seria ${short(pot)} maior. Menor ticket: ${esc(worst.n)} (${cf.format(worst.t)}).`,calc:'Teto teórico, não é meta. Considera lojas com 5 ou mais aparelhos no mês e a quantidade '+(open?'projetada.':'vendida.')});
+    }
+  }
+  // 4) vendedores sem venda de aparelho
+  {const seen=new Map();
+   for(const x of D.rows){if(x[0]!==m||(S.store>=0&&x[1]!==S.store))continue;const v=D.vends[x[2]];if(v[2])continue;const o=seen.get(x[2])||{ap:0,r:0};if(x[3]===0){o.ap+=x[5];o.r+=x[6];}seen.set(x[2],o);}
+   const byS=new Map();
+   seen.forEach((o,vi)=>{const s=D.vends[vi][1];const g=byS.get(s)||{sellers:0,rsum:0,zeros:[]};if(o.ap>0){g.sellers++;g.rsum+=o.r;}else g.zeros.push(D.vends[vi][0]);byS.set(s,g);});
+   let nz=0,pot=0,nomes=[];
+   byS.forEach(g=>{nz+=g.zeros.length;if(g.sellers)pot+=g.zeros.length*(g.rsum/g.sellers)*(open?F:1);nomes=nomes.concat(g.zeros);});
+   if(nz>0)opp.push({t:'down',h:nz+(nz===1?' vendedor':' vendedores'),title:'Sem venda de aparelho no mês',txt:`${nz} ${nz===1?'vendedor ativo ainda não vendeu':'vendedores ativos ainda não venderam'} aparelho em ${mes}. Se vendessem a média da própria loja, seriam <b>${short(pot)}</b> a mais. Ex.: ${nomes.slice(0,3).map(n=>esc(n.split(' ').slice(0,2).join(' '))).join(', ')}${nomes.length>3?'…':''}.`,calc:'Estimativa: vendedores com alguma venda no mês (aparelho ou chip), sem gerentes e fora do quadro. Média = receita de aparelho por vendedor que vendeu, na mesma loja.'});}
+  return opp;
+}
+function renderExec(){
+  const root=document.getElementById('secExec');if(!root)return;
+  paintRef();
+  const m=S.ref,P=exPer(m),pm=P.pm,mesN=MESL[m-1],mesA=P.hasPrev?MESL[pm-1]:'';
+  const ag=(t,mm,lim)=>agg(x=>x[3]===t&&inStore(x)&&x[0]===mm&&x[7]<=(lim||31));
+  const cA=ag(0,m),cC=ag(1,m),pA=P.hasPrev?ag(0,pm,P.lim):null,pC=P.hasPrev?ag(1,pm,P.lim):null,fA=P.hasPrev?ag(0,pm):null;
+  document.getElementById('exSub').textContent=`${storeTxt()} · ${mesN} de ${YR}${P.open?' · parcial até '+exDD():' · mês fechado'}${P.hasPrev?' · comparado com '+MESL[pm-1]+(P.open?' (mesmos dias)':''):''}`;
+  const pill=(c,p)=>P.hasPrev&&p?varPill(c,p):'';
+  const cmpTxt=(v)=>P.hasPrev?`<span class="exs">${v} em ${MES[pm-1]}${P.open?' (mesmo período)':''}</span>`:'';
+  const proj=P.open?(v=>`<span class="exs">proj. <b>${v}</b></span>`):()=>'';
+  const totC=cA.r+cC.r,totP=P.hasPrev?pA.r+pC.r:0;
+  const cards=[
+    ['Receita aparelho + chip',short(totC),pill(totC,totP),cmpTxt(P.hasPrev?short(totP):''),proj(short(cA.pr+cC.pr))],
+    ['Receita aparelho',short(cA.r),pill(cA.r,P.hasPrev?pA.r:0),cmpTxt(P.hasPrev?short(pA.r):''),proj(short(cA.pr))],
+    ['Aparelhos vendidos',nf.format(cA.q)+' un',pill(cA.q,P.hasPrev?pA.q:0),cmpTxt(P.hasPrev?nf.format(pA.q)+' un':''),proj(nf.format(Math.round(cA.pq))+' un')],
+    ['Ticket médio',cf.format(cA.t),pill(cA.t,P.hasPrev?pA.t:0),cmpTxt(P.hasPrev?cf.format(pA.t):''),''],
+    ['Margem estimada',short(cA.mg),pill(cA.mg,P.hasPrev?pA.mg:0),cmpTxt(P.hasPrev?short(pA.mg):''),proj(short(cA.pmg))],
+    ['Chips vendidos',nf.format(cC.q)+' un',pill(cC.q,P.hasPrev?pC.q:0),cmpTxt(P.hasPrev?nf.format(pC.q)+' un':''),proj(nf.format(Math.round(cC.pq))+' un')],
+    ['Receita chip',short(cC.r),pill(cC.r,P.hasPrev?pC.r:0),cmpTxt(P.hasPrev?short(pC.r):''),proj(short(cC.pr))]
+  ];
+  document.getElementById('exCards').innerHTML=cards.map((c,i)=>`<div class="exc${i===0?' hero1':''}"><span class="k">${c[0]}</span><span class="v num">${c[1]}</span><span class="dl">${c[2]}</span>${c[3]}${c[4]}</div>`).join('');
+
+  // onde estão as perdas e as melhorias
+  let items=[];
+  if(P.hasPrev){
+    if(S.store<0){items=D.stores.map((n,i)=>{const c=agg(x=>x[3]===0&&x[1]===i&&x[0]===m),p=agg(x=>x[3]===0&&x[1]===i&&x[0]===pm&&x[7]<=P.lim);return{n,c:c.r,p:p.r};});}
+    else{const mp=new Map();for(const x of D.rows){if(x[3]!==0||x[1]!==S.store)continue;const v=D.vends[x[2]];if(v[2])continue;const o=mp.get(x[2])||{n:v[0],c:0,p:0};if(x[0]===m)o.c+=x[6];else if(x[0]===pm&&x[7]<=P.lim)o.p+=x[6];mp.set(x[2],o);}items=[...mp.values()];}
+    items=items.filter(o=>o.c||o.p).map(o=>({...o,d:o.c-o.p})).sort((a,b)=>a.d-b.d);
+  }
+  const quedas=items.filter(o=>o.d<0).reduce((s,o)=>s+o.d,0),altas=items.filter(o=>o.d>0).reduce((s,o)=>s+o.d,0);
+  let show=items;if(items.length>10)show=items.slice(0,5).concat(items.slice(-5));
+  const maxAbs=Math.max(1,...show.map(o=>Math.abs(o.d)));
+  document.getElementById('exVarTitle').textContent=S.store<0?'Onde cai e onde cresce (receita de aparelho, por loja)':'Onde cai e onde cresce (receita de aparelho, por vendedor)';
+  document.getElementById('exVar').innerHTML=!P.hasPrev?'<div class="note">Não há mês anterior na base para comparar.</div>':
+    show.length?`<div class="dv">${show.map(o=>`<div class="dv-row"><span class="dv-n" title="${esc(o.n)}">${esc(o.n.split(' ').slice(0,S.store<0?3:2).join(' '))}</span><div class="dv-bar">${o.d<0?`<i class="n" style="width:${(Math.abs(o.d)/maxAbs*100).toFixed(1)}%"></i>`:''}${o.d>0?`<i class="p" style="width:${(o.d/maxAbs*100).toFixed(1)}%"></i>`:''}</div><span class="dv-v ${o.d<0?'neg':o.d>0?'pos':''}">${exMoney(o.d)}<small>${o.p?(o.d>=0?'+':'−')+Math.abs(o.d/o.p*100).toFixed(0)+'%':'novo'}</small></span></div>`).join('')}</div>
+      <div class="dv-sum"><span class="neg">Quedas somam <b>${exMoney(quedas)}</b></span><span class="pos">Altas somam <b>${exMoney(altas)}</b></span></div>`
+    :'<div class="note">Sem vendas de aparelho para comparar.</div>';
+
+  // oportunidades
+  const opp=exOpps(P,cA,pA||{},fA||{});
+  document.getElementById('exOpp').innerHTML=opp.map(o=>`<div class="opp ${o.t}"><span class="oh num">${o.h}</span><span class="ot">${o.title}</span><span class="otx">${o.txt}</span>${o.calc?`<span class="oc">${o.calc}</span>`:''}</div>`).join('');
+
+  // texto de abertura
+  const worst=items.length&&items[0].d<0?items[0]:null,best=items.length&&items[items.length-1].d>0?items[items.length-1]:null;
+  let lead=`<b>${mesN}${P.open?' (até '+exDD()+')':''}</b>: aparelhos somam <b>${cf.format(cA.r)}</b> (${nf.format(cA.q)} un) e chips <b>${cf.format(cC.r)}</b>.`;
+  if(P.hasPrev&&pA.r){const d=cA.r-pA.r;lead+=` A receita de aparelho ${d>=0?'cresce':'cai'} <b>${pf(Math.abs(d/pA.r))}</b> sobre ${mesA}${P.open?' no mesmo período':''}.`;}
+  if(worst)lead+=` Maior queda: <b>${esc(worst.n)}</b> (${exMoney(worst.d)}).`;
+  if(best)lead+=` Maior alta: <b>${esc(best.n)}</b> (${exMoney(best.d)}).`;
+  const nd=opp.filter(o=>o.t==='down').length;
+  if(nd)lead+=` <b>${nd} ${nd===1?'ponto de atenção':'pontos de atenção'}</b> abaixo.`;
+  document.getElementById('exLead').innerHTML=lead;
+
+  // gráfico anual (aparelho + chip)
+  const ser=months.map(mm=>({m:mm,...agg(x=>inStore(x)&&x[0]===mm)}));
+  barChart(document.getElementById('chEx'),ser,'r','--bar','--bar-dim',true,(s,p)=>
+    `<b>${MESL[s.m-1]}${s.m===lastM&&partial?' (parcial)':''}</b><br>Receita aparelho + chip: ${cf.format(s.r)}<br>Unidades: ${nf.format(s.q)}${s.m===lastM&&partial?`<br>Projeção: ${cf.format(s.pr)}`:''}${p?`<br><span style="opacity:.75">vs ${MES[p.m-1]}: ${pctTxt(s.r,p.r)}</span>`:''}`,mm=>mm===S.ref);
+}
+function renderRt(){ // gráfico anual do ritmo comercial, com a meta de cada mês
+  const el=document.getElementById('chRt');if(!el)return;
+  const k=S.mt,ser=monthly(0,inStore);
+  const marks=mm=>{const s=metaScope(mm,k);return s.some?s.total:null;};
+  document.getElementById('rtLeg').innerHTML=`<span><i style="background:var(--bar)"></i>Realizado no mês de referência</span><span><i style="background:var(--bar-dim)"></i>Demais meses</span><span><i style="background:var(--red);height:3px;margin-top:4px"></i>Meta do mês (${k==='q'?'quantidade':'receita'})</span><span id="rtP"><i class="pbox"></i>Projeção do mês parcial</span>`;
+  document.getElementById('rtP').hidden=!partial;
+  barChart(el,ser,k,'--bar','--bar-dim',true,(s,p)=>{const mt=marks(s.m);return `<b>${MESL[s.m-1]}${s.m===lastM&&partial?' (parcial)':''}</b><br>${k==='q'?'Quantidade: '+nf.format(s.q):'Receita: '+cf.format(s.r)}${mt?`<br>Meta: ${k==='q'?nf.format(mt):cf.format(mt)} · ${pf((s.m===lastM&&partial?s[PK[k]]:s[k])/mt)}`:''}${s.m===lastM&&partial?`<br>Projeção: ${k==='q'?nf.format(Math.round(s.pq)):cf.format(s.pr)}`:''}${p?`<br><span style="opacity:.75">vs ${MES[p.m-1]}: ${pctTxt(s[k],p[k])}</span>`:''}`;},mm=>mm===S.ref,marks);
 }
 
 /* ---------- carga incremental ---------- */
@@ -736,19 +905,19 @@ function bindUpload(){
 function seg(id,key,fn){const el=document.getElementById(id);
   const paint=()=>el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===S[key]));paint();
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.m;paint();save();fn();});}
-function render(){paintFilters();renderKpis();renderMeta();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();}
+function render(){paintFilters();renderKpis();renderExec();renderMeta();renderRt();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();}
 
 loadState();
 rebuild();
-bindFilters();bindLM('lmR','mR',renderQ2);bindLM('lmM','mM',renderQ3);bindRef('refA');bindRef('refB');bindMeta();bindUpload();
-seg('segQ1','q1',renderQ1);seg('segQ2','q2',renderQ2);seg('segQ4','q4',renderQ4);seg('segMt','mt',()=>renderMeta(true));seg('segCp','cp',renderCmp);
+bindFilters();bindLM('lmR','mR',renderQ2);bindLM('lmM','mM',renderQ3);bindRef('refA');bindRef('refB');bindRef('refC');bindMeta();bindUpload();
+seg('segQ1','q1',renderQ1);seg('segQ2','q2',renderQ2);seg('segQ4','q4',renderQ4);seg('segMt','mt',()=>{renderMeta(true);renderRt();});seg('segCp','cp',renderCmp);
 document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;S.tab=t.dataset.t;S.all=false;save();renderQ2();});
 document.getElementById('moreBtn').addEventListener('click',()=>{S.all=!S.all;renderQ2();});
 bindStoreRows('tStores');bindStoreRows('tChip');
 document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 50 = aparelho, de R$ 10 a R$ 50 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
 setDbState();renderLog();render();paintPub();
 document.getElementById('btnPub').addEventListener('click',publicar);
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();},150);});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();renderExec();renderRt();},150);});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{renderQ1();renderQ4();});
 new MutationObserver(()=>{renderQ1();renderQ4();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
