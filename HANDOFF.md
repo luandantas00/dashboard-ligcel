@@ -58,6 +58,9 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 ## Visual (tema "cyber-clean", 10/11/2026)
 Dois temas: claro (padrão) e escuro fosco com glassmorphism e destaque ciano, fonte Inter + JetBrains Mono nos números. O botão ☾ Escuro / ☀ Claro no topo troca o tema do site e dos painéis (preferência guardada no navegador de cada pessoa, chave `painel_tema`). O shell usa `assets/shell.css`; cada painel recebe, injetado pelo shell, `assets/tema/base.css` + `assets/tema/<painel>.css` (sobrescrevem as variáveis dos apps; os `apps/*.html` mantêm o visual claro original, usado só se o botão Tema do Ritmo voltar para claro). Para mudar cores/estilo, edite esses CSS; não precisa mexer nos apps. Celular: topo compacto, filtros extras do Ritmo atrás de "Mais filtros", pílulas de Aparelhos com rolagem lateral, KPIs em 2 colunas.
 
+## Comissão: versão 10/11-c do original (incorporada em 10/11/2026)
+`apps/comissao.html` e `assets/comissao-nucleo.js` foram regerados a partir da versão nova do artefato original (id 87ebe11b…, versão 1794363019), via `build/build_comissao.py` (fora do repositório; recriar se precisar). Novidades do original: trava de comissão por produto (`cfg.travaInd`: mínimo/parcial/pleno por Controle, Pós, BL, TV, Aparelho), "Sugestão de metas por indicador e loja" na aba Metas e custo, e `MN` no mergeData. Mantidos do painel unificado: limite de aparelho em R$ 60, abas por perfil, ponte `parent.__painel`, autosave de metas/regras no banco (`saveDono`). Ao receber nova versão do original, repetir: gerar de novo e reaplicar o autosave em `saveDono`.
+
 ## Regras de negócio decididas
 
 - **Aparelho = Valor Venda acima de R$ 60**, nos três painéis. **Chip = de R$ 10 a R$ 60.** Seguro Proteção Móvel fora da conta. (Antes: Ritmo usava 63, Aparelhos usava 50, Comissão usava 70.)
@@ -68,7 +71,7 @@ Dois temas: claro (padrão) e escuro fosco com glassmorphism e destaque ciano, f
 
 ## Estado atual (10/11/2026)
 
-- Versão em `config.js`: `2026-11-10-12` (tema cyber-clean + metas no banco + etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
+- Versão em `config.js`: `2026-11-10-13` (tema cyber-clean + metas no banco + etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
 - Base carregada em 06/11/2026, a partir de `HISTORICO ANO CC LIG SET.xlsx` (20.646 linhas, 02/01 a 06/11, 7 lojas). Ritmo com 10.264 registros; Aparelhos com 1.800 aparelhos e 8.323 chips; Comissão de jan a nov.
 - **O projeto Supabase apareceu como `INACTIVE` e o banco não respondeu a consultas.** Verificar no painel do Supabase se está pausado e restaurar. Confirmar o plano da organização (o Luan disse que o plano dele não é gratuito).
 - Fluxo de publicação hoje: o Luan baixa um zip e arrasta arquivos no GitHub pela web. É a principal fonte de erro (arquivo caindo na raiz, cache). Ir para o Claude Code com push direto resolve isso.
@@ -102,3 +105,13 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - A chave `anon` no `config.js` é pública por desenho. **Nunca** colocar a chave `service_role` no código; ela só existe dentro da Edge Function.
 - Não alterar `apps/*.html` sem aumentar `versao` em `config.js`.
 - O Excel original contém CPF e dados de clientes. O painel só guarda números agregados e nomes de vendedores. Não mudar isso.
+
+## Comissão — visão fácil do gerente (10/11-d)
+- Gerente vê um cartão "Sua comissão no mês" + Franquia vendida + Comissão dos vendedores; card "Lojas" removido; no celular a tabela esconde colunas extras e o cabeçalho é opaco.
+- Essas mudanças ficam só em apps/comissao.html e assets/tema/comissao.css. Se o original do Comissão for refeito, reaplicar.
+- versao: 2026-11-10-14
+
+## Vendedor / gerente — visão facilitada (10/11-e)
+- Minha Meta (apps/ritmo.html): quem tem só uma loja (gerente/vendedor) não vê mais o filtro "Loja / Todas as lojas"; já abre na própria loja.
+- Celular (assets/tema/ritmo.css): cada indicador mostra %, barra, Real/Projeção/Meta e o recado; "Meta por dia / Seu ritmo" ficam ocultos.
+- versao: 2026-11-10-15

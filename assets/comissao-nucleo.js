@@ -25,6 +25,7 @@ function defaultCfg() {
     },
     svp: { v: 0.10, g: 0.04 },
     trava: { min: 0.8, parcial: 0.5, pleno: 1.0 },
+    travaInd: { controle: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, pos: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, bl: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, tv: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, ap: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 } },
     bonus: [{ a: 1.2, valor: 100 }, { a: 1.5, valor: 250 }],
     ref: { v: 0.30, g: 0.05 },
     classe: 'Select',
@@ -117,13 +118,17 @@ function mergeData(old, nw) {
   const A = keepA.concat(nw.A.map(a => [a[0], mapL[a[1]], mapV[a[2]], a[3], a[4]]));
   const P = keepP.concat(nw.P.map(p => [p[0], p[1], p[2], p[3], p[4], p[5], p[6], mapL[p[7]], mapV[p[8]]]));
   const D = Object.assign({}, old.D, nw.D);
-  const MN = Object.assign({}, old.MN || {}, nw.MN || {});
-  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D, MN };
+  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D, MN: Object.assign({}, old.MN || {}, nw.MN || {}) };
 }
 
 // ---------- regras ----------
 function faixaPct(ating, gat, pcts) { if (ating == null) return 0; let p = 0; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) p = pcts[i]; return p; }
 function faixaIdx(ating, gat) { if (ating == null) return -1; let x = -1; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) x = i; return x; }
+// trava por produto: abaixo do mínimo não paga, entre mínimo e pleno paga o parcial
+function travaF(ating, tc) {
+  if (!tc || tc.ativa !== 'sim' || ating == null) return 1;
+  return ating + 1e-9 >= tc.pleno ? 1 : (ating + 1e-9 >= tc.min ? tc.parcial : 0);
+}
 function liberacao(blAting, blMeta, cfg) {
   if (!(blMeta > 0)) return 1;
   return blAting + 1e-9 >= cfg.trava.pleno ? 1 : (blAting + 1e-9 >= cfg.trava.min ? cfg.trava.parcial : 0);
@@ -141,12 +146,13 @@ function calcScope(real, ap, meta, metaAp, cfg, kind, servLib) {
     }
     const m = meta[k] || 0, ating = m > 0 ? rr.r / m : null, sc = cfg.esc.fr;
     const pct = faixaPct(ating, sc.gat, sc[kind]), pctM = faixaPct(ating, sc.gat, sc[kind + 'm'] || sc[kind]);
-    const fm = Math.min(rr.fm || 0, rr.f), fs = rr.f - fm, com = fs * pct + fm * pctM;
-    o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct), idx: faixaIdx(ating, sc.gat) };
-    o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM; o.comExtra += fm * (pctM - pct);
+    const tv = travaF(ating, (cfg.travaInd || {})[k]), fm = Math.min(rr.fm || 0, rr.f), fs = rr.f - fm, com = (fs * pct + fm * pctM) * tv;
+    o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct) * tv, tv, idx: faixaIdx(ating, sc.gat) };
+    o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM * tv; o.comExtra += fm * (pctM - pct) * tv;
   }
   const a = ap || { fat: 0, q: 0 }, aAting = metaAp > 0 ? a.fat / metaAp : null, apQ = cfg.esc.ap.modo === 'qtd', aPct = faixaPct(aAting, cfg.esc.ap.gat, apQ ? (cfg.esc.ap.q || { v: [], g: [] })[kind] : cfg.esc.ap[kind]);
-  o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, modo: apQ ? 'qtd' : 'fat', com: apQ ? (a.q || 0) * aPct : a.fat * aPct, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
+  const tvA = travaF(aAting, (cfg.travaInd || {}).ap);
+  o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, tv: tvA, modo: apQ ? 'qtd' : 'fat', com: (apQ ? (a.q || 0) * aPct : a.fat * aPct) * tvA, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
   o.comAp = o.ap.com;
   o.atTotal = o.mTot > 0 ? o.rTot / o.mTot : null;
   o.lib = liberacao(o.ind.bl.ating, o.ind.bl.meta, cfg);
@@ -226,12 +232,13 @@ function custoCenario(B, cfg, s) {
       const r = l.meta[k] * s; rec += r; recL += r;
       const base = r * rho[k]; fr += base; const ms = B.tot[k].f > 0 ? Math.min(1, (B.tot[k].fm || 0) / B.tot[k].f) : 0, sc = cfg.esc.fr;
       const pv = faixaPct(s, sc.gat, sc.v), pvm = faixaPct(s, sc.gat, sc.vm || sc.v), pg = faixaPct(s, sc.gat, sc.g), pgm = faixaPct(s, sc.gat, sc.gm || sc.g);
-      v += base * ((1 - ms) * pv + ms * pvm); g += base * ((1 - ms) * pg + ms * pgm);
+      const tvk = travaF(s, (cfg.travaInd || {})[k]);
+      v += base * ((1 - ms) * pv + ms * pvm) * tvk; g += base * ((1 - ms) * pg + ms * pgm) * tvk;
     }
     const sr = recL * svRatio; recServ += sr; v += sr * ((cfg.svp || {}).v || 0); g += sr * ((cfg.svp || {}).g || 0);
-    const fa = l.metaAp * s;
-    if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v); g += un * faixaPct(s, cfg.esc.ap.gat, qq.g); }
-    else { v += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.v); g += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.g); }
+    const fa = l.metaAp * s, tvA = travaF(s, (cfg.travaInd || {}).ap);
+    if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v) * tvA; g += un * faixaPct(s, cfg.esc.ap.gat, qq.g) * tvA; }
+    else { v += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.v) * tvA; g += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.g) * tvA; }
     nv += l.vends.filter(x => x.w > 0).length;
   }
   v = v * lib; g = g * lib; const b = bonus * nv * lib;

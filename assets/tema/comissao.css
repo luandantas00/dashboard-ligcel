@@ -13,7 +13,7 @@ html[data-theme] .panel,html[data-theme] .card,html[data-theme] .kpi,html[data-t
   background:linear-gradient(180deg,var(--t-gl1),var(--t-gl2));
   -webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);
   border:1px solid var(--t-gb);box-shadow:var(--t-gs)}
-html[data-theme] .top{background:var(--t-nav);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--t-gb)}
+html[data-theme] .top{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--t-gb)}
 html[data-theme] .dot{background:var(--t-acc);box-shadow:0 0 10px var(--t-glow)}
 html[data-theme] .big,html[data-theme] .kpi b{font-family:var(--t-mono);letter-spacing:-.02em}
 html[data-theme] .sumhead,html[data-theme] tr.tot td,html[data-theme] .detbox tbody tr.tot td,html[data-theme] .detbox tbody tr.tot:nth-child(even) td,html[data-theme] .ic.tot{

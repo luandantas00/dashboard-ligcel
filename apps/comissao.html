@@ -220,7 +220,29 @@ tr.dtl>td{padding:0!important;background:var(--surface);border-top:0}
 .dstrip b{font:700 15px var(--f-head);font-variant-numeric:tabular-nums}
 table.pt{margin:0}
 table.pt td.name{padding-left:24px}
-[data-act="sair"]{display:none!important}</style><div id="app"></div><script>const EMB={pub:null,blobs:{at:0,dono:null,lojas:[]},pacote:null};</script><script>// ===== Núcleo (puro; testado em node) =====
+[data-act="sair"]{display:none!important}
+.easy{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;margin-bottom:6px}
+.easyhero{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.easyhero small,.easykp small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.easyhero .big2{margin:6px 0 10px;font-size:40px}
+.easyline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.easykp{display:grid;grid-template-rows:1fr 1fr;gap:12px}
+.easykp>div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 16px}
+.easykp b{display:block;font-size:20px;font-family:var(--f-head);margin-top:2px}
+.easykp em{font-style:normal;color:var(--muted);font-size:12px}
+@media (max-width:760px){
+  .easy{grid-template-columns:1fr}
+  .easykp{grid-template-rows:none;grid-template-columns:1fr 1fr}
+  .easyhero .big2{font-size:34px}
+  .sumtb th:nth-child(2),.sumtb td:nth-child(2),.sumtb th:nth-child(3),.sumtb td:nth-child(3),.sumtb th:nth-child(5),.sumtb td:nth-child(5){display:none}
+  .sumtb td,.sumtb th{padding:10px 8px}
+  .radios{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+  .easy,.easy>*,.sect,main{min-width:0;max-width:100%}
+  .easy{grid-template-columns:minmax(0,1fr)}
+  .radios .rad{flex:none}
+  .dstrip{grid-template-columns:1fr 1fr}
+}
+</style><div id="app"></div><script>const EMB={pub:null,blobs:{at:0,dono:null,lojas:[]},pacote:null};</script><script>// ===== Núcleo (puro; testado em node) =====
 const IND = [
   { k: 'controle', n: 'Controle' }, { k: 'pos', n: 'Pós' }, { k: 'bl', n: 'BL' }, { k: 'tv', n: 'TV' }, { k: 'servico', n: 'Serviços' }
 ];
@@ -246,6 +268,7 @@ function defaultCfg() {
     },
     svp: { v: 0.10, g: 0.04 },
     trava: { min: 0.8, parcial: 0.5, pleno: 1.0 },
+    travaInd: { controle: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, pos: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, bl: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, tv: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, ap: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 } },
     bonus: [{ a: 1.2, valor: 100 }, { a: 1.5, valor: 250 }],
     ref: { v: 0.30, g: 0.05 },
     classe: 'Select',
@@ -338,13 +361,17 @@ function mergeData(old, nw) {
   const A = keepA.concat(nw.A.map(a => [a[0], mapL[a[1]], mapV[a[2]], a[3], a[4]]));
   const P = keepP.concat(nw.P.map(p => [p[0], p[1], p[2], p[3], p[4], p[5], p[6], mapL[p[7]], mapV[p[8]]]));
   const D = Object.assign({}, old.D, nw.D);
-  const MN = Object.assign({}, old.MN || {}, nw.MN || {});
-  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D, MN };
+  return { M: Object.keys(D).sort(), L, V, T, R, A, P, D, MN: Object.assign({}, old.MN || {}, nw.MN || {}) };
 }
 
 // ---------- regras ----------
 function faixaPct(ating, gat, pcts) { if (ating == null) return 0; let p = 0; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) p = pcts[i]; return p; }
 function faixaIdx(ating, gat) { if (ating == null) return -1; let x = -1; for (let i = 0; i < gat.length; i++) if (ating + 1e-9 >= gat[i]) x = i; return x; }
+// trava por produto: abaixo do mínimo não paga, entre mínimo e pleno paga o parcial
+function travaF(ating, tc) {
+  if (!tc || tc.ativa !== 'sim' || ating == null) return 1;
+  return ating + 1e-9 >= tc.pleno ? 1 : (ating + 1e-9 >= tc.min ? tc.parcial : 0);
+}
 function liberacao(blAting, blMeta, cfg) {
   if (!(blMeta > 0)) return 1;
   return blAting + 1e-9 >= cfg.trava.pleno ? 1 : (blAting + 1e-9 >= cfg.trava.min ? cfg.trava.parcial : 0);
@@ -362,12 +389,13 @@ function calcScope(real, ap, meta, metaAp, cfg, kind, servLib) {
     }
     const m = meta[k] || 0, ating = m > 0 ? rr.r / m : null, sc = cfg.esc.fr;
     const pct = faixaPct(ating, sc.gat, sc[kind]), pctM = faixaPct(ating, sc.gat, sc[kind + 'm'] || sc[kind]);
-    const fm = Math.min(rr.fm || 0, rr.f), fs = rr.f - fm, com = fs * pct + fm * pctM;
-    o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct), idx: faixaIdx(ating, sc.gat) };
-    o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM; o.comExtra += fm * (pctM - pct);
+    const tv = travaF(ating, (cfg.travaInd || {})[k]), fm = Math.min(rr.fm || 0, rr.f), fs = rr.f - fm, com = (fs * pct + fm * pctM) * tv;
+    o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct) * tv, tv, idx: faixaIdx(ating, sc.gat) };
+    o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM * tv; o.comExtra += fm * (pctM - pct) * tv;
   }
   const a = ap || { fat: 0, q: 0 }, aAting = metaAp > 0 ? a.fat / metaAp : null, apQ = cfg.esc.ap.modo === 'qtd', aPct = faixaPct(aAting, cfg.esc.ap.gat, apQ ? (cfg.esc.ap.q || { v: [], g: [] })[kind] : cfg.esc.ap[kind]);
-  o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, modo: apQ ? 'qtd' : 'fat', com: apQ ? (a.q || 0) * aPct : a.fat * aPct, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
+  const tvA = travaF(aAting, (cfg.travaInd || {}).ap);
+  o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, tv: tvA, modo: apQ ? 'qtd' : 'fat', com: (apQ ? (a.q || 0) * aPct : a.fat * aPct) * tvA, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
   o.comAp = o.ap.com;
   o.atTotal = o.mTot > 0 ? o.rTot / o.mTot : null;
   o.lib = liberacao(o.ind.bl.ating, o.ind.bl.meta, cfg);
@@ -447,12 +475,13 @@ function custoCenario(B, cfg, s) {
       const r = l.meta[k] * s; rec += r; recL += r;
       const base = r * rho[k]; fr += base; const ms = B.tot[k].f > 0 ? Math.min(1, (B.tot[k].fm || 0) / B.tot[k].f) : 0, sc = cfg.esc.fr;
       const pv = faixaPct(s, sc.gat, sc.v), pvm = faixaPct(s, sc.gat, sc.vm || sc.v), pg = faixaPct(s, sc.gat, sc.g), pgm = faixaPct(s, sc.gat, sc.gm || sc.g);
-      v += base * ((1 - ms) * pv + ms * pvm); g += base * ((1 - ms) * pg + ms * pgm);
+      const tvk = travaF(s, (cfg.travaInd || {})[k]);
+      v += base * ((1 - ms) * pv + ms * pvm) * tvk; g += base * ((1 - ms) * pg + ms * pgm) * tvk;
     }
     const sr = recL * svRatio; recServ += sr; v += sr * ((cfg.svp || {}).v || 0); g += sr * ((cfg.svp || {}).g || 0);
-    const fa = l.metaAp * s;
-    if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v); g += un * faixaPct(s, cfg.esc.ap.gat, qq.g); }
-    else { v += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.v); g += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.g); }
+    const fa = l.metaAp * s, tvA = travaF(s, (cfg.travaInd || {}).ap);
+    if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v) * tvA; g += un * faixaPct(s, cfg.esc.ap.gat, qq.g) * tvA; }
+    else { v += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.v) * tvA; g += fa * faixaPct(s, cfg.esc.ap.gat, cfg.esc.ap.g) * tvA; }
     nv += l.vends.filter(x => x.w > 0).length;
   }
   v = v * lib; g = g * lib; const b = bonus * nv * lib;
@@ -543,16 +572,16 @@ const Store = {
   set(k, v) { const m = /^vw-(.*)$/.exec(k); if (!m) return Promise.resolve(true); return parent.__painel.comissaoSalvarVw(m[1], v).then(() => true, () => false); }
 };
 async function melhorPacote() {
-  let best = null;
+  let best = null; REJ.pacote = false;
   const cands = [EMB.pacote]; for (const t of [await Store.get('pacote'), lsGet('cm2-pacote')]) { try { if (t) cands.push(JSON.parse(t)); } catch (e) { } }
-  for (const p of cands) if (p && p.cfg && (!best || p.at > best.at) && await verifyPacote(p)) best = p;
+  for (const p of cands) if (p && p.cfg && (!best || p.at > best.at)) { if (await verifyPacote(p)) best = p; else if (p !== EMB.pacote) REJ.pacote = true; }
   return best;
 }
 
 async function melhorBlobs() {
-  let best = EMB.blobs;
+  let best = EMB.blobs; REJ.blobs = false;
   for (const t of [await Store.get('blobs'), lsGet('cm2-blobs')]) {
-    try { if (!t) continue; const p = JSON.parse(t); if (p && p.at > (best.at || 0) && await verifyText(p.sig, JSON.stringify({ at: p.at, dono: p.dono, lojas: p.lojas }))) best = p; } catch (e) { }
+    try { if (!t) continue; const p = JSON.parse(t); if (p && p.at > (best.at || 0)) { if (await verifyText(p.sig, JSON.stringify({ at: p.at, dono: p.dono, lojas: p.lojas }))) best = p; else REJ.blobs = true; } } catch (e) { }
   }
   return best;
 }
@@ -666,7 +695,7 @@ function prodInd(li, vi, res, ind) {
   const pl = Object.values(pr).sort((x, y) => tot[y.plano] - tot[x.plano] || x.plano.localeCompare(y.plano) || x.mu - y.mu);
   if (!pl.length) return '<div class="note">Sem vendas de produtos neste indicador no mês.</div>';
   const sv = ind === 'servico', x = res.ind[ind];
-  const com = o => sv ? o.r * kf * x.pct * res.lib : (o.f * kf) * (o.mu ? x.pctM : x.pct) * res.lib;
+  const com = o => sv ? o.r * kf * x.pct * res.lib : (o.f * kf) * (o.mu ? x.pctM : x.pct) * (x.tv == null ? 1 : x.tv) * res.lib;
   return `<div class="scroll"><table class="pt"><thead><tr><th>Produto</th><th>Vendas</th><th>Franquia média</th><th>Franquia total</th><th>Comissão</th></tr></thead><tbody>${pl.slice(0, 40).map(p => `<tr class="${p.mu ? 'mrow' : ''}"><td class="name"><b>${esc(p.plano)}${p.mu ? ' <em class="mx">multi</em>' : ''}</b></td><td>${Math.round(p.q * kf)}</td><td>${sv ? '—' : brl2(p.q ? p.f / p.q : 0)}</td><td>${sv ? '—' : brl2(p.f * kf)}</td><td>${sv && !verServ() ? '<small>a liberar</small>' : brl2(com(p))}</td></tr>`).join('')}</tbody></table></div>${pl.length > 40 ? `<div class="note">Mostrando os 40 maiores de ${pl.length}.</div>` : ''}`;
 }
 function detalhe(B, res, real, li, vi, kind, nome) {
@@ -679,14 +708,14 @@ function detalhe(B, res, real, li, vi, kind, nome) {
   const tgl = (k, n) => `<tr class="click tg ${ok(k) ? 'op' : ''}" data-act="tg" data-v="${k}" tabindex="0" aria-expanded="${ok(k)}"><td class="name"><b>${chev(ok(k))}${n}</b></td>`;
   const strip = (k, x, rq, mq) => `<tr class="dtl"><td colspan="6"><div class="dstrip">${[['Meta', mq == null ? '—' : mq + ' vendas'], ['Real', rq + ' vendas'], ['Atingimento', pc(x.ating)], ['Franquia', brl(x.f)], ['Franquia média', brl2(rq ? x.f / rq : 0)], ['Comissão', brl(x.com)]].map(([t, v]) => `<div><small>${t}</small><b>${v}</b></div>`).join('')}${priv ? '' : `<div><small>Receita</small><b>${brl(x.r)} de ${brl(x.meta)}</b></div>`}</div>${prodInd(li, vi, res, k)}</td></tr>`;
   const rows = FRK.map(k => { const { x, rq, mq } = tkx(k); fTot += x.f; qTot += rq;
-    return `${tgl(k, INDN[k])}<td>${mq == null ? '—' : mq}</td><td>${rq}</td><td>${at(x.ating)}</td><td>${brl(x.f)}</td><td><b>${brl(x.com)}</b>${x.comExtra > 0.005 ? ` <em class="mx">+${brl(x.comExtra)} multi</em>` : ''}</td></tr>${ok(k) ? strip(k, x, rq, mq) : ''}`; }).join('');
+    return `${tgl(k, INDN[k])}<td>${mq == null ? '—' : mq}</td><td>${rq}</td><td>${at(x.ating)}</td><td>${brl(x.f)}</td><td>${x.tv < 1 ? `<span class="pill ${x.tv > 0 ? 'mid' : 'low'}">${x.tv > 0 ? 'trava: ' + pc(x.tv) : 'travado'}</span> ` : ''}<b>${brl(x.com)}</b>${x.comExtra > 0.005 ? ` <em class="mx">+${brl(x.comExtra)} multi</em>` : ''}</td></tr>${ok(k) ? strip(k, x, rq, mq) : ''}`; }).join('');
   const svOpen = ok('servico');
   const svRow = `<tr class="click tg ${svOpen ? 'op' : ''}" data-act="tg" data-v="servico" tabindex="0" aria-expanded="${svOpen}"><td class="name"><b>${chev(svOpen)}Serviços</b><div class="sub">fora da meta · ${pc1(svp)} sobre a comissão</div></td><td>—</td><td>${Math.round(sv.q * kf)}</td><td>—</td><td>—</td><td>${lib ? `<b>${brl(sv.com)}</b>` : `<small>${brl(sv.com)} a liberar</small>`}</td></tr>${svOpen ? `<tr class="dtl"><td colspan="6">${prodInd(li, vi, res, 'servico')}</td></tr>` : ''}`;
   const comFr = res.comFr;
   const resumo = `<section class="sumry"><div class="sumhead"><div><small>${kind === 'v' ? 'Comissão do vendedor' : 'Comissão do gerente'}</small><div class="big2">${brl(res.total)}</div></div><div class="sumact">${libPill(res.lib)}${kind === 'v' && nome ? `<button class="btn primary" data-act="goV" data-v='${esc(nome)}'>Simular minha comissão</button>` : ''}</div></div>
     <div class="scroll"><table class="sumtb"><thead><tr><th>Indicador</th><th>Meta (vendas)</th><th>Real (vendas)</th><th>Ating.</th><th>Franquia</th><th>Comissão</th></tr></thead><tbody>${rows}
     <tr class="sub1"><td><b>Total dos indicadores</b></td><td></td><td>${qTot}</td><td>${at(res.atTotal)}</td><td><b>${brl(fTot)}</b><div class="sub">média ${brl2(qTot ? fTot / qTot : 0)} por plano</div></td><td><b>${brl(comFr)}</b>${res.comExtra > 0.005 ? ` <em class="mx">+${brl(res.comExtra)} multi</em>` : ''}</td></tr>
-    <tr><td class="name"><b>Aparelho</b><div class="sub">${a.meta > 0 ? 'meta ' + brl(a.meta) : ''}</div></td><td>${brl(a.meta)}</td><td>${brl(a.fat)}</td><td>${at(a.ating)}</td><td>—</td><td><b>${brl(a.com)}</b></td></tr>
+    <tr><td class="name"><b>Aparelho</b><div class="sub">${a.meta > 0 ? 'meta ' + brl(a.meta) : ''}</div></td><td>${brl(a.meta)}</td><td>${brl(a.fat)}</td><td>${at(a.ating)}</td><td>—</td><td>${a.tv < 1 ? `<span class="pill ${a.tv > 0 ? 'mid' : 'low'}">${a.tv > 0 ? 'trava: ' + pc(a.tv) : 'travado'}</span> ` : ''}<b>${brl(a.com)}</b></td></tr>
     ${svRow}
     ${kind === 'v' ? `<tr><td class="name"><b>Bônus</b></td><td colspan="4"><span class="sub">${res.bonusBruto > 0 ? 'meta total batida' : 'a partir de ' + pc(cfg.bonus[0].a) + ' do total'}</span></td><td><b>${brl(res.bonus)}</b></td></tr>` : ''}
     <tr class="tr"><td colspan="5"><b>Total a receber</b>${res.lib < 1 ? ` <span class="sub">· trava de BL: libera ${pc(res.lib)} do valor</span>` : ''}</td><td><b>${brl(res.total)}</b></td></tr></tbody></table></div>
@@ -707,7 +736,8 @@ function viewPainel() {
   const B = model(), g = !isDono(), E = B.empresa, { lojas, L } = pSel(B);
   const R = g ? L.res : E, nVend = (g ? L.vends : B.vends).filter(v => v.w > 0).length;
   const frF = FRK.reduce((s, k) => s + R.ind[k].f, 0), frQ = FRK.reduce((s, k) => s + Math.round(R.ind[k].q * B.k), 0);
-  const kp = g ? `<div class="kpis">${kpi('Atingimento da meta', pc(R.atTotal), 'Controle, Pós, BL e TV')}${kpi('Franquia vendida', brl(frF), `${frQ} planos · média ${brl2(frQ ? frF / frQ : 0)}`)}${kpi('Sua comissão', brl(R.total), 'franquia, serviços e aparelho')}${kpi('Comissão dos vendedores', brl(B.comV), nVend + ' vendedores')}</div>`
+  const kp = g ? `<section class="easy"><div class="easyhero"><small>Sua comissão no mês</small><div class="big2">${brl(R.total)}</div><div class="easyline"><span class="pill ${barCls(R.atTotal)}" style="font-size:13px;padding:4px 12px">${pc(R.atTotal)} da meta</span><span class="note">Controle, Pós, BL e TV da loja</span></div></div>
+      <div class="easykp"><div><small>Franquia vendida</small><b>${brl(frF)}</b><em>${frQ} planos</em></div><div><small>Comissão dos vendedores</small><b>${brl(B.comV)}</b><em>${nVend} vendedores</em></div></div></section>`
     : `<div class="kpis">${kpi('Receita ' + (B.k > 1 ? 'projetada' : 'realizada'), brl(R.rTot), `Controle, Pós, BL e TV · meta ${brl(R.mTot)}`)}${kpi('Atingimento', pc(R.atTotal), 'sem serviços')}${kpi('Comissão de vendedores e gerentes', brl(B.comV + B.comG), pc1((B.comV + B.comG) / Math.max(R.rTot, 1)) + ' da receita')}${kpi('Serviços', Math.round(R.ind.servico.q * B.k) + ' vendas', 'comissão gerada ' + brl(R.ind.servico.com) + (servLiberado() ? ' · liberados' : ' · aguardando liberação'))}</div>`;
   const cards = lojas.map(l => { const sel = l.li === L.li; return `<button class="lc ${sel ? 'sel' : ''}" ${g ? '' : 'data-act="pl"'} data-v="${l.li}" aria-pressed="${sel}"><span class="n">${esc(l.nome)}</span><span class="p ${barCls(l.res.atTotal)}">${pc(l.res.atTotal)}</span>${bar(l.res.atTotal, S.cfg.esc.fr.gat)}<span class="s">${l.hc} vendedores · ${g ? 'sua comissão' : 'gerente'} ${brl(l.res.total)}</span></button>`; }).join('');
   const vs = L.vends.filter(v => v.w > 0 || v.res.total > 0).sort((a, b) => b.res.total - a.res.total);
@@ -719,7 +749,7 @@ function viewPainel() {
   const det = V ? detalhe(B, V.res, V.real, L.li, S.data.V.indexOf(V.nome), 'v', V.nome) : detalhe(B, L.res, L.real, L.li, null, 'g', null);
   const comp = `<details class="prod"><summary>Comparar vendedores da loja</summary><div class="scroll"><table><thead><tr><th>Vendedor</th>${FRK.map(k => `<th>${INDN[k]}</th>`).join('')}<th>Aparelho</th><th>Trava BL</th><th>Comissão</th></tr></thead><tbody>${vs.map(v => `<tr class="click" data-act="pvrow" data-v='${esc(v.nome)}' tabindex="0"><td class="name"><b>${esc(v.nome)}</b></td>${FRK.map(k => `<td>${at(v.res.ind[k].ating)}</td>`).join('')}<td>${at(v.res.ap.ating)}</td><td>${libPill(v.res.lib)}</td><td><b>${brl(v.res.total)}</b></td></tr>`).join('')}<tr class="tr"><td><b>Total dos vendedores</b></td>${'<td></td>'.repeat(FRK.length + 2)}<td><b>${brl(vs.reduce((s, v) => s + v.res.total, 0))}</b></td></tr></tbody></table></div></details>`;
   return `${kp}
-  <section class="sect"><h2 class="sh">${g ? 'Sua loja' : 'Lojas'}</h2><div class="lcs">${cards}</div></section>
+  ${g ? '' : `<section class="sect"><h2 class="sh">Lojas</h2><div class="lcs">${cards}</div></section>`}
   <section class="sect"><div class="shrow"><h2 class="sh">${esc(titulo)}</h2><span class="note">${V ? esc(L.nome) + ' · vendedor' : 'visão da loja · gerente'}</span></div>${radios}${det}${comp}</section>`;
 }
 
@@ -818,6 +848,51 @@ function viewReceita() {
     <div class="scroll"><table><thead><tr><th>Uma venda multi de…</th>${FRK.map(k => `<th>cobre vendas de ${INDN[k]}</th>`).join('')}</tr></thead><tbody>${xRows}</tbody></table></div></section>`;
 }
 
+
+// ---------- sugestão de metas por indicador e loja (receita, franquia, quantidade, ticket) ----------
+function sugDet() {
+  const Z = sugestao(), D = S.data, f = Z.f, B = model();
+  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = dd < dm ? dm / dd : 1;
+  const cel = {}; // li|k -> {r,f,q,m}
+  D.L.forEach((_, li) => { for (const k of FRK) {
+    const b = Z.best[li][k]; let r = 0, fr = 0, q = 0;
+    if (b.m) { const m = b.m === S.mk && Z.aberto ? pk : 1; for (const x of D.R) if (x[0] === b.m && x[1] === li && x[3] === k) { q += x[6] * m; fr += x[7] * m; r += x[8] * m; } }
+    cel[li + '|' + k] = { r: r * f, f: fr * f, q: q * f, m: b.m, tk: q > 0 ? r / q : 0, fm: q > 0 ? fr / q : 0 };
+  } });
+  const sum = (lis, ks) => { const o = { r: 0, f: 0, q: 0 }; for (const li of lis) for (const k of ks) { const c = cel[li + '|' + k]; o.r += c.r; o.f += c.f; o.q += c.q; } o.tk = o.q > 0 ? o.r / o.q : 0; o.fm = o.q > 0 ? o.f / o.q : 0; return o; };
+  return { Z, B, cel, sum, lis: D.L.map((_, i) => i) };
+}
+function viewSug() {
+  const X = sugDet(), { Z, B, cel, sum, lis } = X, D = S.data, op = S.openSug || (S.openSug = {});
+  const tkt = ticketMap(B);
+  const cur = (rs, k) => { const m = rs; const t = tkt[k]; return { r: m, q: t > 0 ? Math.ceil(m / t) : 0 }; };
+  const head = '<th>Receita sugerida</th><th>Franquia sugerida</th><th>Quantidade (vendas)</th><th>Ticket médio de comissão</th><th>Franquia média</th><th>Meta atual (receita)</th><th>Meta atual (vendas)</th>';
+  const cells = (o, metaR, metaQ) => `<td><b>${brl(o.r)}</b></td><td>${brl(o.f)}</td><td><b>${Math.ceil(o.q)}</b></td><td>${o.tk ? brl2(o.tk) : '—'}</td><td>${o.fm ? brl2(o.fm) : '—'}</td><td>${brl(metaR)}</td><td>${metaQ}</td>`;
+  const chv = o => `<span class="xp" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:8px"><i style="${o ? 'transform:rotate(45deg);top:5px' : ''}"></i></span>`;
+  // por indicador
+  let iRows = '';
+  for (const k of FRK) {
+    const o = sum(lis, [k]), key = 'i|' + k, open = !!op[key], ex = B.empresa.ind[k], mq = tkt[k] > 0 ? Math.ceil(ex.meta / tkt[k]) : 0;
+    iRows += `<tr class="click tg ${open ? 'op' : ''}" data-act="tgs" data-v="${key}" tabindex="0" aria-expanded="${open}"><td class="name"><b>${chv(open)}${INDN[k]}</b></td>${cells(o, ex.meta, mq)}</tr>`;
+    if (open) iRows += `<tr class="dtl"><td colspan="8"><table class="pt"><thead><tr><th>Loja</th>${head}<th>Melhor mês</th></tr></thead><tbody>${D.L.map((l, li) => { const c = cel[li + '|' + k], bl = B.lojas.find(z => z.li === li), mr = bl ? bl.meta[k] : 0, t = tkt[k]; return `<tr><td class="name"><b>${esc(l)}</b></td>${cells(c, mr, t > 0 ? Math.ceil(mr / t) : 0)}<td>${c.m ? mlabel(c.m) : '—'}</td></tr>`; }).join('')}</tbody></table></td></tr>`;
+  }
+  const tot = sum(lis, FRK), metaTot = B.empresa.mTot, mqTot = FRK.reduce((a, k) => a + (tkt[k] > 0 ? Math.ceil(B.empresa.ind[k].meta / tkt[k]) : 0), 0);
+  iRows += `<tr class="tr"><td><b>Total</b></td>${cells(tot, metaTot, mqTot)}</tr>`;
+  // por loja
+  let lRows = '';
+  D.L.forEach((l, li) => {
+    const o = sum([li], FRK), key = 'l|' + li, open = !!op[key], bl = B.lojas.find(z => z.li === li), mr = bl ? bl.res.mTot : 0, mq = bl ? FRK.reduce((a, k) => a + (tkt[k] > 0 ? Math.ceil(bl.meta[k] / tkt[k]) : 0), 0) : 0;
+    lRows += `<tr class="click tg ${open ? 'op' : ''}" data-act="tgs" data-v="${key}" tabindex="0" aria-expanded="${open}"><td class="name"><b>${chv(open)}${esc(l)}</b></td>${cells(o, mr, mq)}</tr>`;
+    if (open) lRows += `<tr class="dtl"><td colspan="8"><table class="pt"><thead><tr><th>Indicador</th>${head}<th>Melhor mês</th></tr></thead><tbody>${FRK.map(k => { const c = cel[li + '|' + k], mm = bl ? bl.meta[k] : 0, t = tkt[k]; return `<tr><td class="name"><b>${INDN[k]}</b></td>${cells(c, mm, t > 0 ? Math.ceil(mm / t) : 0)}<td>${c.m ? mlabel(c.m) : '—'}</td></tr>`; }).join('')}</tbody></table></td></tr>`;
+  });
+  return `<section class="panel"><header><h2>Sugestão de metas por indicador e loja</h2><span class="n">Base: o melhor mês fechado de cada loja em cada indicador (${Z.ref.map(mlabel).join(', ')}) + ${pc1(Z.cres)} de crescimento. Quantidade = vendas do melhor mês × crescimento; ticket médio de comissão = receita ÷ vendas; franquia média = franquia ÷ vendas. Clique na linha para abrir.</span></header>
+    <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label><button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><span class="note">Aplica receita total, mix por indicador e divisão por loja.</span></div>
+    <div class="pad"><b>Por indicador</b> <span class="note">(abre as lojas)</span></div>
+    <div class="scroll"><table><thead><tr><th>Indicador</th>${head}</tr></thead><tbody>${iRows}</tbody></table></div>
+    <div class="pad"><b>Por loja</b> <span class="note">(abre os indicadores)</span></div>
+    <div class="scroll"><table><thead><tr><th>Loja</th>${head}</tr></thead><tbody>${lRows}</tbody></table></div></section>`;
+}
+
 function viewMetas() {
   if (gate()) return projPrompt();
   const B = model(), M = B.M;
@@ -844,7 +919,7 @@ function viewMetas() {
     <div class="pad"><b>Custo por loja se bater 100% da meta</b></div>
     <div class="scroll"><table><thead><tr><th>Loja</th><th>Receita</th><th>Franquia</th><th>Vendedores</th><th>Gerente</th><th>Bônus</th><th>Total</th><th>% da receita</th><th>% da franquia</th><th>Sobra</th></tr></thead><tbody>${lcRows}</tbody></table></div></section>`;
   const cr = cen.map(c => `<tr><td><b>${pc(c.s)} da meta</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td></tr>`).join('');
-  return `${topo}<section class="panel"><header><h2>Divisão da meta por loja</h2><span class="n">Cada loja recebe uma parte da meta de receita (${brl(M.total)}) e de aparelho (${brl(M.ap)}). A meta de cada loja cai igual entre os vendedores; o gerente pode ajustar.</span>
+  return `${topo}${viewSug()}<section class="panel"><header><h2>Divisão da meta por loja</h2><span class="n">Cada loja recebe uma parte da meta de receita (${brl(M.total)}) e de aparelho (${brl(M.ap)}). A meta de cada loja cai igual entre os vendedores; o gerente pode ajustar.</span>
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="lojaigual">Dividir igualmente</button><button class="btn" data-act="lojahc">Dividir por nº de vendedores</button></span></header>
     <div class="scroll"><table><thead><tr><th>Loja</th><th>Parte da meta</th><th>Meta de receita</th><th>Meta de aparelho</th><th>Meta por vendedor</th><th>Realizado</th><th>Ating. receita</th><th>Ating. aparelho</th></tr></thead><tbody>${lojasRows}</tbody></table></div>
     <div class="pad note">${Math.abs(pctSum - 100) < 0.01 ? '<span class="okk">As partes fecham em 100%.</span>' : `<span class="err">As partes somam ${num(pctSum, 1)}%: a meta foi proporcionalizada.</span>`} O valor da meta e o mix por indicador estão no topo desta aba; a aba Receita sugere valores pelos melhores meses.</div></section>
@@ -995,7 +1070,7 @@ function viewAcesso() {
   <section class="panel"><header><h2>Atualizar base do Controle Celular</h2><span class="n">Base atual: ${D.M.map(mlabel).join(', ')} · até ${String(D.D[ult]).padStart(2, '0')}/${ult.slice(5)}</span></header>
     <div class="pad" style="display:grid;gap:10px;max-width:80ch"><input type="file" accept=".xlsx,.xls" data-act="xlsx" aria-label="Planilha do Controle Celular">
     <div class="note">Envie a exportação acumulada do mês (do dia 1 até o dia mais recente). Os meses que estiverem na planilha substituem os mesmos meses já carregados; os demais ficam como estão. Depois confira os números e toque em Publicar.</div>
-    ${S.up ? `<div class="callout">${esc(S.up)}</div>` : ''}</div></section>`;
+    ${S.up ? `<div class="callout">${esc(S.up)}</div>` : ''}${REJ.blobs || REJ.pacote ? `<div class="callout" style="border-color:var(--red)"><b>Atenção:</b> havia dados publicados por uma versão antiga do arquivo, e eles foram ignorados (assinatura diferente). Suba a base de novo, confira as regras e metas, e publique. A partir desta versão a chave é fixa e isso não se repete ao trocar o index.html.</div>` : ''}</div></section>`;
 }
 
 function viewRegras() {
@@ -1007,11 +1082,13 @@ function viewRegras() {
     <div><div class="note" style="margin-bottom:6px"><b>Serviços</b> · percentual fixo sobre a comissão e a comissão residencial (colunas Comissão e Comissão Res). Sem meta e sem faixa.</div>
       <div class="form" style="grid-template-columns:auto auto;max-width:300px"><span>Vendedor</span>${inp(['svp', 'v'], (c.svp || {}).v || 0, 'pct', '0.5')}<span>Gerente</span>${inp(['svp', 'g'], (c.svp || {}).g || 0, 'pct', '0.5')}</div></div>
     ${escTable('Aparelho', 'ap', 'percentual sobre o faturamento (coluna N, itens acima de ' + brl(AP_MIN) + ')')}
-    <div class="form"><span>Trava de BL: abaixo de</span>${inp(['trava', 'min'], t.min, 'pct', '1')}<span>libera até 100% o percentual de</span>${inp(['trava', 'parcial'], t.parcial, 'pct', '1')}<span>libera tudo a partir de</span>${inp(['trava', 'pleno'], t.pleno, 'pct', '1')}
+    <div><div class="note" style="margin-bottom:6px"><b>Trava de comissão por produto</b> · se ativada, o produto só paga quando o atingimento dele na meta chegar ao mínimo. Abaixo do mínimo não paga; entre o mínimo e o pleno paga o percentual parcial do valor; a partir do pleno paga tudo. Vale para vendedor e gerente. Vem desligada.</div>
+      <div class="scroll"><table><thead><tr><th>Produto</th><th>Trava</th><th>Abaixo de (não paga)</th><th>Paga parcial</th><th>Paga tudo a partir de</th></tr></thead><tbody>${[['controle', 'Controle'], ['pos', 'Pós'], ['bl', 'BL'], ['tv', 'TV'], ['ap', 'Aparelho']].map(([k, n]) => { const ti = (c.travaInd || {})[k] || { ativa: 'nao', min: .8, parcial: .5, pleno: 1 }; return `<tr><td><b>${n}</b></td><td><select data-p='["travaInd","${k}","ativa"]' data-t="txt" ${isDono() ? '' : 'disabled'}><option value="nao" ${ti.ativa === 'sim' ? '' : 'selected'}>Desligada</option><option value="sim" ${ti.ativa === 'sim' ? 'selected' : ''}>Ligada</option></select></td><td>${inp(['travaInd', k, 'min'], ti.min, 'pct', '1')}</td><td>${inp(['travaInd', k, 'parcial'], ti.parcial, 'pct', '1')}</td><td>${inp(['travaInd', k, 'pleno'], ti.pleno, 'pct', '1')}</td></tr>`; }).join('')}</tbody></table></div></div>
+    <div class="form"><span>Trava geral (pelo BL, vale para tudo): abaixo de</span>${inp(['trava', 'min'], t.min, 'pct', '1')}<span>libera até 100% o percentual de</span>${inp(['trava', 'parcial'], t.parcial, 'pct', '1')}<span>libera tudo a partir de</span>${inp(['trava', 'pleno'], t.pleno, 'pct', '1')}
       <span>Bônus 1 acima de (ating. total)</span>${inp(['bonus', 0, 'a'], b[0].a, 'pct', '1')}<span>Valor do bônus 1 (R$)</span>${inp(['bonus', 0, 'valor'], b[0].valor, 'num', '10', '90px')}
       <span>Bônus 2 acima de (ating. total)</span>${inp(['bonus', 1, 'a'], b[1].a, 'pct', '1')}<span>Valor do bônus 2 (R$)</span>${inp(['bonus', 1, 'valor'], b[1].valor, 'num', '10', '90px')}
       <span>Classificação do parceiro</span><select data-p='["classe"]' data-t="txt" ${isDono() ? '' : 'disabled'}>${CLASSES.map(x => `<option ${x === atual ? 'selected' : ''}>${x}</option>`).join('')}</select></div></div>
-    ${isDono() ? '<div class="pad note">As alterações valem nesta tela na hora. Para os gerentes receberem, use Publicar para os gerentes em Metas e custo.</div>' : ''}</section>
+    ${isDono() ? '<div class="pad note">As alterações são salvas sozinhas e valem para todos, gerentes inclusive.</div>' : ''}</section>
   <section class="panel"><header><h2>Regras de elegibilidade</h2></header><div class="pad" style="display:grid;gap:8px;max-width:90ch">
     <p>1. Controle, Pós, BL e TV pagam o percentual da faixa atingida sobre a franquia total da venda. A faixa vem do atingimento da receita de cada indicador contra a meta dele.</p>
     <p>1b. Venda multi (coluna Combo) paga percentual maior que a venda single, na mesma faixa: ${c.esc.fr.gat.map((x, i) => `${pc(x)} da meta paga ${pc1(c.esc.fr.v[i])} single e ${pc1((c.esc.fr.vm || c.esc.fr.v)[i])} multi`).join('; ')} (vendedor).</p>
@@ -1038,7 +1115,7 @@ function render() {
   if (!isDono() && (S.tab === 'regras' || S.tab === 'receita' || S.tab === 'acesso' || S.tab === 'sim' || S.tab === 'aparelho' || S.tab === 'simc')) S.tab = 'painel';
   const v = { painel: viewPainel, aparelho: viewAparelho, receita: viewReceita, metas: viewMetas, sim: viewSim, simc: viewSimc, regras: viewRegras, acesso: viewAcesso }[S.tab];
   const keep = document.activeElement && document.activeElement.id;
-  $app.innerHTML = header() + `<div class="wrap"><main>${v()}<p class="note">${isDono() ? 'Receita = coluna Comissão + Comissão Res da base do Controle Celular, por data da venda. ' : 'Comissão calculada sobre a franquia dos planos vendidos. '}Os valores seguem as regras da aba Regras.</p></main></div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+  $app.innerHTML = header() + `<div class="wrap"><main>${v()}<p class="note"><b>Versão 10/11-c</b> · ${isDono() ? 'Receita = coluna Comissão + Comissão Res da base do Controle Celular, por data da venda. ' : 'Comissão calculada sobre a franquia dos planos vendidos. '}Os valores seguem as regras da aba Regras.</p></main></div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
   if (keep) { const el = document.getElementById(keep); if (el) el.focus(); }
 }
 
@@ -1054,6 +1131,7 @@ document.addEventListener('click', async e => {
   if (a === 'tab') { S.tab = t.dataset.v; render(); window.scrollTo(0, 0); }
   else if (a === 'sair') sair();
   else if (a === 'tg') { const o = S.openInd || (S.openInd = {}); o[t.dataset.v] = !o[t.dataset.v]; render(); }
+  else if (a === 'tgs') { const o = S.openSug || (S.openSug = {}); o[t.dataset.v] = !o[t.dataset.v]; render(); }
   else if (a === 'pl') { S.pSel = { li: +t.dataset.v, who: '' }; render(); }
   else if (a === 'pvrow') { S.pSel.who = t.dataset.v; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   else if (a === 'pickloja') { await concluir(S.cands[+t.dataset.v], 'gerente', null); render(); }
@@ -1101,8 +1179,9 @@ async function publicarAcesso() {
     const txt = JSON.stringify({ at, dono, lojas, sig });
     const ok = await Store.set('blobs', txt); S.blobsAt = at; S.dirty = false;
     say(hasServer() ? (ok ? 'Publicado. Os gerentes já entram com as senhas novas.' : 'Não consegui gravar no servidor.') : 'Salvo neste navegador (sem servidor Apps Script).');
+    S.busy = false; render(); return !!ok;
   } catch (e) { say('Falha ao publicar: ' + e.message); }
-  S.busy = false; render();
+  S.busy = false; render(); return false;
 }
 async function lerXlsx(file) {
   try {
@@ -1111,12 +1190,18 @@ async function lerXlsx(file) {
     const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
     const nw = aggregateRows(json);
     if (!nw.M.length) { S.up = 'Não encontrei vendas com data válida nessa planilha.'; return; }
-    const ruim = nw.M.filter(m => S.data.M.includes(m) && (nw.MN[m] || 1) > 1);
-    if (ruim.length) { S.up = 'Essa planilha começa depois do dia 1 em ' + ruim.map(mlabel).join(', ') + '. Envie a exportação do mês inteiro (dia 1 até hoje) para não perder vendas já carregadas.'; return; }
+    // início do mês: se a base antiga guarda o 1º dia, compara; senão tolera início nos primeiros dias (domingo/feriado)
+    const ruim = nw.M.filter(m => S.data.M.includes(m) && (nw.MN[m] || 1) > ((S.data.MN || {})[m] != null ? S.data.MN[m] : 7));
+    if (ruim.length) { S.up = 'Essa planilha começa depois do que já está carregado em ' + ruim.map(m => mlabel(m) + ' (planilha começa no dia ' + nw.MN[m] + ')').join(', ') + '. Envie a exportação acumulada do mês (do primeiro dia até hoje) para não perder vendas já carregadas.'; return; }
+    const aviso = nw.M.filter(m => (nw.MN[m] || 1) > 1).map(m => mlabel(m) + ' começa no dia ' + nw.MN[m]);
+    const velha = nw.M.filter(m => S.data.M.includes(m) && (nw.D[m] || 0) < (S.data.D[m] || 0));
+    if (velha.length) { S.up = 'Essa planilha é mais antiga que a base carregada (' + velha.map(m => mlabel(m) + ': planilha até dia ' + nw.D[m] + ', base até dia ' + S.data.D[m]).join('; ') + '). Envie a exportação mais recente.'; return; }
     const antes = S.data; S.data = mergeData(antes, nw); S.dirty = true;
     const novas = S.data.L.filter(l => !antes.L.includes(l));
     S.mk = S.data.M[S.data.M.length - 1];
-    S.up = 'Base atualizada: ' + nw.M.map(m => mlabel(m) + ' até dia ' + nw.D[m]).join(' · ') + ' (' + json.length + ' linhas lidas).' + (novas.length ? ' Lojas novas: ' + novas.join(', ') + ' (defina a senha).' : '') + (Object.keys(nw.unmapped).filter(Boolean).length ? ' Tipos sem mapeamento ignorados: ' + Object.keys(nw.unmapped).join(', ') + '.' : '') + ' Toque em Publicar.';
+    S.up = 'Base atualizada: ' + nw.M.map(m => mlabel(m) + ' até dia ' + nw.D[m]).join(' · ') + ' (' + json.length + ' linhas lidas).' + (novas.length ? ' Lojas novas: ' + novas.join(', ') + ' (defina a senha).' : '') + (Object.keys(nw.unmapped).filter(Boolean).length ? ' Tipos sem mapeamento ignorados: ' + Object.keys(nw.unmapped).join(', ') + '.' : '') + (aviso.length ? ' Aviso: ' + aviso.join('; ') + ' (sem vendas antes disso; confira se a exportação é do mês inteiro).' : '') + ' Publicando...'; render();
+    const ok = await publicarAcesso();
+    S.up = S.up.replace(' Publicando...', ok ? ' Publicado: gerentes e vendedores já veem a base nova.' : ' ATENÇÃO: não publicou no servidor. Toque em Publicar senhas e base.');
   } catch (e) { S.up = 'Não consegui ler a planilha: ' + e.message; }
 }
 document.addEventListener('change', async e => {

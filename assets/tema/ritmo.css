@@ -54,4 +54,12 @@ html[data-theme] #btnTheme{display:none!important}
   .panel{margin-bottom:12px}
   .secs-h>span:not(.right){display:none}
   #viewMeta .hero .insight,#viewMeta .card .insight{font-size:12.5px}
+  /* visão simples: cada indicador mostra só % , barra, real/projeção/meta e o recado */
+  #viewMeta .card .ritmo{display:none}
+  #viewMeta .card .stats{gap:6px}
+  #viewMeta .card .stats>div{padding:8px 10px}
+  #viewMeta .card .stats b{font-size:18px}
+  #viewMeta .card{padding:14px 16px}
+  #viewMeta .card .pct{font-size:26px}
+  #viewMeta .legenda{font-size:11px}
 }

@@ -1596,6 +1596,8 @@ function mNumeros(test,meta){
 /* ---------- filtros ---------- */
 function mRenderLojas(){
   const el=document.getElementById('vLojas');
+  if(LOJAS.length===1){ /* quem só tem uma loja (gerente/vendedor) não precisa escolher loja */
+    S.mLoja=LOJAS[0];el.innerHTML='';el.parentNode.hidden=true;return;}
   const op=[{id:'__all',lab:'Todas as lojas'}].concat(LOJAS.map(l=>({id:l,lab:nomeLoja(l)})));
   el.innerHTML=op.map(o=>'<button class="chip" data-l="'+esc(o.id)+'" aria-pressed="'+(S.mLoja===o.id)+'">'+esc(o.lab)+'</button>').join('');
   el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
