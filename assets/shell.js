@@ -136,6 +136,7 @@ async function trocarEmpresa(id) {
 function abasVisiveis() { return ABAS.filter(a => a.papeis.includes(S.me.papel) && (S.me.papel !== 'dono' || S.empresa || a.id === 'empresas')); }
 
 function pintarTopo() {
+  setTimeout(() => { const t = document.querySelector('.topo'); if (t) document.documentElement.style.setProperty('--topoH', t.offsetHeight + 'px'); }, 0);
   $('#tituloTxt').textContent = S.titulo; document.title = S.titulo;
   $('#btnEditarTitulo').hidden = !gestao();
   $('#uNome').textContent = S.me.nome || S.me.email;
@@ -234,12 +235,76 @@ function montarDoc(html, prelude, css) {
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">' +
     '<script>try{document.documentElement.setAttribute("data-theme",parent.document.documentElement.getAttribute("data-theme")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}<\/script>' +
-    '<style>' + css + '</style><script>' + prelude + '<\/script></head><body>' + corpo + '</body></html>';
+    '<style>' + css + SEM_ROLAGEM_CSS + '</style><script>' + prelude + '<\/script></head><body>' + corpo + '<script>' + SEM_ROLAGEM_JS + '<\/script></body></html>';
 }
+/* nenhuma rolagem para o lado dentro dos painéis: tabela larga primeiro se compacta, depois vira cartões */
+const SEM_ROLAGEM_CSS = `
+html body .tabs,html body .rolo,html body .radios,html body .jump,html body .frow{flex-wrap:wrap!important;overflow:visible!important;max-width:100%!important}
+html body .radios>*,html body .rolo>*{max-width:100%!important;min-width:0!important}
+html body .chartbox{overflow:visible!important;max-width:100%}
+html body .chartbox svg,html body svg[viewBox]{max-width:100%!important;min-width:0!important;height:auto!important}
+table.compacta th,table.compacta td{white-space:normal!important;padding:7px 6px!important;font-size:12px!important;min-width:0!important;max-width:none!important}
+table.vira-cartao,table.vira-cartao tbody{display:block!important;width:100%!important;min-width:0!important}
+table.vira-cartao thead{display:none!important}
+table.vira-cartao tr{display:block!important;border:1px solid rgba(128,128,128,.28)!important;border-radius:12px;margin:8px 0;padding:6px 4px;background:transparent}
+table.vira-cartao td,table.vira-cartao th{display:flex!important;justify-content:space-between;align-items:center;gap:12px;text-align:right!important;border:0!important;padding:5px 10px!important;position:static!important;white-space:normal!important;min-width:0!important;max-width:none!important;width:auto!important;box-shadow:none!important}
+table.vira-cartao td::before{content:attr(data-l);flex:none;max-width:46%;font-size:11px;letter-spacing:.05em;text-transform:uppercase;opacity:.65;text-align:left;font-weight:600}
+table.vira-cartao td:first-child{justify-content:flex-start;text-align:left!important;font-weight:700;font-size:1.05em}
+table.vira-cartao td:first-child::before{display:none}
+table.vira-cartao tr.khr,table.vira-cartao tr.dv2{border:0!important}
+`;
+const SEM_ROLAGEM_JS = `(function(){
+  var raf=0;
+  function dono(t){var e=t.parentElement;while(e&&e!==document.body){var o=getComputedStyle(e).overflowX;if(e.hasAttribute('data-sr')||o==='auto'||o==='scroll'){e.setAttribute('data-sr','1');return e;}e=e.parentElement;}return null;}
+  function estoura(w){return w.scrollWidth>w.clientWidth+1;}
+  function rotular(t){var hs=[];var hr=t.querySelectorAll('thead tr');if(hr.length){var ths=hr[hr.length-1].children;for(var i=0;i<ths.length;i++){var n=+ths[i].getAttribute('colspan')||1;for(var k=0;k<n;k++)hs.push(ths[i].textContent.trim());}}
+    t.querySelectorAll('tbody tr').forEach(function(tr){var c=0;for(var j=0;j<tr.children.length;j++){var td=tr.children[j];td.setAttribute('data-l',hs[c]||'');c+=(+td.getAttribute('colspan')||1);}});}
+  function ajusta(){document.querySelectorAll('table').forEach(function(t){var w=dono(t);if(!w)return;t.classList.remove('vira-cartao','compacta');
+      w.style.setProperty('min-width','0','important');w.style.setProperty('max-width','100%','important');var ok=!estoura(w);w.style.setProperty('overflow','visible','important');if(ok)return;t.classList.add('compacta');if(!estoura(w))return;rotular(t);t.classList.add('vira-cartao');});}
+  function agenda(){cancelAnimationFrame(raf);raf=requestAnimationFrame(ajusta);}
+  new MutationObserver(agenda).observe(document.body,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('resize',agenda);agenda();
+})();`;
 function colocarIframe(doc) {
+  if (S._unlig) { S._unlig(); S._unlig = null; }
   const f = document.createElement('iframe');
   f.setAttribute('title', 'Painel'); f.srcdoc = doc;
   $('#palco').innerHTML = ''; $('#palco').appendChild(f);
+  f.addEventListener('load', () => ligarAltura(f));
+}
+/* o painel cresce até o tamanho do conteúdo: a única rolagem é a da página */
+function ligarAltura(f) {
+  let d; try { d = f.contentDocument; } catch (e) { return; }
+  if (!d || !d.documentElement) return;
+  const st = d.createElement('style');
+  st.textContent = 'html,body{height:auto!important;min-height:0!important;overflow-y:hidden!important}';
+  d.head.appendChild(st);
+  const topoH = () => { const t = document.querySelector('.topo'); return t ? t.offsetHeight : 0; };
+  const piso = () => Math.max(300, window.innerHeight - topoH());
+  const vars = () => {
+    const r = f.getBoundingClientRect(), root = d.documentElement;
+    root.style.setProperty('--vt', Math.max(0, topoH() - r.top) + 'px');
+    root.style.setProperty('--vb', Math.max(0, window.innerHeight - r.top) + 'px');
+  };
+  let raf = 0;
+  const ajusta = () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const h = Math.max(Math.ceil(d.documentElement.getBoundingClientRect().height), d.body ? d.body.offsetHeight : 0, piso());
+      if (Math.abs(h - f.offsetHeight) > 1) f.style.height = h + 'px';
+      vars();
+    });
+  };
+  try {
+    const w = f.contentWindow;
+    const ir = (y, suave) => window.scrollTo({ top: f.getBoundingClientRect().top + window.scrollY - topoH() + (y || 0), behavior: suave ? 'smooth' : 'auto' });
+    w.scrollTo = w.scroll = function (a, b) { if (a && typeof a === 'object') ir(a.top, a.behavior === 'smooth'); else ir(b, false); };
+  } catch (e) { }
+  const ro = new ResizeObserver(ajusta); ro.observe(d.documentElement); if (d.body) ro.observe(d.body);
+  const mo = new MutationObserver(ajusta); mo.observe(d.body || d.documentElement, { childList: true, subtree: true, attributes: true });
+  window.addEventListener('scroll', vars, { passive: true }); window.addEventListener('resize', ajusta);
+  S._unlig = () => { ro.disconnect(); mo.disconnect(); window.removeEventListener('scroll', vars); window.removeEventListener('resize', ajusta); };
+  ajusta();
 }
 
 async function abrirRitmo(visao) {

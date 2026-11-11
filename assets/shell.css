@@ -158,3 +158,15 @@ input[type=file]::file-selector-button{background:var(--t-tint);color:var(--t-te
 .grupo-loja{margin:0;padding:10px 18px;background:var(--surface2);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .linkbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .linkbox input{flex:1;min-width:200px;font-size:12px}
+
+/* ===== uma única rolagem: a da página ===== */
+html,body{height:auto;min-height:100%}
+.app{height:auto;min-height:100vh}
+.topo{position:sticky;top:0;z-index:20}
+.corpo-app{min-height:0;align-items:flex-start}
+.menu{position:sticky;top:var(--topoH,56px);height:calc(100vh - var(--topoH,56px));align-self:flex-start}
+.palco{flex:1;min-width:0;min-height:calc(100vh - var(--topoH,56px));position:static;overflow:visible}
+.palco iframe{position:static;inset:auto;display:block;width:100%;height:calc(100vh - var(--topoH,56px));border:0}
+@media(max-width:700px){
+  .menu{position:fixed;top:0;height:auto}
+}

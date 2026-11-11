@@ -142,3 +142,9 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - Cadastros: lista "Vendedores com vendas no mês" (último mês da base, por loja, fora quadro excluído) com botão "Criar acesso".
 - Layout: menu lateral fixo no computador; no celular abre com ☰.
 - Envio automático de e-mail NÃO configurado (precisa SMTP próprio no Supabase); hoje o link é copiado ou enviado por WhatsApp.
+
+## 11/11 — Rolagem única da página (versao 2026-11-11-22)
+- Os painéis (iframes) crescem até a altura do conteúdo (`ligarAltura` em shell.js); a única rolagem é a da página. Topo e menu lateral ficam fixos (sticky).
+- Nenhuma rolagem para o lado dentro dos painéis: `SEM_ROLAGEM_JS/CSS` (montarDoc) compacta tabelas largas e, se ainda não couberem, mostra cada linha como cartão (`vira-cartao`). Linhas de abas/chips quebram em várias linhas; gráficos SVG se ajustam à largura.
+- `window.scrollTo` dentro do painel foi redirecionado para a página. Cabeçalhos "sticky" internos dos apps deixam de grudar (o topo do site é que gruda).
+- Testes: e2e27 (rolagens por aba, 390px e 1366px) sem nenhuma rolagem interna.
