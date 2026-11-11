@@ -115,3 +115,9 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - Minha Meta (apps/ritmo.html): quem tem só uma loja (gerente/vendedor) não vê mais o filtro "Loja / Todas as lojas"; já abre na própria loja.
 - Celular (assets/tema/ritmo.css): cada indicador mostra %, barra, Real/Projeção/Meta e o recado; "Meta por dia / Seu ritmo" ficam ocultos.
 - versao: 2026-11-10-15
+
+## Meta base = Comissão e Meta (10/11-g)
+- Regra do Luan: a meta criada em Comissão e Meta > Metas (receita total, mix, % por loja, aparelho) é a BASE; dela saem as quantidades do Ritmo Comercial e do Minha Meta.
+- apps/comissao.html: função metasParaRitmo() = meta em R$ de cada loja/indicador ÷ ticket médio -> quantidade (Controle, Pós, BL, TV; AP = meta aparelho ÷ ticket de aparelho). Roda sozinha após cada salvamento do dono e pelo botão "Enviar metas ao Ritmo e Minha Meta". Grava em ritmo-cfg (+ fatias por loja) via ritmoSalvarCfg. Seguro e Claro Troca seguem digitados só no Ritmo.
+- apps/ritmo.html: aviso na aba de metas. Pendente: ligar também as metas do app Aparelhos (METAS q/r por loja) à mesma base.
+- versao 2026-11-10-17.

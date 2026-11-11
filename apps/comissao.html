@@ -614,7 +614,7 @@ function saveDono() {
   /* salva no banco sozinho: metas e regras valem para todos, sem depender do botão Publicar */
   clearTimeout(window._cmAuto);
   window._cmAuto = setTimeout(async () => {
-    try { if (parent.__painel && parent.__painel.comissaoPublicarCfg) { await parent.__painel.comissaoPublicarCfg(S.cfg); lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); } }
+    try { if (parent.__painel && parent.__painel.comissaoPublicarCfg) { await parent.__painel.comissaoPublicarCfg(S.cfg); lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); await metasParaRitmo(true); } }
     catch (e) { say('Não consegui salvar no banco: ' + (e && e.message || e)); }
   }, 1200);
 }
@@ -834,7 +834,7 @@ function viewReceita() {
   return `${kp}
   <section class="panel"><header><h2>Meta sugerida pelos melhores meses</h2><span class="n">Referência: o melhor mês fechado de cada loja em cada indicador (${ref.map(mlabel).join(', ')}). O mês aberto entra pela projeção (aparece marcado como parcial).</span></header>
     <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento sobre o melhor mês ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label>
-    <button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><span class="note">Define a meta total, o mix por indicador e a divisão por loja. Depois ajuste em Metas e custo e publique.</span></div></section>
+    <button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><button class="btn" data-act="metasritmo">Enviar metas ao Ritmo e Minha Meta</button><span class="note">Define a meta total, o mix por indicador e a divisão por loja. Depois ajuste em Metas e custo e publique.</span></div></section>
   <section class="panel"><header><h2>Receita por indicador</h2><span class="n">Receita = comissão + comissão residencial de Controle, Pós, BL e TV. Serviços ficam à parte. Destaque cinza = melhor mês.</span></header>
     <div class="scroll"><table><thead><tr><th>Indicador</th>${mCols}<th>Melhor mês</th><th>Meta atual</th><th>Meta sugerida</th><th>Oportunidade</th></tr></thead><tbody>${iRows}${iTot}</tbody></table></div></section>
   <section class="panel"><header><h2>Receita por loja</h2><span class="n">Onde há espaço para subir a meta: compare a meta atual com o que a loja já entregou no melhor mês.</span></header>
@@ -886,7 +886,7 @@ function viewSug() {
     if (open) lRows += `<tr class="dtl"><td colspan="8"><table class="pt"><thead><tr><th>Indicador</th>${head}<th>Melhor mês</th></tr></thead><tbody>${FRK.map(k => { const c = cel[li + '|' + k], mm = bl ? bl.meta[k] : 0, t = tkt[k]; return `<tr><td class="name"><b>${INDN[k]}</b></td>${cells(c, mm, t > 0 ? Math.ceil(mm / t) : 0)}<td>${c.m ? mlabel(c.m) : '—'}</td></tr>`; }).join('')}</tbody></table></td></tr>`;
   });
   return `<section class="panel"><header><h2>Sugestão de metas por indicador e loja</h2><span class="n">Base: o melhor mês fechado de cada loja em cada indicador (${Z.ref.map(mlabel).join(', ')}) + ${pc1(Z.cres)} de crescimento. Quantidade = vendas do melhor mês × crescimento; ticket médio de comissão = receita ÷ vendas; franquia média = franquia ÷ vendas. Clique na linha para abrir.</span></header>
-    <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label><button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><span class="note">Aplica receita total, mix por indicador e divisão por loja.</span></div>
+    <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label><button class="btn primary" data-act="aplicarsug">Aplicar como meta de ${mlabel(S.mk)}</button><button class="btn" data-act="metasritmo">Enviar metas ao Ritmo e Minha Meta</button><span class="note">Aplica receita total, mix por indicador e divisão por loja.</span></div>
     <div class="pad"><b>Por indicador</b> <span class="note">(abre as lojas)</span></div>
     <div class="scroll"><table><thead><tr><th>Indicador</th>${head}</tr></thead><tbody>${iRows}</tbody></table></div>
     <div class="pad"><b>Por loja</b> <span class="note">(abre os indicadores)</span></div>
@@ -1142,6 +1142,7 @@ document.addEventListener('click', async e => {
   else if (a === 'simcreset') { simcLoad(model(1), S.simc.who); render(); }
   else if (a === 'simcall') { simcLoad(model(1), S.simc.who, +t.dataset.v); render(); }
   else if (a === 'aplicarsug') aplicarSug();
+  else if (a === 'metasritmo') metasParaRitmo(false);
   else if (a === 'rv') { S.rv = t.dataset.v; render(); }
   else if (a === 'open') { S.open[t.dataset.v] = !S.open[t.dataset.v]; render(); }
   else if (a === 'calcsimv') { calcSimV(); render(); }
@@ -1168,6 +1169,23 @@ function aplicarSug() {
   M.lojaPct = M.lojaPct || {}; let ac2 = 0; const L = Z.D.L;
   L.forEach((l, li) => { M.lojaPct[l] = li < L.length - 1 ? Math.round((Z.potL[li] / tot) * 1000) / 10 : Math.round((100 - ac2) * 10) / 10; ac2 += M.lojaPct[l]; });
   saveDono(); say('Meta de ' + mlabel(S.mk) + ' atualizada pela sugestão. Revise em Metas e custo e publique.');
+}
+/* A meta do Comissão e Meta é a base: dela saem as quantidades do Ritmo Comercial e do Minha Meta. */
+async function metasParaRitmo(silencioso) {
+  if (!isDono() || !(parent.__painel && parent.__painel.ritmoSalvarCfg)) return;
+  const nz = x => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+  const B = model(), M = B.M; if (!(M && M.total > 0)) { if (!silencioso) say('Defina primeiro a meta total deste mês em Metas.'); return; }
+  const cfgR = JSON.parse(JSON.stringify(parent.__painel.ritmoCfg() || {})); cfgR.metas = cfgR.metas || {};
+  const nomes = {}; Object.keys(cfgR.metas).forEach(k => { const n = k.split('|')[1]; if (n) nomes[nz(n).slice(0, 6)] = n; });
+  const tk = ticketMap(B), apT = B.totAp && B.totAp.q > 0 ? B.totAp.fat / B.totAp.q : 0, ID = { controle: 'CONTROLE', pos: 'POS', bl: 'BL', tv: 'TV' };
+  let n = 0, sem = [];
+  for (const l of B.lojas) {
+    const nm = nomes[nz(S.data.L[l.li]).slice(0, 6)]; if (!nm) { sem.push(S.data.L[l.li]); continue; }
+    for (const k of FRK) { const q = tk[k] > 0 ? Math.ceil((l.meta[k] || 0) / tk[k]) : 0; const key = S.mk + '|' + nm + '|' + ID[k]; if (q > 0) cfgR.metas[key] = q; else delete cfgR.metas[key]; n++; }
+    const qa = apT > 0 ? Math.ceil((l.metaAp || 0) / apT) : 0, ka = S.mk + '|' + nm + '|AP'; if (qa > 0) cfgR.metas[ka] = qa; else delete cfgR.metas[ka];
+  }
+  try { await parent.__painel.ritmoSalvarCfg(cfgR); if (!silencioso) say('Metas de ' + mlabel(S.mk) + ' enviadas ao Ritmo Comercial e ao Minha Meta (quantidades = meta em R$ ÷ ticket médio).' + (sem.length ? ' Sem correspondência no Ritmo: ' + sem.join(', ') + '.' : '')); }
+  catch (e) { if (!silencioso) say('Não consegui enviar ao Ritmo: ' + (e && e.message || e)); }
 }
 async function publicarAcesso() {
   S.busy = true; render();
