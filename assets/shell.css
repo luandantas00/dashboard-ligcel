@@ -97,7 +97,7 @@ table.t tr:last-child td{border-bottom:0}
 .pilula.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}
 .pilula.off{background:var(--bad-bg);color:var(--bad);border-color:transparent}
 .acoes{display:flex;gap:6px;flex-wrap:wrap}
-.destaque{background:var(--ok-bg);color:var(--ok);border-radius:12px;padding:12px 14px;margin-top:12px;font-weight:600;word-break:break-all}
+.destaque{background:var(--ok-bg);color:var(--ok);border-radius:12px;padding:12px 14px;margin-top:12px;font-weight:600;word-break:break-word}
 .destaque code{font-family:ui-monospace,monospace;background:var(--surface);padding:2px 7px;border-radius:6px;color:var(--ink)}
 .nota{color:var(--muted);font-size:12.5px;margin:8px 0 0}
 .solta{border:1.5px dashed var(--line);border-radius:14px;background:var(--surface2);padding:22px;text-align:center}
@@ -132,3 +132,29 @@ input[type=file]::file-selector-button{background:var(--t-tint);color:var(--t-te
 
 .btn.tema{min-width:92px}
 @media(max-width:700px){.btn.tema{min-width:0}}
+
+/* ===== menu lateral (como um programa) ===== */
+.corpo-app{flex:1;min-height:0;display:flex}
+.menu{width:224px;flex:none;background:var(--t-nav);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-right:1px solid var(--t-gb);padding:14px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.abas{max-width:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;overflow:visible}
+.aba{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;border-radius:10px;padding:11px 12px;font-weight:600;color:var(--ink2);white-space:normal;background:none}
+.aba:hover{background:var(--t-tint);color:var(--ink)}
+.aba[aria-current="page"]{background:var(--t-tint);color:var(--t-text);border-left-color:var(--brand)}
+.emp-box{padding:2px 4px 8px;border-bottom:1px solid var(--line)}
+.emp-box select{margin-top:4px}
+.menu-btn,.veu{display:none}
+.topo-in{max-width:none}
+@media(max-width:700px){
+  .menu-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;font-size:18px;flex:none}
+  .menu{position:fixed;z-index:30;top:0;bottom:0;left:0;width:78%;max-width:300px;transform:translateX(-102%);transition:transform .22s ease;padding-top:64px;background:var(--surface);box-shadow:var(--shadow)}
+  .menu.aberto{transform:none}
+  .veu{display:block;position:fixed;inset:0;z-index:25;background:rgba(2,6,12,.55)}
+  .veu[hidden]{display:none}
+  .aba{padding:14px 14px;font-size:15px}
+}
+.item-vend{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:12px 4px;border-bottom:1px solid var(--line)}
+.item-vend:last-child{border-bottom:0}
+.item-vend small{color:var(--muted);display:block}
+.grupo-loja{margin:0;padding:10px 18px;background:var(--surface2);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.linkbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.linkbox input{flex:1;min-width:200px;font-size:12px}

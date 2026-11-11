@@ -197,6 +197,7 @@ tr.dv2 td{background:var(--surface-2);font-size:11.5px;font-weight:700;letter-sp
 }
 
 @media (prefers-reduced-motion:no-preference){.seg button,.chip{transition:background .15s,color .15s}}
+.abtog{font:inherit;font-weight:600;background:none;border:0;color:var(--ink2,inherit);cursor:pointer;padding:6px 0;text-align:left}.abtog:hover{text-decoration:underline}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
@@ -229,9 +230,7 @@ tr.dv2 td{background:var(--surface-2);font-size:11.5px;font-weight:700;letter-sp
         <label class="chip"><input type="checkbox" id="cSEM" checked><i style="background:var(--sx)"></i>Sem multi</label></div>
       <div class="fg"><label class="chip"><input type="checkbox" id="fHide">Ocultar gerentes</label></div>
     </div>
-    <nav class="jump" id="jump" aria-label="Ir para">
-      <button data-j="sKpi">Resumo</button><button data-j="sHl">Destaques</button><button data-j="sEv">Evolução</button><button data-j="sInd">Indicador</button><button data-j="sLoja">Loja</button><button data-j="sVend">Vendedor</button><button data-j="sMulti">Multi</button><button data-j="sBase">Base</button>
-    </nav>
+    <nav class="jump" id="jump" aria-label="Ir para"><button data-j="sKpi">Resumo</button><button data-j="sHl">Destaques</button><button data-j="sLoja">Loja</button><button data-j="sInd">Indicador</button><button data-j="sVend">Vendedor</button><button data-j="sMulti">Multi</button><button data-j="sTend">Tendência</button><button data-j="sBase">Base</button></nav>
   </div>
 
   <div class="pnote" id="pnote" style="display:none"></div>
@@ -244,24 +243,15 @@ tr.dv2 td{background:var(--surface-2);font-size:11.5px;font-weight:700;letter-sp
     <div class="hls" id="hls"></div>
   </section>
 
-  <section id="sEv">
-    <div class="sh"><div><h2>Evolução da receita</h2><div class="hint" id="evHint"></div></div></div>
-    <div class="grid2">
-      <div class="card"><h3>Receita por mês e indicador</h3><div class="cap">Comissão + Comissão Res</div><div id="chStack"></div><div class="legend" id="lgStack"></div></div>
-      <div class="card"><h3>Tendência por indicador</h3><div class="cap">Uma linha por indicador</div><div id="chLine"></div></div>
-      <div class="card"><h3>Ritmo diário acumulado</h3><div class="cap">Receita acumulada dia a dia, por mês</div><div id="chCum"></div><div class="legend" id="lgCum"></div></div>
-    </div>
+  <section id="sLoja">
+    <div class="sh"><div><h2>Por loja</h2><div class="hint" id="lHint"></div></div>
+      <div class="tools"><details class="ms" id="msL"><summary>Indicadores: todos</summary><div class="msb"></div></details><button class="mini" id="xL">Abrir todos</button></div></div>
+    <div class="tw rank" id="tLoja"></div>
   </section>
 
   <section id="sInd">
     <div class="sh"><div><h2>Por indicador</h2><div class="hint">Ranking pela receita do mês selecionado</div></div></div>
     <div class="tw rank" id="tInd"></div>
-  </section>
-
-  <section id="sLoja">
-    <div class="sh"><div><h2>Por loja</h2><div class="hint" id="lHint"></div></div>
-      <div class="tools"><details class="ms" id="msL"><summary>Indicadores: todos</summary><div class="msb"></div></details><button class="mini" id="xL">Abrir todos</button></div></div>
-    <div class="tw rank" id="tLoja"></div>
   </section>
 
   <section id="sVend">
@@ -281,6 +271,14 @@ tr.dv2 td{background:var(--surface-2);font-size:11.5px;font-weight:700;letter-sp
     </div>
     <div class="sh" style="margin-top:18px"><div><h3 style="font-size:16px">Multi por indicador</h3><div class="hint" id="mHint"></div></div></div>
     <div class="tw" id="tMultiI"></div>
+  </section>
+
+  <section id="sTend">
+    <div class="sh"><div><h2>Tendência e histórico</h2><div class="hint" id="evHint"></div></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Tendência por indicador</h3><div class="cap">Uma linha por indicador, últimos 6 meses</div><div id="chLine"></div></div>
+      <div class="card"><h3>Histórico da receita total</h3><div class="cap">Todos os meses da base · Comissão + Comissão Res</div><div id="chHist"></div></div>
+    </div>
   </section>
 
   <section id="sBase">
@@ -514,9 +512,9 @@ function tableHtml(rows,o={}){
   const wk=(fn,joinKids)=>r=>{let s=fn(r);if(xo(r)){const ks=kidsOf(r),p={kid:true,den:r.d[m],mx1:m1==null?0:Math.max(...ks.map(x=>Math.abs(x.t[m]-x.t[m1])),1),mx2:m2==null?0:Math.max(...ks.map(x=>Math.abs(x.t[m]-x.t[m2])),1)};
       const kh=ks.length?ks.map(x=>fn(x,p)).join(''):'';s+=joinKids?(!ks.length?'':`<div class="kids"><div class="kh">Indicadores · maior queda primeiro</div>${kh}</div>`):(ks.length?`<tr class="khr"><td colspan="10">Indicadores de ${esc(r.name)} · ordenados pela maior queda vs ${st.hl===1?'M-1':'M-2'}</td></tr>`+kh:'')}return s};
   const main=o.rows||rows.filter(r=>!r.abs),after=o.after||[];
-  const dvTxt=`Ausentes ou sem vendas no mês (${after.length}) · receita somada nos totais, fora dos destaques`;
-  const bodyD=main.map(wk(rowD,false)).join('')+(after.length?`<tr class="dv2"><td colspan="10">${dvTxt}</td></tr>`+after.map(wk(rowD,false)).join(''):'');
-  const bodyM=main.map(wk(rowM,true)).join('')+(after.length?`<div class="rdiv">${dvTxt}</div>`+after.map(wk(rowM,true)).join(''):'');
+  const dvTxt=`Ausentes ou sem vendas no mês (${after.length}) · receita somada nos totais, fora dos destaques`,abOpen=!!st.showAb,abBtn=`<button class="abtog" aria-expanded="${abOpen}">${abOpen?'▾ Ocultar':'▸ Mostrar'} vendedores ausentes ou sem vendas (${after.length})</button>`;
+  const bodyD=main.map(wk(rowD,false)).join('')+(after.length?`<tr class="dv2"><td colspan="10">${abBtn}${abOpen?' · '+dvTxt:''}</td></tr>`+(abOpen?after.map(wk(rowD,false)).join(''):''):'');
+  const bodyM=main.map(wk(rowM,true)).join('')+(after.length?`<div class="rdiv">${abBtn}</div>`+(abOpen?after.map(wk(rowM,true)).join(''):''):'');
   const foot=o.noTotal?'':`<tr class="tr"><td>Total</td><td>${brl(totD[m])}${P?`<span class="alt">${st.pmode==='proj'?'real '+brl(totRaw[m]):'proj. '+brl(totRaw[m]*F)}</span>`:''}</td><td>${brl(totC)}</td><td>${brl(totR)}</td><td>100%</td><td>${spark(totD)}</td><td>${m1!=null?brl(totD[m1]):'—'}</td><td class="dv">${m1!=null?dl(totT[m],totT[m1]):'—'}</td><td>${m2!=null?brl(totD[m2]):'—'}</td><td class="dv">${m2!=null?dl(totT[m],totT[m2]):'—'}</td></tr>`;
   const footM=o.noTotal?'':`<div class="rc tot"><div class="rc1"><div class="nm"><span>Total</span></div><div class="rv"><b>${brl(totD[m])}</b><small>100%</small></div></div><div class="rc2" style="margin-top:8px"><div><label>${m1!=null?vsl(m1):'M-1'}</label>${m1!=null?dl(totT[m],totT[m1]):na}</div><div><label>${m2!=null?vsl(m2):'M-2'}</label>${m2!=null?dl(totT[m],totT[m2]):na}</div><div>${spark(totD)}</div></div><div class="rc3">Comissão ${brl(totC)} · Res ${brl(totR)}${P?' · '+altTxt(totRaw[m],st.pmode):''}</div></div>`;
   const empty='<tr><td colspan="10" class="empty">Sem receita para os filtros escolhidos.</td></tr>';
@@ -591,15 +589,15 @@ function render(){
   $('#hlHint').textContent=b==null?'Mês de comparação indisponível':`Maiores ganhos e perdas de receita de ${MN[m]}${st.pmode==='real'&&P?' (sobre a projeção)':''} contra ${MN[b]}. Vendedores ausentes ficam fora.`;
   $('#hls').innerHTML=hlCard('Indicador',rowsI)+hlCard('Loja'+fiTxt('L'),rowsL)+hlCard('Vendedor'+fiTxt('V'),rowsV);
   /* evolução (últimos 6 meses) */
-  setDims($('#chStack'));const narrow=W<460,vis=R_(NM).slice(Math.max(0,NM-6));
+  setDims($('#chLine'));const narrow=W<460,vis=R_(NM).slice(Math.max(0,NM-6));
   const cats=vis.map(i=>catLabel(i,narrow,cut));
   const Mi=agg(keyOf),top=RANK.slice(0,7).filter(k=>Mi.has(k)),rest=[...Mi.keys()].filter(k=>!top.includes(k));
   const ser=top.map(k=>({name:nm[k],col:colOf(k),v:vis.map(i=>dv(tt(Mi.get(k)))[i])}));
   if(rest.length)ser.push({name:'Demais',col:'var(--sx)',v:vis.map(i=>rest.reduce((a,k)=>a+dv(tt(Mi.get(k)))[i],0))});
-  $('#evHint').textContent=pm>=0?(st.pmode==='proj'?`${MN[pm]} está projetado (realizado até o dia ${maxDay} × fator ${F.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}).`:st.pmode==='real'?`${MN[pm]} mostra o realizado até o dia ${maxDay}.`:(cut<99?`Todos os meses limitados aos dias 1 a ${cut}, para comparar no mesmo período.`:`${MN[pm]} está parcial, com dados até o dia ${maxDay}.`)):'';
-  $('#chStack').innerHTML=stacked(cats,ser);$('#lgStack').innerHTML=legend(ser,ser.map(s=>s.v[s.v.length-1-(LASTM-m)]));
+  $('#evHint').textContent=pm>=0&&st.pmode==='proj'?`${MN[pm]} está projetado (realizado até o dia ${maxDay} × fator ${F.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}).`:'';
   setDims($('#chLine'));$('#chLine').innerHTML=lines(cats,ser)+`<div class="legend">${legend(ser)}</div>`;
-  cumChart();
+  {const allI=R_(NM),catsA=allI.map(i=>catLabel(i,true,cut)),totA=dv(t0);
+   setDims($('#chHist'));$('#chHist').innerHTML=lines(catsA,[{name:'Receita total',col:'var(--s1)',v:allI.map(i=>totA[i])}]);}
   /* multi */
   const Mc=agg(r=>r[5],{ic:true}),E=k=>Mc.get(k)||zero(),net=E(1),cla=E(2),sem=E(0);
   const tn=tt(net),tc2=tt(cla),ts=tt(sem),mt=tn.map((v,i)=>v+tc2[i]),all=mt.map((v,i)=>v+ts[i]),allD=dv(all);
@@ -637,6 +635,7 @@ $('#fLoja').onchange=e=>{st.loja=+e.target.value;render()};
 [['#cSEM',0],['#cNET',1],['#cCLA',2]].forEach(([s,i])=>$(s).onchange=e=>{st.combo[i]=e.target.checked;if(!st.combo.some(Boolean)){st.combo[i]=true;e.target.checked=true}render()});
 $('#fHide').onchange=e=>{st.hide=e.target.checked;render()};
 $('#vq').oninput=e=>{st.q=e.target.value;render()};
+document.addEventListener('click',e=>{if(e.target.closest('.abtog')){st.showAb=!st.showAb;render()}});
 $('#vMore').onclick=()=>{st.all=!st.all;render()};
 $('#fToggle').onclick=()=>{const b=$('#bar'),o=b.classList.toggle('open');$('#fToggle').setAttribute('aria-expanded',o)};
 $('#jump').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const el=document.getElementById(b.dataset.j);if(!el)return;$('#bar').classList.remove('open');$('#fToggle').setAttribute('aria-expanded','false');el.scrollIntoView({behavior:'smooth',block:'start'})});

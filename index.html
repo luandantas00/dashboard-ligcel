@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("painel_tema")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
-<link rel="stylesheet" href="assets/shell.css?v=12">
+<link rel="stylesheet" href="assets/shell.css?v=13">
 </head>
 <body>
 
@@ -27,9 +27,23 @@
   </form>
 </main>
 
+<main id="telaSenha" class="login" hidden>
+  <form id="formSenha" class="login-card" autocomplete="off">
+    <div class="marca"><span class="bola"></span><span>Crie a sua senha</span></div>
+    <p class="sub">Bem-vindo! Escolha uma senha para os seus próximos acessos.</p>
+    <label for="snSenha">Nova senha (mínimo 8 caracteres)</label>
+    <input id="snSenha" type="password" autocomplete="new-password" minlength="8" required>
+    <label for="snSenha2">Repita a senha</label>
+    <input id="snSenha2" type="password" autocomplete="new-password" minlength="8" required>
+    <button class="btn principal" id="btnSenha" type="submit">Salvar e entrar</button>
+    <p class="msg" id="snMsg" role="alert"></p>
+  </form>
+</main>
+
 <div id="telaApp" class="app" hidden>
   <header class="topo">
     <div class="topo-in">
+      <button class="icone menu-btn" id="btnMenu" aria-label="Abrir o menu">☰</button>
       <div class="marca">
         <span class="bola"></span>
         <h1 id="tituloTxt">Painel Comercial</h1>
@@ -47,9 +61,15 @@
         <button class="btn mini" id="btnSair">Sair</button>
       </div>
     </div>
-    <nav id="abas" class="abas" aria-label="Seções"></nav>
   </header>
-  <section id="palco" class="palco"></section>
+  <div class="corpo-app">
+    <aside id="menu" class="menu" aria-label="Menu">
+      <div id="empBox" class="emp-box" hidden></div>
+      <nav id="abas" class="abas" aria-label="Seções"></nav>
+    </aside>
+    <div id="menuVeu" class="veu" hidden></div>
+    <section id="palco" class="palco"></section>
+  </div>
 </div>
 
 <dialog id="dlgConta">
@@ -68,7 +88,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
-<script src="assets/comissao-nucleo.js?v=4"></script>
-<script src="assets/shell.js?v=12"></script>
+<script src="assets/comissao-nucleo.js?v=5"></script>
+<script src="assets/shell.js?v=13"></script>
 </body>
 </html>

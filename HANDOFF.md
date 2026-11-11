@@ -134,3 +134,11 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - Testado (e2e23): admin vê aba e grava; gerente/vendedor sem aba. versao 2026-11-10-19.
 - Apps Script antigo: a senha dele ficou exposta no chat → trocar ou desativar essa implantação.
 - 11/11 (versao 2026-11-11-20) Receita: removidos "Receita por mês e indicador" e "Ritmo diário acumulado". Ordem: Resumo, Destaques, Loja (abre indicador), Indicador, Vendedor (abre indicador; ausentes/sem venda recolhidos, abrem no clique), Multi, Tendência por indicador + Histórico da receita total (todos os meses).
+
+## 11/11 — Multi-empresa, menu lateral, convites (versao 2026-11-11-21)
+- Banco: tabela `empresas`; `empresa_id` em lojas, profiles, datasets, app_config (PK de datasets e app_config agora `(empresa_id, chave)`; upsert usa `onConflict: 'empresa_id,chave'`). Função `minha_empresa()`. RLS reescrita por empresa. LIGCEL = empresa `00000000-0000-4000-8000-000000000001`. Dono tem `empresa_id` nulo e escolhe a empresa no menu. SQL em `supabase/migrations/20261111_multi_empresa.sql`. Cópias de segurança: tabelas `bkp_20261111_*`.
+- Papéis: dono (plataforma) > admin (= "Empresário" na tela) > gerente > vendedor. Aba "Empresas" só do dono: cria empresa + convida o empresário por link.
+- Convite: Edge Function `usuarios` (código em `supabase/functions/usuarios/index.ts`) gera link com `token_hash`; o site abre `?token=…&tipo=invite|recovery`, faz `verifyOtp` e pede a nova senha. Não depende de e-mail nem de redirect do Supabase. Ações: nova_empresa, convidar, criar (senha provisória), gerar_link, redefinir_senha.
+- Cadastros: lista "Vendedores com vendas no mês" (último mês da base, por loja, fora quadro excluído) com botão "Criar acesso".
+- Layout: menu lateral fixo no computador; no celular abre com ☰.
+- Envio automático de e-mail NÃO configurado (precisa SMTP próprio no Supabase); hoje o link é copiado ou enviado por WhatsApp.
