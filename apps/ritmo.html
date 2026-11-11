@@ -1054,7 +1054,7 @@ const nomeLoja=l=>l.replace(/\s*\([^)]+\)\s*$/,''), codLoja=l=>(l.match(/\(([^)]
 /* ---------- regras ---------- */
 let FORA=[], REGRAS=[];
 function regrasAtivas(){
-  const u=lsGet(KEY_REG,null);
+  const u=REGUSER;
   return (u&&u.length!==undefined)?u:(RAW.regrasLoja||[]);
 }
 function carregarRegras(){
@@ -2084,6 +2084,19 @@ function renderFiltPort(){
 const KEY_META='lig26_metas', KEY_HC='lig26_hc', KEY_TH='lig26_tema', KEY_MOB='lig26_mob', KEY_REG='lig26_regras', KEY_DU='lig26_dias';
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+let CFGDB={};try{CFGDB=(parent.__painel&&parent.__painel.ritmoCfg&&parent.__painel.ritmoCfg())||{};}catch(e){CFGDB={};}
+let REGUSER=Array.isArray(CFGDB.regras)?CFGDB.regras:null, _cfgT=null;
+/* metas, HC, dias úteis e regras ficam no banco: valem para todos os acessos */
+function salvarCfg(msg){
+  clearTimeout(_cfgT);saveState('salvando…');
+  _cfgT=setTimeout(function(){
+    const P=parent.__painel;
+    if(!P||!P.ritmoSalvarCfg){saveState('NÃO salvou: sem ligação com o banco');return;}
+    Promise.resolve(P.ritmoSalvarCfg({metas:metas,hc:HCMAN,dias:DUMAN,regras:REGUSER})).then(
+      function(){saveState(msg||'salvo para todos');},
+      function(e){saveState('ERRO ao salvar');alert('Não consegui salvar no banco: '+((e&&e.message)||e)+'\nTente de novo.');});
+  },500);
+}
 function saveState(t){const el=document.getElementById('saveState');el.textContent=t;clearTimeout(el._t);el._t=setTimeout(()=>el.textContent='',2600);}
 function renderMetas(){
   document.getElementById('metaMes').textContent=mesLabel(S.mes);
@@ -2102,7 +2115,7 @@ function renderMetas(){
     inp.addEventListener('change',()=>{
       const k=S.mes+'|'+inp.dataset.l+'|'+inp.dataset.i,v=Number(String(inp.value).replace(/\./g,'').replace(',','.'))||0;
       if(v>0)metas[k]=v;else delete metas[k];
-      lsSet(KEY_META,metas);saveState('metas salvas');renderMetas();renderAll();});
+      salvarCfg('metas salvas para todos');renderMetas();renderAll();});
   });
 }
 function renderDU(){
@@ -2126,7 +2139,7 @@ function salvarDU(total,dec){
   if(total!==''&&total!==null&&total!==undefined)o.total=Number(total)||0;
   if(dec!==''&&dec!==null&&dec!==undefined)o.dec=Number(dec)||0;
   if(Object.keys(o).length)DUMAN[S.mes]=o;else delete DUMAN[S.mes];
-  lsSet(KEY_DU,DUMAN);saveState('dias úteis salvos');renderAll();renderDU();
+  salvarCfg('dias úteis salvos para todos');renderAll();renderDU();
 }
 function renderHC(){
   let h='<thead><tr><th class="l">Loja</th><th>HC</th><th>Com produção</th></tr></thead><tbody>';
@@ -2140,7 +2153,7 @@ function renderHC(){
   el.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
     const l=inp.dataset.l,v=String(inp.value).trim();
     if(v==='')delete HCMAN[l];else HCMAN[l]=Number(v)||0;
-    lsSet(KEY_HC,HCMAN);saveState('HC salvo');clearDiv();renderAll();renderHC();}));
+    salvarCfg('HC salvo para todos');clearDiv();renderAll();renderHC();}));
 }
 function renderRegras(){
   const rg=regrasAtivas(),host=document.getElementById('regrasBox');
@@ -2449,7 +2462,7 @@ function wire(){
     const passados=fer.filter(d=>d<=hoje).length;
     salvarDU(P.totalAuto-fer.length, P.decAuto-passados);});
   const aplicarRegras=(rg,msg)=>{
-    lsSet(KEY_REG,rg);
+    REGUSER=rg;salvarCfg('regras salvas para todos');
     carregarRegras();rebuild();derive();clearDiv();
     if(MESES.indexOf(S.mes)<0)S.mes=REF.mesAtual;
     montarSelects();renderRegras();renderAll();
@@ -2458,8 +2471,7 @@ function wire(){
     n.className='report on ok';
     n.innerHTML='<b>Regras aplicadas.</b> O resultado dos vendedores já está na loja nova. '+
       'Duas coisas a lembrar: o <b>volume atendido</b> (usado na conversão) só acompanha na próxima planilha que você enviar, '+
-      'porque ele vem somado por loja na base; e para todo mundo que abre o link ver essa mudança é preciso '+
-      '<b>enviar a planilha e publicar</b> na aba Atualizar base.';
+      'porque ele vem somado por loja na base; e a mudança já ficou salva para todos os acessos.';
   };
   document.getElementById('btnRegraAdd').addEventListener('click',()=>{
     const rg=lerRegrasDoForm();rg.push({loja:'',desde:'0000-00-00',vendedores:[]});
@@ -2475,7 +2487,7 @@ function wire(){
   document.getElementById('btnRegraSalvar').addEventListener('click',()=>
     aplicarRegras(lerRegrasDoForm(),'regras salvas'));
   document.getElementById('btnRegraReset').addEventListener('click',()=>{
-    try{localStorage.removeItem(KEY_REG);}catch(e){}
+    REGUSER=null;
     aplicarRegras(JSON.parse(JSON.stringify(CFG0.regrasLoja||[])),'voltou ao padrão');});
   document.querySelectorAll('input[name="modoBase"]').forEach(r=>r.addEventListener('change',()=>{
     document.getElementById('modoHint').innerHTML=modoBase()==='tudo'
@@ -2489,15 +2501,15 @@ function wire(){
       const t=i.id==='SEG'?tSeg:i.id==='PORT'?tPort:i.id==='TROCA'?tTroca:IND[i.id].t;
       const v=Math.round(cnt(pm,t,r=>r.loja===l)*g);
       if(v>0)metas[S.mes+'|'+l+'|'+i.id]=v;else delete metas[S.mes+'|'+l+'|'+i.id];}));
-    lsSet(KEY_META,metas);saveState('metas geradas de M-1');renderAll();});
+    salvarCfg('metas geradas de M-1 e salvas');renderAll();});
   document.getElementById('btnMetaCopy').addEventListener('click',()=>{
     const pm=prevYm(S.mes);
     LOJAS.forEach(l=>METAIDS.forEach(i=>{const v=metas[pm+'|'+l+'|'+i.id];
       if(v)metas[S.mes+'|'+l+'|'+i.id]=v;else delete metas[S.mes+'|'+l+'|'+i.id];}));
-    lsSet(KEY_META,metas);saveState('metas copiadas');renderAll();});
+    salvarCfg('metas copiadas e salvas');renderAll();});
   document.getElementById('btnMetaClear').addEventListener('click',()=>{
     LOJAS.forEach(l=>METAIDS.forEach(i=>delete metas[S.mes+'|'+l+'|'+i.id]));
-    lsSet(KEY_META,metas);saveState('metas zeradas');renderAll();});
+    salvarCfg('metas zeradas e salvas');renderAll();});
 }
 
 /* ---------- escolha e troca de visão ---------- */
@@ -2553,9 +2565,9 @@ async function boot(){
   }else{
     try{if(window.claude&&claude.use)PUB=await claude.use('artifact');}catch(e){PUB=null;}
   }
-  metas=Object.assign({},RAW.metasIniciais||{},lsGet(KEY_META,{}));
-  HCMAN=Object.assign({},RAW.hcIniciais||{},lsGet(KEY_HC,{}));
-  DUMAN=Object.assign({},RAW.diasIniciais||{},lsGet(KEY_DU,{}));
+  metas=Object.assign({},RAW.metasIniciais||{},CFGDB.metas||{});
+  HCMAN=Object.assign({},RAW.hcIniciais||{},CFGDB.hc||{});
+  DUMAN=Object.assign({},RAW.diasIniciais||{},CFGDB.dias||{});
   document.documentElement.setAttribute('data-theme',lsGet(KEY_TH,'light'));
   document.documentElement.setAttribute('data-mob',lsGet(KEY_MOB,'resumo'));
   carregarRegras();rebuild();derive();

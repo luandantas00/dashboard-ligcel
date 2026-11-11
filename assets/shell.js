@@ -177,6 +177,7 @@ async function abrirRitmo(visao) {
         : 'A gestão ainda não publicou os dados da sua loja.');
     }
     S.ritmoTxt = JSON.stringify(payload);
+    S.ritmoCfg = (await lerDataset(gestao() ? 'ritmo-cfg' : 'ritmo-cfg:' + S.me.loja_id)) || {};
     const p = visao === 'meta' ? 'vendedor' : 'ritmo';
     const prelude = `(function(){
       function run(){var ok,er;var o={withSuccessHandler:function(f){ok=f;return o;},withFailureHandler:function(f){er=f;return o;}};
@@ -240,6 +241,11 @@ async function salvarComissao(data, cfg, cfgAt) {
 window.__painel = {
   lerBase: async () => S.ritmoTxt || '',
   salvarBase: async (txt) => { await salvarRitmo(JSON.parse(txt)); return true; },
+  ritmoCfg: () => S.ritmoCfg || {},
+  ritmoSalvarCfg: async (cfg) => {
+    if (!gestao()) throw new Error('Só dono e administrador alteram metas e parâmetros.');
+    await salvarCfgRitmo(cfg); S.ritmoCfg = cfg; return true;
+  },
   comissaoInit: async () => {
     const p = S.comissao; if (!p) throw new Error('Sem dados do Comissão e Meta.');
     const vw = {};
@@ -313,6 +319,19 @@ async function salvarRitmo(raw) {
   }
   await gravar(linhas);
   return linhas.length - 1;
+}
+
+async function salvarCfgRitmo(cfg) {
+  const linhas = [{ chave: 'ritmo-cfg', loja_id: null, payload: cfg }];
+  for (const l of S.lojas.filter(x => x.ativa)) {
+    const alvo = new Set([l.nome].concat(l.apelidos || []).map(norm)), f = {};
+    f.metas = {}; Object.keys(cfg.metas || {}).forEach(k => { if (alvo.has(norm(k.split('|')[1]))) f.metas[k] = cfg.metas[k]; });
+    f.hc = {}; Object.keys(cfg.hc || {}).forEach(k => { if (alvo.has(norm(k))) f.hc[k] = cfg.hc[k]; });
+    f.dias = cfg.dias || {};
+    f.regras = Array.isArray(cfg.regras) ? cfg.regras.filter(r => alvo.has(norm(r.loja))) : null;
+    linhas.push({ chave: 'ritmo-cfg:' + l.id, loja_id: l.id, payload: f });
+  }
+  await gravar(linhas);
 }
 
 /* ====================== entrada única: Excel do Controle Celular ====================== */

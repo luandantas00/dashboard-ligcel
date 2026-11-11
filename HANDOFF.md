@@ -46,11 +46,14 @@ Chaves de `datasets` (campo `chave`):
 - `ritmo` (base completa, só gestão) e `ritmo:<loja_id>` (recorte por loja)
 - `aparelhos` (`{seed, excl, page}`; carga nova entra em `page.upd`, base cheia em `seed`)
 - `comissao` (`{data, cfg, cfgAt}`, só gestão) e `comissao:<loja_id>` (`{data` recortado, `cfg, cfgAt}`)
+- `ritmo-cfg` (`{metas, hc, dias, regras}` do Ritmo: metas por mês|loja|indicador, HC manual, dias úteis, regras de loja por vendedor; só gestão grava) e `ritmo-cfg:<loja_id>` (recorte da loja, lido por gerente e vendedor). Tudo que a gestão digita no Ritmo (⚙ Metas) é salvo aqui automaticamente.
 - `comissao-vw:<loja_id>` (`{vw}`: divisão da meta entre vendedores, gravada pelo gerente)
 
 Os dados do Excel nunca são guardados como arquivo, só como números agregados.
 
 **Primeira tarefa sugerida:** exportar o SQL real da estrutura (tabelas, políticas, funções, trigger) para `supabase/schema.sql` e o código da Edge Function para `supabase/functions/usuarios/index.ts`. Hoje ambos existem só dentro do Supabase. O código da função foi lido do Supabase em 10/11/2026 e dá para recuperar a qualquer momento com a ferramenta de leitura de funções.
+
+**Regra do Luan:** nada que alguém digite pode ficar salvo só no navegador. Metas/HC/dias/regras do Ritmo, metas do Aparelhos e configuração da Comissão salvam sozinhos no banco (autosave). Só tema/filtros ficam locais.
 
 ## Regras de negócio decididas
 
@@ -62,7 +65,7 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 
 ## Estado atual (10/11/2026)
 
-- Versão em `config.js`: `2026-11-10-8` (etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
+- Versão em `config.js`: `2026-11-10-9` (etapa 3 + metas no banco; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
 - Base carregada em 06/11/2026, a partir de `HISTORICO ANO CC LIG SET.xlsx` (20.646 linhas, 02/01 a 06/11, 7 lojas). Ritmo com 10.264 registros; Aparelhos com 1.800 aparelhos e 8.323 chips; Comissão de jan a nov.
 - **O projeto Supabase apareceu como `INACTIVE` e o banco não respondeu a consultas.** Verificar no painel do Supabase se está pausado e restaurar. Confirmar o plano da organização (o Luan disse que o plano dele não é gratuito).
 - Fluxo de publicação hoje: o Luan baixa um zip e arrasta arquivos no GitHub pela web. É a principal fonte de erro (arquivo caindo na raiz, cache). Ir para o Claude Code com push direto resolve isso.

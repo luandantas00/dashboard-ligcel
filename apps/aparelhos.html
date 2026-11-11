@@ -802,13 +802,13 @@ function renderRt(){ // gráfico anual do ritmo comercial, com a meta de cada m�
 /* ---------- carga incremental ---------- */
 let PENDING=null, LOG=[];
 function setDbState(){const el=document.getElementById('dbState');
-  if(PUB){el.className='dbstate ok';el.textContent='● Depois de incluir, publique para atualizar o link';}
+  if(PUB){el.className='dbstate ok';el.textContent='● Alterações são salvas automaticamente para todos';}
   else{el.className='dbstate off';el.textContent='● Só leitura: cargas ficam apenas neste navegador';}}
 function loadState(){UPD=new Map(Object.entries(PAGE.upd||{}).map(([k,v])=>[+k,v]));METAS=JSON.parse(JSON.stringify(PAGE.metas||{}));LOG=(PAGE.log||[]).slice();
   try{const d=JSON.parse(localStorage.getItem('ligcel-ap-draft')||'null');
     if(d&&d.base===PAGE.stamp){UPD=new Map(Object.entries(d.upd||{}).map(([k,v])=>[+k,v]));METAS=d.metas||{};LOG=d.log||[];dirty=true;}
     else if(d)localStorage.removeItem('ligcel-ap-draft');}catch(e){}}
-function saveDraft(){dirty=true;try{localStorage.setItem('ligcel-ap-draft',JSON.stringify({base:PAGE.stamp,upd:Object.fromEntries(UPD),metas:METAS,log:LOG}));}catch(e){}paintPub();}
+function saveDraft(){dirty=true;try{localStorage.setItem('ligcel-ap-draft',JSON.stringify({base:PAGE.stamp,upd:Object.fromEntries(UPD),metas:METAS,log:LOG}));}catch(e){}paintPub();clearTimeout(window._apAuto);window._apAuto=setTimeout(function(){if(PUB)publicar();},800);}
 function paintPub(msg,ok){const b=document.getElementById('btnPub'),m=document.getElementById('pubMsg');b.hidden=!PUB;
   m.className='pubmsg'+(ok?' ok':'');
   if(msg!=null){m.textContent=msg;return;}

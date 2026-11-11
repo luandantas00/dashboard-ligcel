@@ -580,7 +580,15 @@ function say(t) { S.toast = t; render(); clearTimeout(say.t); say.t = setTimeout
 
 // ---------- edição ----------
 function setPath(p, v) { let o = S.cfg; for (let i = 0; i < p.length - 1; i++) { if (o[p[i]] == null || typeof o[p[i]] !== 'object') o[p[i]] = {}; o = o[p[i]]; } o[p[p.length - 1]] = v; }
-function saveDono() { lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); }
+function saveDono() {
+  lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() }));
+  /* salva no banco sozinho: metas e regras valem para todos, sem depender do botão Publicar */
+  clearTimeout(window._cmAuto);
+  window._cmAuto = setTimeout(async () => {
+    try { if (parent.__painel && parent.__painel.comissaoPublicarCfg) { await parent.__painel.comissaoPublicarCfg(S.cfg); lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); } }
+    catch (e) { say('Não consegui salvar no banco: ' + (e && e.message || e)); }
+  }, 1200);
+}
 function metaW() { if (!S.cfg.metas[S.mk]) S.cfg.metas[S.mk] = JSON.parse(JSON.stringify(metaOf(S.cfg, S.mk))); return S.cfg.metas[S.mk]; }
 async function publicar() {
   try { S.busy = true; render(); await parent.__painel.comissaoPublicarCfg(S.cfg); lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() })); say('Publicado: os gerentes veem as metas e regras novas.'); }
