@@ -364,6 +364,21 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
   .dep td{font-size:11px}
   .foot{gap:10px;flex-direction:column}
 }
+
+/* ---------- etapa 3: visual mais enxuto e celular ---------- */
+.panel{border-radius:16px}
+.chip{border-radius:14px}
+@media(max-width:760px){
+  .tw{-webkit-overflow-scrolling:touch}
+  table.grid th:first-child,table.grid td.l:first-child{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:1px 0 0 var(--hair-2)}
+  table.grid tr.tot td.l:first-child{background:var(--surface-2)}
+  .sumstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 10px}
+  .sumitem{text-align:left}
+  .sumitem.hero b{font-size:19px}
+  .panel{border-radius:14px}
+  .secs-h h2{font-size:15.5px}
+  .secs-h>span:not(.right){flex:1 1 100%;font-size:11.5px}
+}
 </style><style>
 .filt2{display:inline-flex;gap:6px;flex-wrap:wrap}
 .lock{display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:12px 14px;margin-bottom:14px}
@@ -648,7 +663,7 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
       <button class="opt" data-app="ritmo">
         <span class="ico">📊</span>
         <h3>Ritmo Comercial</h3>
-        <p>O painel completo: ranking por loja e vendedor, matriz de atingimento, portabilidade, seguro, Claro Troca, aparelho e venda diária.</p>
+        <p>O painel completo: matriz de atingimento, abertura por indicador, aparelho (Claro Troca e seguro) e venda diária.</p>
         <span class="tag">Gestão</span>
       </button>
       <button class="opt" data-app="meta">
@@ -721,7 +736,7 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
     <div class="note" id="mtxNote"></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" hidden>
     <div class="ph">
       <h2 id="tblTitle">Ranking por loja</h2>
       <span class="hint" id="tblHint"></span>
@@ -752,6 +767,40 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
   <div id="sections"></div>
 
   <div class="secs-h">
+    <h2>Aparelho</h2>
+    <span id="apHint"></span>
+    <span class="right" style="display:flex;gap:10px;align-items:center">
+      <select class="pick" id="selApView"><option value="loja">Por loja</option><option value="vend">Por vendedor</option></select>
+    </span>
+  </div>
+  <section class="panel">
+    <div class="ph"><h2>Quantidade, receita e ticket</h2><span class="hint" id="apSub"></span></div>
+    <div class="tw"><table class="grid" id="tblAp"></table></div>
+    <div class="note">Aparelho = toda linha com Valor Venda acima de R$ 60,00. Receita soma o Valor Venda dessas linhas; ticket é receita ÷ quantidade.</div>
+  </section>
+
+  <div class="secs-h"><h2>Aparelho · Claro Troca</h2><span>quantidade, variação e conversão sobre aparelho · Motivo = Oferta Especial - Boost</span></div>
+  <div class="duo">
+    <section class="panel">
+      <div class="ph"><h2>Resultado por loja</h2><span class="hint">real, alcance e variação</span></div>
+      <div class="tw"><table class="grid" id="tblTroca"></table></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h2>Conversão sobre aparelho</h2><span class="hint">Claro Troca ÷ aparelhos vendidos</span></div>
+      <div class="tw"><table class="grid" id="tblTrocaConv"></table></div>
+    </section>
+  </div>
+
+  <div class="secs-h"><h2>Aparelho · Seguro</h2><span>Plano/Serviço = Seguro Proteção Móvel · conversão sobre aparelho</span></div>
+  <section class="panel">
+    <div class="ph"><h2 id="segTitle">Seguro por loja</h2><span class="hint" id="segHint"></span>
+      <div class="right"><button class="iconbtn" id="btnSegExp">Abrir todas</button></div></div>
+    <div class="tw"><table class="grid" id="tblSeg"></table></div>
+    <div class="note" id="segNote"></div>
+  </section>
+
+  <div hidden>
+  <div class="secs-h">
     <h2>Portabilidade</h2>
     <span id="portHint"></span>
     <span class="right" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -764,38 +813,7 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
     <div class="note" id="portNote"></div>
   </section>
 
-  <div class="secs-h"><h2>Claro Troca</h2><span>Motivo = Oferta Especial - Boost</span></div>
-  <div class="duo">
-    <section class="panel">
-      <div class="ph"><h2>Resultado por loja</h2><span class="hint">real, alcance e variação</span></div>
-      <div class="tw"><table class="grid" id="tblTroca"></table></div>
-    </section>
-    <section class="panel">
-      <div class="ph"><h2>Conversão sobre aparelho</h2><span class="hint">Claro Troca ÷ aparelhos vendidos</span></div>
-      <div class="tw"><table class="grid" id="tblTrocaConv"></table></div>
-    </section>
   </div>
-
-  <div class="secs-h"><h2>Seguro</h2><span>Plano/Serviço = Seguro Proteção Móvel · conversão sobre aparelho</span></div>
-  <section class="panel">
-    <div class="ph"><h2 id="segTitle">Seguro por loja</h2><span class="hint" id="segHint"></span>
-      <div class="right"><button class="iconbtn" id="btnSegExp">Abrir todas</button></div></div>
-    <div class="tw"><table class="grid" id="tblSeg"></table></div>
-    <div class="note" id="segNote"></div>
-  </section>
-
-  <div class="secs-h">
-    <h2>Aparelho · receita e ticket</h2>
-    <span id="apHint"></span>
-    <span class="right" style="display:flex;gap:10px;align-items:center">
-      <select class="pick" id="selApView"><option value="loja">Por loja</option><option value="vend">Por vendedor</option></select>
-    </span>
-  </div>
-  <section class="panel">
-    <div class="ph"><h2>Quantidade, receita e ticket</h2><span class="hint" id="apSub"></span></div>
-    <div class="tw"><table class="grid" id="tblAp"></table></div>
-    <div class="note">Aparelho = toda linha com Valor Venda acima de R$ 63,00. Receita soma o Valor Venda dessas linhas; ticket é receita ÷ quantidade.</div>
-  </section>
 
   <div class="secs-h">
     <h2>Venda diária e semanal</h2>
@@ -1808,7 +1826,7 @@ function renderFiltDia2Loja(){
 }
 function renderFiltDia2(){
   const opts=[{id:'__sel',lab:'Selecionado'}].concat(INDS.map(i=>({id:i.id,lab:i.lab})))
-    .concat([{id:'SEG',lab:'Seguro'},{id:'TROCA',lab:'Claro Troca'},{id:'PORT',lab:'Portabilidade'}]);
+    .concat([{id:'SEG',lab:'Seguro'},{id:'TROCA',lab:'Claro Troca'}]);
   const el=document.getElementById('filtDia2');
   el.innerHTML=opts.map(o=>'<button class="fchip mini" data-k="'+o.id+'" aria-pressed="'+(S.dia2Ind===o.id)+
     '" style="--kc:'+corDe(o.id)+'"><i></i>'+o.lab+'</button>').join('');
@@ -2039,7 +2057,7 @@ function renderSem(){
   document.getElementById('semNote').innerHTML='Média de <b>'+N1(md)+'</b> por semana em '+sem.length+' semanas · conversão do mês <b>'+pct1(totv>0?tot/totv:null)+'</b>.';
 }
 /* ---------- filtros ---------- */
-const EXTRA=[{id:'SEG',lab:'Seguro'},{id:'TROCA',lab:'Claro Troca'},{id:'PORT',lab:'Portabilidade'}];
+const EXTRA=[{id:'SEG',lab:'Seguro'},{id:'TROCA',lab:'Claro Troca'}];
 const METAIDS=INDS.map(i=>({id:i.id,lab:i.lab})).concat(EXTRA);
 function renderFiltKpi(){
   document.getElementById('filtKpi').innerHTML=INDS.map(i=>

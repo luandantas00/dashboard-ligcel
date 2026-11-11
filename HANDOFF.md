@@ -62,14 +62,15 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 
 ## Estado atual (10/11/2026)
 
-- Versão publicada em `config.js`: `2026-11-06-7`.
+- Versão em `config.js`: `2026-11-10-8` (etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
 - Base carregada em 06/11/2026, a partir de `HISTORICO ANO CC LIG SET.xlsx` (20.646 linhas, 02/01 a 06/11, 7 lojas). Ritmo com 10.264 registros; Aparelhos com 1.800 aparelhos e 8.323 chips; Comissão de jan a nov.
 - **O projeto Supabase apareceu como `INACTIVE` e o banco não respondeu a consultas.** Verificar no painel do Supabase se está pausado e restaurar. Confirmar o plano da organização (o Luan disse que o plano dele não é gratuito).
 - Fluxo de publicação hoje: o Luan baixa um zip e arrasta arquivos no GitHub pela web. É a principal fonte de erro (arquivo caindo na raiz, cache). Ir para o Claude Code com push direto resolve isso.
 
 ## O que falta fazer
 
-**Etapa 3 — Ritmo LIGCEL (`apps/ritmo.html`)**
+**Etapa 3 — Ritmo LIGCEL (`apps/ritmo.html`) — FEITA em 10/11/2026 (versão 2026-11-10-8, aguardando publicação e conferência do Luan). Decisão: projeção sem amostra mínima (projeta sobre o real; se for 0, projeta 0).**
+Feito: ranking por loja escondido, portabilidade removida da tela, seção Aparelho (qtd/receita/ticket) + Claro Troca + Seguro agrupadas, limite de R$ 60 no texto, ajustes de celular (1ª coluna fixa). Itens abaixo ficam como histórico.
 1. Remover o segundo quadrante, "ranking por loja" (o que tem o totalizador).
 2. Modernizar o detalhamento por indicador.
 3. Adaptar todas as visões para celular, com visual moderno, simples e resumido.
