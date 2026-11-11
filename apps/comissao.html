@@ -609,7 +609,27 @@ function say(t) { S.toast = t; render(); clearTimeout(say.t); say.t = setTimeout
 
 // ---------- edição ----------
 function setPath(p, v) { let o = S.cfg; for (let i = 0; i < p.length - 1; i++) { if (o[p[i]] == null || typeof o[p[i]] !== 'object') o[p[i]] = {}; o = o[p[i]]; } o[p[p.length - 1]] = v; }
+/* divisão da meta entre as lojas pela média da receita (comissão + comissão res de Controle, Pós, BL e TV) dos 3 meses anteriores */
+function pctMedia3(data, mk) {
+  const ms = (data.M || []).filter(m => m < mk).slice(-3);
+  if (!ms.length) return null;
+  const set = new Set(ms), tot = data.L.map(() => 0);
+  for (const r of data.R) { if (!set.has(r[0]) || FRK.indexOf(r[3]) < 0) continue; tot[r[1]] += (+r[7] || 0) + (+r[8] || 0); }
+  const sum = tot.reduce((x, y) => x + y, 0); if (!(sum > 0)) return null;
+  const out = {}; let ac = 0;
+  data.L.forEach((nome, i) => { out[nome] = i < data.L.length - 1 ? Math.round(tot[i] / sum * 1000) / 10 : Math.round((100 - ac) * 10) / 10; ac += out[nome]; });
+  return { pct: out, meses: ms };
+}
+function autoLojaPct(forcar) {
+  if (!isDono() || !S.data) return false;
+  const M = S.cfg.metas[S.mk]; if (!M) return false;
+  const soma = Object.values(M.lojaPct || {}).reduce((x, y) => x + (+y || 0), 0);
+  if (!forcar && (soma > 0 || !((+M.total || 0) > 0 || (+M.ap || 0) > 0))) return false;
+  const r = pctMedia3(S.data, S.mk); if (!r) return false;
+  M.lojaPct = r.pct; return r.meses;
+}
 function saveDono() {
+  autoLojaPct();
   lsSet('cm2-cfg-dono', JSON.stringify({ cfg: S.cfg, at: Date.now() }));
   /* salva no banco sozinho: metas e regras valem para todos, sem depender do botão Publicar */
   clearTimeout(window._cmAuto);
@@ -920,7 +940,7 @@ function viewMetas() {
     <div class="scroll"><table><thead><tr><th>Loja</th><th>Receita</th><th>Franquia</th><th>Vendedores</th><th>Gerente</th><th>Bônus</th><th>Total</th><th>% da receita</th><th>% da franquia</th><th>Sobra</th></tr></thead><tbody>${lcRows}</tbody></table></div></section>`;
   const cr = cen.map(c => `<tr><td><b>${pc(c.s)} da meta</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td></tr>`).join('');
   return `${topo}${viewSug()}<section class="panel"><header><h2>Divisão da meta por loja</h2><span class="n">Cada loja recebe uma parte da meta de receita (${brl(M.total)}) e de aparelho (${brl(M.ap)}). A meta de cada loja cai igual entre os vendedores; o gerente pode ajustar.</span>
-      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="lojaigual">Dividir igualmente</button><button class="btn" data-act="lojahc">Dividir por nº de vendedores</button></span></header>
+      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="lojarec3">Média da receita (3 meses)</button><button class="btn" data-act="lojaigual">Dividir igualmente</button><button class="btn" data-act="lojahc">Dividir por nº de vendedores</button></span></header>
     <div class="scroll"><table><thead><tr><th>Loja</th><th>Parte da meta</th><th>Meta de receita</th><th>Meta de aparelho</th><th>Meta por vendedor</th><th>Realizado</th><th>Ating. receita</th><th>Ating. aparelho</th></tr></thead><tbody>${lojasRows}</tbody></table></div>
     <div class="pad note">${Math.abs(pctSum - 100) < 0.01 ? '<span class="okk">As partes fecham em 100%.</span>' : `<span class="err">As partes somam ${num(pctSum, 1)}%: a meta foi proporcionalizada.</span>`} O valor da meta e o mix por indicador estão no topo desta aba; a aba Receita sugere valores pelos melhores meses.</div></section>
   <section class="panel"><header><h2>Quem está batendo meta</h2></header><div class="scroll"><table><thead><tr><th>Loja</th><th>Ating. total</th><th>Situação</th><th>Vendedores ≥100%</th><th>BL</th><th>Trava BL</th><th>Comissão da loja</th></tr></thead><tbody>${bate}</tbody></table></div></section>
@@ -1150,6 +1170,7 @@ document.addEventListener('click', async e => {
   else if (a === 'resetsimv') { carregarSimV(S.simV.vend); render(); }
   else if (a === 'liberar') { const l = (S.cfg.lib[S.mk] = S.cfg.lib[S.mk] || {}); l.servicos = !l.servicos; saveDono(); render(); say(l.servicos ? 'Serviços liberados. Publique para os gerentes verem.' : 'Serviços bloqueados. Publique para os gerentes.'); }
   else if (a === 'publicar') { await publicar(); render(); }
+  else if (a === 'lojarec3') { metaW(); const m = autoLojaPct(true); if (m) { saveDono(); render(); say('Divisão pela média de receita de ' + m.map(mlabel).join(', ') + '.'); } else say('Sem meses anteriores com receita para calcular a média.'); }
   else if (a === 'lojaigual' || a === 'lojahc') {
     const B = model(1), M = metaW(); M.lojaPct = M.lojaPct || {};
     const hc = B.lojas.map(l => a === 'lojahc' ? Math.max(l.hc, 0) : 1), sum = hc.reduce((x, y) => x + y, 0) || 1;
