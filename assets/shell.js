@@ -12,6 +12,7 @@ const ABAS = [
   { id: 'ritmo',     nome: 'Ritmo Comercial', papeis: ['dono', 'admin', 'gerente'] },
   { id: 'meta',      nome: 'Minha Meta',      papeis: ['dono', 'admin', 'gerente', 'vendedor'] },
   { id: 'aparelhos', nome: 'Aparelhos e Chip', papeis: ['dono', 'admin'] },
+  { id: 'receita',   nome: 'Receita',         papeis: ['dono', 'admin'] },
   { id: 'comissao',  nome: 'Comissão e Meta', papeis: ['dono', 'admin', 'gerente'] },
   { id: 'cadastros', nome: 'Cadastros',       papeis: ['dono', 'admin', 'gerente'] },
   { id: 'dados',     nome: 'Importar dados',  papeis: ['dono', 'admin'] }
@@ -144,6 +145,7 @@ function irPara(id) {
   const p = $('#palco'); p.innerHTML = '';
   if (id === 'ritmo' || id === 'meta') return abrirRitmo(id);
   if (id === 'aparelhos') return abrirAparelhos();
+  if (id === 'receita') return abrirReceita();
   if (id === 'comissao') return abrirComissao();
   if (id === 'cadastros') return abrirCadastros();
   if (id === 'dados') return abrirDados();
@@ -223,6 +225,17 @@ async function abrirAparelhos() {
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 
+async function abrirReceita() {
+  carregando();
+  try {
+    if (!gestao()) return aviso('Sem acesso', 'A Visão de Receita é exclusiva do empresário.');
+    const payload = await lerDataset('receita');
+    const prelude = 'window.__RECEITA=' + jsonSeguro(payload && payload.R ? payload : {}) + ';';
+    const html = await texto('apps/receita.html');
+    colocarIframe(montarDoc(html, prelude, await cssTema('receita')));
+  } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
+}
+
 async function abrirComissao() {
   carregando();
   try {
@@ -296,6 +309,13 @@ window.__painel = {
     Object.keys(cur.q).forEach(k => { if (!(cur.q[k] > 0)) delete cur.q[k]; }); Object.keys(cur.r).forEach(k => { if (!(cur.r[k] > 0)) delete cur.r[k]; });
     cur.atualizado = new Date().toISOString();
     await gravar([{ chave: 'aparelhos', loja_id: null, payload: { seed: S.aparelhos.seed, excl: S.aparelhos.excl || [], page } }]);
+    return true;
+  },
+  receitaSalvar: async (txt) => {
+    if (!gestao()) throw new Error('Sem permissão.');
+    const d = JSON.parse(txt);
+    if (!d || !d.R || !d.M) throw new Error('Base inválida.');
+    await gravar([{ chave: 'receita', loja_id: null, payload: d }]);
     return true;
   },
   aparelhosSalvar: async (doc) => {

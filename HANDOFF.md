@@ -126,3 +126,10 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - metasParaRitmo() agora também grava em datasets 'aparelhos' (page.metas['YYYY-MM'] = {q: unidades, r: receita R$} por loja) pela ponte nova window.__painel.aparelhosMetas / aparelhosLojas (shell.js). Aparelhos já acompanha unidade e receita.
 - Pendente: "outra visão de receita" (outro link que o Luan vai trazer), visível só para o empresário (dono/admin).
 - versao 2026-11-10-18.
+
+## 10/11-i — Aba "Receita" (Visão de Receita) — só dono/admin
+- `apps/receita.html` (veio do Apps Script do Luan): sem senha, sem Google. Base fica em `datasets` chave `receita` (payload D = {M,L,V,T,R,meta}).
+- shell.js: ABAS `receita` (papeis dono/admin), `abrirReceita()`, bridge `receitaSalvar(txt)` (só gestão). Gerente/vendedor não veem a aba nem leem o dataset (RLS só libera ritmo%/comissao%).
+- Base inicial NÃO embutida (site público): primeiro acesso mostra "Nenhuma base carregada"; subir BASE RECEITA.xlsx em "Atualizar base".
+- Testado (e2e23): admin vê aba e grava; gerente/vendedor sem aba. versao 2026-11-10-19.
+- Apps Script antigo: a senha dele ficou exposta no chat → trocar ou desativar essa implantação.
