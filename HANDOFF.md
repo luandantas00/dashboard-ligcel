@@ -133,3 +133,4 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - Base inicial NÃO embutida (site público): primeiro acesso mostra "Nenhuma base carregada"; subir BASE RECEITA.xlsx em "Atualizar base".
 - Testado (e2e23): admin vê aba e grava; gerente/vendedor sem aba. versao 2026-11-10-19.
 - Apps Script antigo: a senha dele ficou exposta no chat → trocar ou desativar essa implantação.
+- 11/11 (versao 2026-11-11-20) Receita: removidos "Receita por mês e indicador" e "Ritmo diário acumulado". Ordem: Resumo, Destaques, Loja (abre indicador), Indicador, Vendedor (abre indicador; ausentes/sem venda recolhidos, abrem no clique), Multi, Tendência por indicador + Histórico da receita total (todos os meses).
