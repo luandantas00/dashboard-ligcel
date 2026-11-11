@@ -148,3 +148,9 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - Nenhuma rolagem para o lado dentro dos painéis: `SEM_ROLAGEM_JS/CSS` (montarDoc) compacta tabelas largas e, se ainda não couberem, mostra cada linha como cartão (`vira-cartao`). Linhas de abas/chips quebram em várias linhas; gráficos SVG se ajustam à largura.
 - `window.scrollTo` dentro do painel foi redirecionado para a página. Cabeçalhos "sticky" internos dos apps deixam de grudar (o topo do site é que gruda).
 - Testes: e2e27 (rolagens por aba, 390px e 1366px) sem nenhuma rolagem interna.
+
+## 11/11 — Segurança: estrutura e backup
+- `supabase/schema.sql`: estrutura completa do banco (tabelas, funções, regras de acesso). `supabase/functions/usuarios/index.ts`: função de usuários/convites. `supabase/migrations/20261111_multi_empresa.sql`: migração aplicada.
+- Backup do que só existe no banco (empresas, lojas, metas do Ritmo, configuração do Comissão, metas de Aparelhos): arquivo `backup-banco-2026-11-11.json`, guardado FORA do repositório (público). Bases de vendas (ritmo, comissao, aparelhos, receita) voltam importando o Excel.
+- Cópias dentro do banco: tabelas `bkp_20261111_*` (podem ser apagadas depois que tudo estiver validado).
+- Rotina: refazer o backup (consulta no SQL Editor ou pedindo ao Claude) antes de mudanças grandes e ao menos uma vez por mês.
