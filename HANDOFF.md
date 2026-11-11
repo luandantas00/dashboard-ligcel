@@ -56,7 +56,7 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 **Regra do Luan:** nada que alguém digite pode ficar salvo só no navegador. Metas/HC/dias/regras do Ritmo, metas do Aparelhos e configuração da Comissão salvam sozinhos no banco (autosave). Só tema/filtros ficam locais.
 
 ## Visual (tema "cyber-clean", 10/11/2026)
-Tema escuro fosco com glassmorphism, cinza-azulado e destaque ciano (#22D3EE), fonte Inter + JetBrains Mono nos números. O shell usa `assets/shell.css`; cada painel recebe, injetado pelo shell, `assets/tema/base.css` + `assets/tema/<painel>.css` (sobrescrevem as variáveis dos apps; os `apps/*.html` mantêm o visual claro original, usado só se o botão Tema do Ritmo voltar para claro). Para mudar cores/estilo, edite esses CSS; não precisa mexer nos apps. Celular: topo compacto, filtros extras do Ritmo atrás de "Mais filtros", pílulas de Aparelhos com rolagem lateral, KPIs em 2 colunas.
+Dois temas: claro (padrão) e escuro fosco com glassmorphism e destaque ciano, fonte Inter + JetBrains Mono nos números. O botão ☾ Escuro / ☀ Claro no topo troca o tema do site e dos painéis (preferência guardada no navegador de cada pessoa, chave `painel_tema`). O shell usa `assets/shell.css`; cada painel recebe, injetado pelo shell, `assets/tema/base.css` + `assets/tema/<painel>.css` (sobrescrevem as variáveis dos apps; os `apps/*.html` mantêm o visual claro original, usado só se o botão Tema do Ritmo voltar para claro). Para mudar cores/estilo, edite esses CSS; não precisa mexer nos apps. Celular: topo compacto, filtros extras do Ritmo atrás de "Mais filtros", pílulas de Aparelhos com rolagem lateral, KPIs em 2 colunas.
 
 ## Regras de negócio decididas
 
@@ -68,7 +68,7 @@ Tema escuro fosco com glassmorphism, cinza-azulado e destaque ciano (#22D3EE), f
 
 ## Estado atual (10/11/2026)
 
-- Versão em `config.js`: `2026-11-10-11` (tema cyber-clean + metas no banco + etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
+- Versão em `config.js`: `2026-11-10-12` (tema cyber-clean + metas no banco + etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
 - Base carregada em 06/11/2026, a partir de `HISTORICO ANO CC LIG SET.xlsx` (20.646 linhas, 02/01 a 06/11, 7 lojas). Ritmo com 10.264 registros; Aparelhos com 1.800 aparelhos e 8.323 chips; Comissão de jan a nov.
 - **O projeto Supabase apareceu como `INACTIVE` e o banco não respondeu a consultas.** Verificar no painel do Supabase se está pausado e restaurar. Confirmar o plano da organização (o Luan disse que o plano dele não é gratuito).
 - Fluxo de publicação hoje: o Luan baixa um zip e arrasta arquivos no GitHub pela web. É a principal fonte de erro (arquivo caindo na raiz, cache). Ir para o Claude Code com push direto resolve isso.

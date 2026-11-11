@@ -2571,7 +2571,7 @@ async function boot(){
   metas=Object.assign({},RAW.metasIniciais||{},CFGDB.metas||{});
   HCMAN=Object.assign({},RAW.hcIniciais||{},CFGDB.hc||{});
   DUMAN=Object.assign({},RAW.diasIniciais||{},CFGDB.dias||{});
-  document.documentElement.setAttribute('data-theme',lsGet(KEY_TH,'dark'));
+  document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')||'light');
   document.documentElement.setAttribute('data-mob',lsGet(KEY_MOB,'resumo'));
   carregarRegras();rebuild();derive();
   if(!recs.length){

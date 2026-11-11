@@ -1,19 +1,27 @@
-/* ===== Cyber-clean: base compartilhada (vale dentro dos painéis) ===== */
-html:root[data-theme="dark"]{color-scheme:dark}
-html[data-theme="dark"] body{
-  background:
-    radial-gradient(1100px 520px at 12% -12%,rgba(34,211,238,.10),transparent 62%),
-    radial-gradient(900px 480px at 104% -4%,rgba(59,130,246,.10),transparent 60%),
-    #060A11 !important;
-  background-attachment:fixed !important;
-  letter-spacing:.005em;
-}
-html[data-theme="dark"] ::selection{background:rgba(34,211,238,.28)}
-html[data-theme="dark"] *{scrollbar-color:#1E3350 transparent;scrollbar-width:thin}
-html[data-theme="dark"] button,html[data-theme="dark"] select,html[data-theme="dark"] input{
+/* ===== Tema compartilhado (claro e escuro) ===== */
+html:root[data-theme="dark"]{color-scheme:dark;
+  --t-gl1:rgba(26,42,66,.50); --t-gl2:rgba(12,20,33,.62); --t-gb:rgba(110,180,255,.15);
+  --t-gs:0 1px 0 rgba(255,255,255,.05) inset,0 16px 38px -24px rgba(0,0,0,.95);
+  --t-nav:rgba(8,14,24,.72); --t-acc:#22D3EE; --t-acc2:#0EA5C4; --t-ink:#03121A; --t-tint:rgba(34,211,238,.14); --t-text:#CFF8FF; --t-glow:rgba(34,211,238,.5);
+  --t-btn:rgba(16,26,42,.7);
+  --t-body:radial-gradient(1100px 520px at 12% -12%,rgba(34,211,238,.10),transparent 62%),radial-gradient(900px 480px at 104% -4%,rgba(59,130,246,.10),transparent 60%),#060A11;
+  --t-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+html:root[data-theme="light"]{color-scheme:light;
+  --t-gl1:rgba(255,255,255,.96); --t-gl2:rgba(247,250,254,.92); --t-gb:rgba(15,40,80,.10);
+  --t-gs:0 1px 2px rgba(15,40,80,.05),0 12px 30px -22px rgba(15,40,80,.35);
+  --t-nav:rgba(255,255,255,.86); --t-acc:#0891B2; --t-acc2:#0E7490; --t-ink:#FFFFFF; --t-tint:rgba(8,145,178,.10); --t-text:#0A5C73; --t-glow:rgba(8,145,178,.35);
+  --t-btn:#FFFFFF;
+  --t-body:radial-gradient(1100px 520px at 12% -12%,rgba(8,145,178,.09),transparent 62%),radial-gradient(900px 480px at 104% -4%,rgba(37,99,235,.07),transparent 60%),#F3F6FA;
+  --t-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;}
+html[data-theme] body{background:var(--t-body)!important;background-attachment:fixed!important;letter-spacing:.005em}
+html[data-theme] ::selection{background:var(--t-tint)}
+html[data-theme] *{scrollbar-width:thin}
+html[data-theme] button,html[data-theme] select,html[data-theme] input{
   transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease,transform .12s ease,color .18s ease}
-html[data-theme="dark"] button:not([disabled]):hover{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.10)}
-html[data-theme="dark"] button:not([disabled]):active{transform:translateY(1px) scale(.985)}
-html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus{border-color:#22D3EE;box-shadow:0 0 0 3px rgba(34,211,238,.16);outline:none}
-html[data-theme="dark"] :focus-visible{outline:2px solid #22D3EE;outline-offset:2px}
-html[data-theme="dark"] .num,html[data-theme="dark"] td,html[data-theme="dark"] .big{font-variant-numeric:tabular-nums}
+html[data-theme] button:not([disabled]):hover{border-color:var(--t-glow);box-shadow:0 0 0 3px var(--t-tint)}
+html[data-theme] button:not([disabled]):active{transform:translateY(1px) scale(.985)}
+html[data-theme] input:focus,html[data-theme] select:focus{border-color:var(--t-acc);box-shadow:0 0 0 3px var(--t-tint);outline:none}
+html[data-theme] :focus-visible{outline:2px solid var(--t-acc);outline-offset:2px}
+html[data-theme] .num,html[data-theme] td,html[data-theme] .big{font-variant-numeric:tabular-nums}
+html[data-theme] input[type=file]::file-selector-button{background:var(--t-tint);color:var(--t-text);border:1px solid var(--t-glow);border-radius:8px;padding:6px 12px;margin-right:10px;cursor:pointer}
+html[data-theme="dark"] *{scrollbar-color:#1E3350 transparent}

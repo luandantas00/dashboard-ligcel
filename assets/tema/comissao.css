@@ -2,22 +2,26 @@ html:root[data-theme="dark"]{
   --bg:#060A11; --surface:#0E1623; --ink:#E6EEF8; --muted:#7489A1; --line:#1B2B42; --soft:#0A111C;
   --red:#22D3EE; --red-ink:#03121A; --ok:#34D399; --ok-bg:#0E2B29; --mid:#FBBF24; --mid-bg:#2F2610; --low:#F87171; --low-bg:#321A22; --zero:#7489A1; --zero-bg:#142035;
   --bar:#1D3250; --focus:#38BDF8; --g1:#0F1A2A; --g2:#1B2B42;
-  --f-head:"Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-}
-html[data-theme="dark"] .panel,html[data-theme="dark"] .card,html[data-theme="dark"] .kpi,html[data-theme="dark"] .hero,html[data-theme="dark"] .callout{
-  background:linear-gradient(180deg,rgba(26,42,66,.50),rgba(12,20,33,.62));
+  --t-tot:linear-gradient(90deg,#0B3342,#0F2548); --t-tot-ink:#E6EEF8;}
+html:root[data-theme="light"]{
+  --bg:#F3F6FA; --surface:#FFFFFF; --ink:#0F1B2D; --muted:#6B7C93; --line:#DCE5F0; --soft:#F7F9FC;
+  --red:#0891B2; --red-ink:#FFFFFF; --ok:#047857; --ok-bg:#DDF5EC; --mid:#B45309; --mid-bg:#FDF1D8; --low:#DC2626; --low-bg:#FDE8E8; --zero:#6B7C93; --zero-bg:#EDF2F8;
+  --bar:#D5E2F0; --focus:#0284C7; --g1:#F1F5FA; --g2:#E3EAF3;
+  --t-tot:linear-gradient(90deg,#0E7490,#1D4ED8); --t-tot-ink:#FFFFFF;}
+html:root[data-theme]{--f-head:"Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-theme] .panel,html[data-theme] .card,html[data-theme] .kpi,html[data-theme] .hero,html[data-theme] .callout{
+  background:linear-gradient(180deg,var(--t-gl1),var(--t-gl2));
   -webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);
-  border:1px solid rgba(110,180,255,.15);
-  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 16px 38px -24px rgba(0,0,0,.95)}
-html[data-theme="dark"] .top{background:rgba(8,14,24,.72);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(110,180,255,.14)}
-html[data-theme="dark"] .dot{background:#22D3EE;box-shadow:0 0 10px rgba(34,211,238,.9)}
-html[data-theme="dark"] .big,html[data-theme="dark"] .kpi b{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:-.02em}
-html[data-theme="dark"] .sumhead,html[data-theme="dark"] tr.tot td,html[data-theme="dark"] .detbox tbody tr.tot td,html[data-theme="dark"] .detbox tbody tr.tot:nth-child(even) td,html[data-theme="dark"] .ic.tot{
-  background:linear-gradient(90deg,#0B3342,#0F2548)!important;color:#E6EEF8!important;border-color:rgba(34,211,238,.35)}
-html[data-theme="dark"] .sumhead small{color:#9BE7F5;opacity:1}
-html[data-theme="dark"] .meter i{background:linear-gradient(90deg,#22D3EE,#3B82F6);box-shadow:0 0 10px rgba(34,211,238,.5)}
-html[data-theme="dark"] .rad input:checked+span{background:rgba(34,211,238,.16);border-color:#22D3EE;color:#CFF8FF}
-html[data-theme="dark"] .toast{background:#0E1623;color:#E6EEF8;border:1px solid rgba(34,211,238,.45);box-shadow:0 10px 30px -10px rgba(34,211,238,.4)}
+  border:1px solid var(--t-gb);box-shadow:var(--t-gs)}
+html[data-theme] .top{background:var(--t-nav);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--t-gb)}
+html[data-theme] .dot{background:var(--t-acc);box-shadow:0 0 10px var(--t-glow)}
+html[data-theme] .big,html[data-theme] .kpi b{font-family:var(--t-mono);letter-spacing:-.02em}
+html[data-theme] .sumhead,html[data-theme] tr.tot td,html[data-theme] .detbox tbody tr.tot td,html[data-theme] .detbox tbody tr.tot:nth-child(even) td,html[data-theme] .ic.tot{
+  background:var(--t-tot)!important;color:var(--t-tot-ink)!important;border-color:var(--t-glow)}
+html[data-theme] .sumhead small{color:var(--t-tot-ink);opacity:.85}
+html[data-theme] .meter i{background:linear-gradient(90deg,var(--t-acc),#3B82F6)}
+html[data-theme] .rad input:checked+span{background:var(--t-tint);border-color:var(--t-acc);color:var(--t-text)}
+html[data-theme] .toast{background:var(--surface);color:var(--ink);border:1px solid var(--t-glow);box-shadow:0 10px 30px -10px var(--t-glow)}
 @media(max-width:760px){
   .kpis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
   .kpi{padding:10px 11px!important}

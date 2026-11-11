@@ -95,6 +95,15 @@ function pintarTopo() {
 }
 $('#abas').addEventListener('click', e => { const b = e.target.closest('.aba'); if (b) irPara(b.dataset.aba); });
 window.addEventListener('hashchange', () => { const id = location.hash.replace('#/', ''); if (S.me && id !== S.aba && abasVisiveis().some(a => a.id === id)) irPara(id); });
+function aplicarTema(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('painel_tema', t); } catch (e) { }
+  const b = $('#btnTema'); if (b) b.textContent = t === 'light' ? '☾ Escuro' : '☀ Claro';
+  const f = document.querySelector('#palco iframe');
+  try { if (f && f.contentDocument) f.contentDocument.documentElement.setAttribute('data-theme', t); } catch (e) { }
+}
+aplicarTema(document.documentElement.getAttribute('data-theme') || 'light');
+$('#btnTema').addEventListener('click', () => aplicarTema(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
 $('#btnSair').addEventListener('click', async () => { await sb.auth.signOut(); });
 
 /* ====================== título ====================== */
@@ -162,7 +171,7 @@ function montarDoc(html, prelude, css) {
   return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">' +
-    '<script>document.documentElement.setAttribute("data-theme","dark");<\/script>' +
+    '<script>try{document.documentElement.setAttribute("data-theme",parent.document.documentElement.getAttribute("data-theme")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}<\/script>' +
     '<style>' + css + '</style><script>' + prelude + '<\/script></head><body>' + corpo + '</body></html>';
 }
 function colocarIframe(doc) {

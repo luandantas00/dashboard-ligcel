@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/shell.css?v=11">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("painel_tema")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
+<link rel="stylesheet" href="assets/shell.css?v=12">
 </head>
 <body>
 
@@ -41,6 +42,7 @@
       </div>
       <div class="quem">
         <span class="chip-user"><b id="uNome">—</b><small id="uPapel">—</small></span>
+        <button class="btn mini tema" id="btnTema" title="Alternar entre visão clara e escura" aria-label="Alternar tema">☾ Escuro</button>
         <button class="btn mini" id="btnConta">Minha conta</button>
         <button class="btn mini" id="btnSair">Sair</button>
       </div>
@@ -67,6 +69,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="assets/comissao-nucleo.js?v=4"></script>
-<script src="assets/shell.js?v=11"></script>
+<script src="assets/shell.js?v=12"></script>
 </body>
 </html>
