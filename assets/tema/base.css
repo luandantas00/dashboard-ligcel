@@ -1,0 +1,19 @@
+/* ===== Cyber-clean: base compartilhada (vale dentro dos painéis) ===== */
+html:root[data-theme="dark"]{color-scheme:dark}
+html[data-theme="dark"] body{
+  background:
+    radial-gradient(1100px 520px at 12% -12%,rgba(34,211,238,.10),transparent 62%),
+    radial-gradient(900px 480px at 104% -4%,rgba(59,130,246,.10),transparent 60%),
+    #060A11 !important;
+  background-attachment:fixed !important;
+  letter-spacing:.005em;
+}
+html[data-theme="dark"] ::selection{background:rgba(34,211,238,.28)}
+html[data-theme="dark"] *{scrollbar-color:#1E3350 transparent;scrollbar-width:thin}
+html[data-theme="dark"] button,html[data-theme="dark"] select,html[data-theme="dark"] input{
+  transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease,transform .12s ease,color .18s ease}
+html[data-theme="dark"] button:not([disabled]):hover{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.10)}
+html[data-theme="dark"] button:not([disabled]):active{transform:translateY(1px) scale(.985)}
+html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus{border-color:#22D3EE;box-shadow:0 0 0 3px rgba(34,211,238,.16);outline:none}
+html[data-theme="dark"] :focus-visible{outline:2px solid #22D3EE;outline-offset:2px}
+html[data-theme="dark"] .num,html[data-theme="dark"] td,html[data-theme="dark"] .big{font-variant-numeric:tabular-nums}

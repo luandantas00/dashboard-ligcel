@@ -1,0 +1,52 @@
+html:root[data-theme="dark"]{
+  --ground:#060A11; --surface:#0E1623; --surface-2:#0A111C; --raise:#142033;
+  --ink:#E6EEF8; --ink-2:#B0C1D5; --muted:#7489A1; --hair:#1B2B42; --hair-2:#142035;
+  --brand:#22D3EE;
+  --k1:#38BDF8; --k2:#FBBF24; --k3:#34D399; --k4:#A78BFA; --k5:#F472B6; --trilho:#1A2A40;
+  --good:#34D399; --warn:#FBBF24; --bad:#F87171;
+  --good-bg:#0E2B29; --warn-bg:#2F2610; --bad-bg:#321A22;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 14px 34px -22px rgba(0,0,0,.9);
+  --mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --sans:'Inter','IBM Plex Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --disp:'Inter','IBM Plex Sans',system-ui,sans-serif;
+}
+html[data-theme="dark"] .panel,html[data-theme="dark"] .chip,html[data-theme="dark"] #viewMeta .card,html[data-theme="dark"] #viewMeta .hero,html[data-theme="dark"] #viewMeta .bloco{
+  background:linear-gradient(180deg,rgba(26,42,66,.50),rgba(12,20,33,.62));
+  -webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);
+  border:1px solid rgba(110,180,255,.15);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 16px 38px -24px rgba(0,0,0,.95)}
+html[data-theme="dark"] .panel:hover,html[data-theme="dark"] .chip:hover{border-color:rgba(34,211,238,.32)}
+html[data-theme="dark"] .top,html[data-theme="dark"] #viewMeta .topo{background:rgba(8,14,24,.72);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(110,180,255,.14)}
+html[data-theme="dark"] .railbar{background:linear-gradient(90deg,#22D3EE,#3B82F6)!important;height:2px!important;box-shadow:0 0 16px rgba(34,211,238,.55)}
+html[data-theme="dark"] .brandmark .dot{background:#22D3EE;box-shadow:0 0 10px rgba(34,211,238,.9)}
+html[data-theme="dark"] .iconbtn,html[data-theme="dark"] .trocar,html[data-theme="dark"] select.pick,html[data-theme="dark"] .fchip,html[data-theme="dark"] .seg{background:rgba(16,26,42,.7);border-color:rgba(110,180,255,.16)}
+html[data-theme="dark"] .iconbtn.solid{background:linear-gradient(180deg,#22D3EE,#0EA5C4);color:#03121A;border-color:transparent;font-weight:700}
+html[data-theme="dark"] .seg button[aria-pressed="true"]{background:rgba(34,211,238,.14);color:#CFF8FF;box-shadow:inset 0 0 0 1px rgba(34,211,238,.45)}
+html[data-theme="dark"] .fchip[aria-pressed="true"]{border-color:rgba(34,211,238,.6);color:#E6EEF8;background:rgba(34,211,238,.08)}
+html[data-theme="dark"] table.grid th,html[data-theme="dark"] table.mtx th{color:#7F95AE}
+html[data-theme="dark"] .chip .val,html[data-theme="dark"] .big{font-family:var(--mono);letter-spacing:-.02em}
+html[data-theme="dark"] #viewMeta .chip[aria-pressed="true"]{background:rgba(34,211,238,.16);color:#CFF8FF;border-color:#22D3EE}
+html[data-theme="dark"] #viewMeta .btn{background:linear-gradient(180deg,#22D3EE,#0EA5C4);color:#03121A;font-weight:700}
+html[data-theme="dark"] input[type=file]::file-selector-button{background:rgba(34,211,238,.14);color:#CFF8FF;border:1px solid rgba(34,211,238,.4);border-radius:8px;padding:6px 12px;margin-right:10px;cursor:pointer}
+html[data-theme="dark"] #viewMeta .modo button{background:transparent;border:0}
+html[data-theme="dark"] #viewMeta .modo button[aria-pressed="true"]{background:rgba(34,211,238,.16);color:#CFF8FF;box-shadow:inset 0 0 0 1px rgba(34,211,238,.5)}
+/* ===== celular: compacto, só o essencial ===== */
+@media(max-width:760px){
+  #viewRitmo .brandmark,#viewRitmo .railbar{display:none}
+  #viewRitmo .top-in{padding:8px 14px 6px}
+  #viewRitmo .top-meta{gap:6px}
+  #viewRitmo .stamp{font-size:10px;line-height:1.35}
+  #viewRitmo .stamp br,#viewRitmo #stampRows,#viewRitmo #stampPer{display:none}
+  #viewRitmo .top-meta .iconbtn{padding:7px 4px;font-size:11px}
+  .controls .ctl.extra{display:none}
+  .controls.aberto .ctl.extra{display:flex}
+  .controls{gap:8px;padding:8px 0}
+  .chips.kpi5{gap:8px}
+  .chip .val{font-size:20px}
+  .chip .sub{font-size:9.5px}
+  #viewMeta .marca{font-size:16px}
+  #viewMeta .topo-in{padding:9px 14px}
+  .panel{margin-bottom:12px}
+  .secs-h>span:not(.right){display:none}
+  #viewMeta .hero .insight,#viewMeta .card .insight{font-size:12.5px}
+}

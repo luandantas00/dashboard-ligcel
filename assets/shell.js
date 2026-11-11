@@ -154,10 +154,15 @@ async function texto(url) {
 }
 const jsonSeguro = o => JSON.stringify(o).replace(/<\//g, '<\\/');
 
+async function cssTema(app) {
+  try { return (await texto('assets/tema/base.css')) + (await texto('assets/tema/' + app + '.css')); } catch (e) { return ''; }
+}
 function montarDoc(html, prelude, css) {
   const corpo = html.replace(/<\/body>\s*<\/html>\s*$/i, '');
   return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">' +
+    '<script>document.documentElement.setAttribute("data-theme","dark");<\/script>' +
     '<style>' + css + '</style><script>' + prelude + '<\/script></head><body>' + corpo + '</body></html>';
 }
 function colocarIframe(doc) {
@@ -189,7 +194,7 @@ async function abrirRitmo(visao) {
     let css = '.trocar{display:none!important}#btnBase{display:none!important}';
     if (!gestao()) css += '#btnCfg,#btnBase,#vCfg,#cfg{display:none!important}';
     const html = await texto('apps/ritmo.html');
-    colocarIframe(montarDoc(html.replace('Publicado.</b> A planilha foi gravada no Drive — quem abrir o link já vê a base nova.', 'Publicado.</b> Todos os acessos já veem a base nova.'), prelude, css));
+    colocarIframe(montarDoc(html.replace('Publicado.</b> A planilha foi gravada no Drive — quem abrir o link já vê a base nova.', 'Publicado.</b> Todos os acessos já veem a base nova.'), prelude, css + await cssTema('ritmo')));
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 
@@ -205,7 +210,7 @@ async function abrirAparelhos() {
       window.claude={use:function(){return Promise.resolve({publish:function(doc){return parent.__painel.aparelhosSalvar(doc);}});}};`;
     let html = await texto('apps/aparelhos.html');
     html = html.replace('<script id="pagedata" type="application/json">{}</script>', '<script id="pagedata" type="application/json">' + jsonSeguro(payload.page || {}) + '</script>');
-    colocarIframe(montarDoc(html, prelude, '#btnUp{display:none!important}'));
+    colocarIframe(montarDoc(html, prelude, '#btnUp{display:none!important}' + await cssTema('aparelhos')));
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 
@@ -220,7 +225,7 @@ async function abrirComissao() {
         : 'A gestão ainda não publicou os dados da sua loja.');
     }
     S.comissao = payload;
-    colocarIframe(montarDoc(await texto('apps/comissao.html'), '', ''));
+    colocarIframe(montarDoc(await texto('apps/comissao.html'), '', await cssTema('comissao')));
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 function indiceLoja(D, l) {

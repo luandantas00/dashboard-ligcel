@@ -1,0 +1,30 @@
+html:root[data-theme="dark"]{
+  --bg:#060A11; --surface:#0E1623; --ink:#E6EEF8; --muted:#7489A1; --line:#1B2B42; --soft:#0A111C;
+  --red:#22D3EE; --red-ink:#03121A; --ok:#34D399; --ok-bg:#0E2B29; --mid:#FBBF24; --mid-bg:#2F2610; --low:#F87171; --low-bg:#321A22; --zero:#7489A1; --zero-bg:#142035;
+  --bar:#1D3250; --focus:#38BDF8; --g1:#0F1A2A; --g2:#1B2B42;
+  --f-head:"Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+html[data-theme="dark"] .panel,html[data-theme="dark"] .card,html[data-theme="dark"] .kpi,html[data-theme="dark"] .hero,html[data-theme="dark"] .callout{
+  background:linear-gradient(180deg,rgba(26,42,66,.50),rgba(12,20,33,.62));
+  -webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);
+  border:1px solid rgba(110,180,255,.15);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 16px 38px -24px rgba(0,0,0,.95)}
+html[data-theme="dark"] .top{background:rgba(8,14,24,.72);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(110,180,255,.14)}
+html[data-theme="dark"] .dot{background:#22D3EE;box-shadow:0 0 10px rgba(34,211,238,.9)}
+html[data-theme="dark"] .big,html[data-theme="dark"] .kpi b{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:-.02em}
+html[data-theme="dark"] .sumhead,html[data-theme="dark"] tr.tot td,html[data-theme="dark"] .detbox tbody tr.tot td,html[data-theme="dark"] .detbox tbody tr.tot:nth-child(even) td,html[data-theme="dark"] .ic.tot{
+  background:linear-gradient(90deg,#0B3342,#0F2548)!important;color:#E6EEF8!important;border-color:rgba(34,211,238,.35)}
+html[data-theme="dark"] .sumhead small{color:#9BE7F5;opacity:1}
+html[data-theme="dark"] .meter i{background:linear-gradient(90deg,#22D3EE,#3B82F6);box-shadow:0 0 10px rgba(34,211,238,.5)}
+html[data-theme="dark"] .rad input:checked+span{background:rgba(34,211,238,.16);border-color:#22D3EE;color:#CFF8FF}
+html[data-theme="dark"] .toast{background:#0E1623;color:#E6EEF8;border:1px solid rgba(34,211,238,.45);box-shadow:0 10px 30px -10px rgba(34,211,238,.4)}
+@media(max-width:760px){
+  .kpis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .kpi{padding:10px 11px!important}
+  .kpi .big,.big{font-size:22px!important}
+  .kpi small,.kpi .sub{font-size:10.5px}
+  .hero{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .big2{font-size:28px!important}
+  .sumhead{padding:12px 14px!important}
+  .tabs{overflow-x:auto;scrollbar-width:none}
+}

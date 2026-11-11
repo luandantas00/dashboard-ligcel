@@ -55,6 +55,9 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 
 **Regra do Luan:** nada que alguém digite pode ficar salvo só no navegador. Metas/HC/dias/regras do Ritmo, metas do Aparelhos e configuração da Comissão salvam sozinhos no banco (autosave). Só tema/filtros ficam locais.
 
+## Visual (tema "cyber-clean", 10/11/2026)
+Tema escuro fosco com glassmorphism, cinza-azulado e destaque ciano (#22D3EE), fonte Inter + JetBrains Mono nos números. O shell usa `assets/shell.css`; cada painel recebe, injetado pelo shell, `assets/tema/base.css` + `assets/tema/<painel>.css` (sobrescrevem as variáveis dos apps; os `apps/*.html` mantêm o visual claro original, usado só se o botão Tema do Ritmo voltar para claro). Para mudar cores/estilo, edite esses CSS; não precisa mexer nos apps. Celular: topo compacto, filtros extras do Ritmo atrás de "Mais filtros", pílulas de Aparelhos com rolagem lateral, KPIs em 2 colunas.
+
 ## Regras de negócio decididas
 
 - **Aparelho = Valor Venda acima de R$ 60**, nos três painéis. **Chip = de R$ 10 a R$ 60.** Seguro Proteção Móvel fora da conta. (Antes: Ritmo usava 63, Aparelhos usava 50, Comissão usava 70.)
@@ -65,7 +68,7 @@ Os dados do Excel nunca são guardados como arquivo, só como números agregados
 
 ## Estado atual (10/11/2026)
 
-- Versão em `config.js`: `2026-11-10-9` (etapa 3 + metas no banco; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
+- Versão em `config.js`: `2026-11-10-11` (tema cyber-clean + metas no banco + etapa 3; a publicada no GitHub pode ainda ser a `2026-11-06-7`).
 - Base carregada em 06/11/2026, a partir de `HISTORICO ANO CC LIG SET.xlsx` (20.646 linhas, 02/01 a 06/11, 7 lojas). Ritmo com 10.264 registros; Aparelhos com 1.800 aparelhos e 8.323 chips; Comissão de jan a nov.
 - **O projeto Supabase apareceu como `INACTIVE` e o banco não respondeu a consultas.** Verificar no painel do Supabase se está pausado e restaurar. Confirmar o plano da organização (o Luan disse que o plano dele não é gratuito).
 - Fluxo de publicação hoje: o Luan baixa um zip e arrasta arquivos no GitHub pela web. É a principal fonte de erro (arquivo caindo na raiz, cache). Ir para o Claude Code com push direto resolve isso.
