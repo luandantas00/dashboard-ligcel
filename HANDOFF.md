@@ -121,3 +121,8 @@ Nos testes usei Playwright com o site servido localmente e respostas simuladas d
 - apps/comissao.html: função metasParaRitmo() = meta em R$ de cada loja/indicador ÷ ticket médio -> quantidade (Controle, Pós, BL, TV; AP = meta aparelho ÷ ticket de aparelho). Roda sozinha após cada salvamento do dono e pelo botão "Enviar metas ao Ritmo e Minha Meta". Grava em ritmo-cfg (+ fatias por loja) via ritmoSalvarCfg. Seguro e Claro Troca seguem digitados só no Ritmo.
 - apps/ritmo.html: aviso na aba de metas. Pendente: ligar também as metas do app Aparelhos (METAS q/r por loja) à mesma base.
 - versao 2026-11-10-17.
+
+## Aparelhos ligado à meta base (10/11-h)
+- metasParaRitmo() agora também grava em datasets 'aparelhos' (page.metas['YYYY-MM'] = {q: unidades, r: receita R$} por loja) pela ponte nova window.__painel.aparelhosMetas / aparelhosLojas (shell.js). Aparelhos já acompanha unidade e receita.
+- Pendente: "outra visão de receita" (outro link que o Luan vai trazer), visível só para o empresário (dono/admin).
+- versao 2026-11-10-18.

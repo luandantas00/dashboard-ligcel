@@ -1184,7 +1184,13 @@ async function metasParaRitmo(silencioso) {
     for (const k of FRK) { const q = tk[k] > 0 ? Math.ceil((l.meta[k] || 0) / tk[k]) : 0; const key = S.mk + '|' + nm + '|' + ID[k]; if (q > 0) cfgR.metas[key] = q; else delete cfgR.metas[key]; n++; }
     const qa = apT > 0 ? Math.ceil((l.metaAp || 0) / apT) : 0, ka = S.mk + '|' + nm + '|AP'; if (qa > 0) cfgR.metas[ka] = qa; else delete cfgR.metas[ka];
   }
-  try { await parent.__painel.ritmoSalvarCfg(cfgR); if (!silencioso) say('Metas de ' + mlabel(S.mk) + ' enviadas ao Ritmo Comercial e ao Minha Meta (quantidades = meta em R$ ÷ ticket médio).' + (sem.length ? ' Sem correspondência no Ritmo: ' + sem.join(', ') + '.' : '')); }
+  try {
+    if (parent.__painel.aparelhosMetas) { /* mesma meta de aparelho (unidades e receita) para o app Aparelhos e Chip */
+      const lj = await parent.__painel.aparelhosLojas(), q = {}, r = {};
+      for (const l of B.lojas) { const nmC = S.data.L[l.li], nmA = lj.find(x => nz(x).slice(0, 6) === nz(nmC).slice(0, 6)) || nmC; r[nmA] = Math.round(l.metaAp || 0); q[nmA] = apT > 0 ? Math.ceil((l.metaAp || 0) / apT) : 0; }
+      await parent.__painel.aparelhosMetas(S.mk, q, r);
+    }
+    await parent.__painel.ritmoSalvarCfg(cfgR); if (!silencioso) say('Metas de ' + mlabel(S.mk) + ' enviadas ao Ritmo Comercial, Minha Meta e Aparelhos e Chip (quantidades = meta em R$ ÷ ticket médio).' + (sem.length ? ' Sem correspondência no Ritmo: ' + sem.join(', ') + '.' : '')); }
   catch (e) { if (!silencioso) say('Não consegui enviar ao Ritmo: ' + (e && e.message || e)); }
 }
 async function publicarAcesso() {

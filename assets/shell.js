@@ -284,6 +284,20 @@ window.__painel = {
   },
   aparelhosSeed: () => (S.aparelhos && S.aparelhos.seed) || { stores: [], vends: [], brands: [], rows: [] },
   aparelhosExcl: () => (S.aparelhos && S.aparelhos.excl) || [],
+  aparelhosLojas: async () => { if (!S.aparelhos && gestao()) S.aparelhos = await lerDataset('aparelhos'); return ((S.aparelhos && S.aparelhos.seed && S.aparelhos.seed.stores) || []).slice(); },
+  aparelhosMetas: async (mes, q, r) => {
+    if (!gestao()) return false;
+    if (!S.aparelhos) S.aparelhos = await lerDataset('aparelhos');
+    if (!S.aparelhos) return false;
+    const page = S.aparelhos.page || (S.aparelhos.page = { stamp: Date.now(), upd: {}, metas: {}, log: [] });
+    page.metas = page.metas || {};
+    const cur = page.metas[mes] = page.metas[mes] || { q: {}, r: {} };
+    cur.q = Object.assign(cur.q || {}, q || {}); cur.r = Object.assign(cur.r || {}, r || {});
+    Object.keys(cur.q).forEach(k => { if (!(cur.q[k] > 0)) delete cur.q[k]; }); Object.keys(cur.r).forEach(k => { if (!(cur.r[k] > 0)) delete cur.r[k]; });
+    cur.atualizado = new Date().toISOString();
+    await gravar([{ chave: 'aparelhos', loja_id: null, payload: { seed: S.aparelhos.seed, excl: S.aparelhos.excl || [], page } }]);
+    return true;
+  },
   aparelhosSalvar: async (doc) => {
     const m = /<script id="pagedata"[^>]*>([\s\S]*?)<\/script>/.exec(doc);
     if (!m) throw new Error('Não localizei os dados da página.');
