@@ -15,10 +15,13 @@ const ABAS = [
   { id: 'aparelhos', nome: 'Aparelhos e Chip', papeis: ['dono', 'admin'] },
   { id: 'receita',   nome: 'Receita',         papeis: ['dono', 'admin'] },
   { id: 'comissao',  nome: 'Comissão e Meta', papeis: ['dono', 'admin', 'gerente'] },
+  { id: 'simulador', nome: 'Simulador AA',    papeis: ['dono', 'admin'] },
   { id: 'cadastros', nome: 'Cadastros',       papeis: ['dono', 'admin', 'gerente'] },
   { id: 'dados',     nome: 'Importar dados',  papeis: ['dono', 'admin'] }
 ];
-const PODE_CRIAR = { dono: ['admin', 'gerente', 'vendedor'], admin: ['gerente', 'vendedor'], gerente: ['vendedor'] };
+const ICONES = {'empresas': '<path d="M4 21V7l8-4 8 4v14M9 21v-6h6v6M9 10h.01M15 10h.01"/>', 'ritmo': '<path d="M3 12h4l3-8 4 16 3-8h4"/>', 'meta': '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>', 'aparelhos': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>', 'receita': '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', 'simulador': '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M8.5 7h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>', 'comissao': '<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>', 'cadastros': '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.7 3 2.4 3.5 5.2"/>', 'dados': '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'};
+const icoSvg = id => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONES[id] || '') + '</svg>';
+const PODE_CRIAR = { dono: ['admin', 'gerente', 'vendedor'], admin: ['admin', 'gerente', 'vendedor'], gerente: ['vendedor'] };
 
 const S = { empresa: null, empresas: [], me: null, lojas: [], titulo: 'Painel Comercial', aba: null, aparelhos: null, ritmoTxt: null };
 const gestao = () => S.me && (S.me.papel === 'dono' || S.me.papel === 'admin');
@@ -59,7 +62,7 @@ async function iniciar() {
   if (data.session) await entrarNoApp(); else { await carregarTituloPublico(); mostrar('login'); }
   sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { limparEstado(); mostrar('login'); } });
 }
-async function carregarTituloPublico() { document.title = S.titulo; $('#loginTitulo').textContent = S.titulo; }
+async function carregarTituloPublico() { document.title = S.titulo; document.querySelectorAll('.js-titulo').forEach(el => { el.textContent = S.titulo; }); }
 
 $('#formSenha').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -146,7 +149,9 @@ function pintarTopo() {
     eb.hidden = false;
     eb.innerHTML = `<label for="selEmp">Empresa</label><select id="selEmp">${S.empresas.map(x => `<option value="${x.id}"${S.empresa && x.id === S.empresa.id ? ' selected' : ''}>${esc(x.nome)}</option>`).join('')}</select>`;
   } else { eb.hidden = true; eb.innerHTML = ''; }
-  $('#abas').innerHTML = abasVisiveis().map(a => `<button class="aba" data-aba="${a.id}">${esc(a.nome)}</button>`).join('');
+  $('#abas').innerHTML = abasVisiveis().map(a => `<button class="aba" data-aba="${a.id}"><span class="ico">${icoSvg(a.id)}</span><span class="rot">${esc(a.nome)}</span></button>`).join('');
+  const nm = S.me.nome || S.me.email || '', ini = nm.replace(/@.*/, '').split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('') || '?';
+  $('#menuUser').innerHTML = `<span class="av">${esc(ini)}</span><span class="mu-t"><b>${esc(nm)}</b><small>${esc(ROTULO[S.me.papel] + (S.me.loja ? ' · ' + S.me.loja.nome : ''))}</small></span>`;
 }
 $('#abas').addEventListener('click', e => { const b = e.target.closest('.aba'); if (b) { fecharMenu(); irPara(b.dataset.aba); } });
 $('#empBox').addEventListener('change', e => { if (e.target.id === 'selEmp') { fecharMenu(); trocarEmpresa(e.target.value); } });
@@ -200,6 +205,7 @@ function irPara(id) {
   S.aba = id; location.hash = '#/' + id;
   document.querySelectorAll('.aba').forEach(b => b.toggleAttribute('aria-current', b.dataset.aba === id));
   document.querySelectorAll('.aba').forEach(b => { if (b.dataset.aba === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  { const ab = ABAS.find(x => x.id === id), cr = $('#crumb'); if (cr) cr.textContent = ab ? ab.nome : ''; }
   const p = $('#palco'); p.innerHTML = '';
   if (S._cadH) { p.removeEventListener('click', S._cadH); S._cadH = null; }
   if (S._empH) { p.removeEventListener('click', S._empH); S._empH = null; }
@@ -208,6 +214,7 @@ function irPara(id) {
   if (id === 'empresas') return abrirEmpresas();
   if (id === 'receita') return abrirReceita();
   if (id === 'comissao') return abrirComissao();
+  if (id === 'simulador') return abrirSimulador();
   if (id === 'cadastros') return abrirCadastros();
   if (id === 'dados') return abrirDados();
 }
@@ -358,6 +365,14 @@ async function abrirReceita() {
     const prelude = 'window.__RECEITA=' + jsonSeguro(payload && payload.R ? payload : {}) + ';';
     const html = await texto('apps/receita.html');
     colocarIframe(montarDoc(html, prelude, await cssTema('receita')));
+  } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
+}
+
+async function abrirSimulador() {
+  carregando();
+  try {
+    if (!gestao()) return aviso('Sem acesso', 'O Simulador de Comissão AA é exclusivo do dono e do empresário.');
+    colocarIframe(montarDoc(await texto('apps/simulador.html'), '', ''));
   } catch (e) { aviso('Não consegui abrir', esc(msgErro(e))); }
 }
 
@@ -827,7 +842,7 @@ async function abrirCadastros() {
     const vendAtivos = await vendedoresAtivos();
     const lojaNome = id => (S.lojas.find(l => l.id === id) || {}).nome || '—';
     const meusPapeis = PODE_CRIAR[S.me.papel] || [];
-    const podeVer = us.filter(u => u.id !== S.me.id || true);
+    const podeVer = us;
 
     const blocoLojas = gestao() ? `
       <div class="cartao"><header><h2>Lojas</h2><span>Cada loja tem os seus gerentes e vendedores. Os “apelidos” são os nomes da loja como aparecem nas bases.</span></header>
@@ -856,7 +871,7 @@ async function abrirCadastros() {
     const opPapel = meusPapeis.map(p => `<option value="${p}">${ROTULO[p]}</option>`).join('');
     const opLoja = S.lojas.filter(l => l.ativa).map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
     const blocoNovo = meusPapeis.length ? `
-      <div class="cartao"><header><h2>Novo usuário</h2><span>${S.me.papel === 'dono' ? 'Você cadastra empresários, gerentes e vendedores.' : S.me.papel === 'admin' ? 'Você cadastra gerentes e vendedores da sua empresa.' : 'Você cadastra os vendedores da sua loja.'}</span></header>
+      <div class="cartao"><header><h2>Novo usuário</h2><span>${S.me.papel === 'dono' ? 'Você cadastra empresários, gerentes e vendedores.' : S.me.papel === 'admin' ? 'Você cadastra administradores, gerentes e vendedores da sua empresa.' : 'Você cadastra os vendedores da sua loja.'}</span></header>
       <div class="corpo"><form id="formUser" class="grade">
         <div><label for="uNomeN">Nome</label><input id="uNomeN" required maxlength="80"></div>
         <div><label for="uEmailN">E-mail (será o login)</label><input id="uEmailN" type="email" required></div>

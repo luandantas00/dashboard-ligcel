@@ -267,6 +267,7 @@ function defaultCfg() {
       ap: { gat: gat.slice(), v: [0.005, 0.01, 0.015], g: [0.0025, 0.005, 0.0075], modo: 'fat', q: { v: [5, 10, 15], g: [2, 4, 6] } }
     },
     svp: { v: 0.10, g: 0.04 },
+    segp: { v: 0.10, g: 0.04 },
     trava: { min: 0.8, parcial: 0.5, pleno: 1.0 },
     travaInd: { controle: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, pos: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, bl: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, tv: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, ap: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 } },
     bonus: [{ a: 1.2, valor: 100 }, { a: 1.5, valor: 250 }],
@@ -292,7 +293,7 @@ function mergeCfg(base, over) {
 function metaOf(cfg, mk) {
   if (cfg.metas[mk]) return cfg.metas[mk];
   const prev = Object.keys(cfg.metas).filter(k => k < mk).sort().pop() || Object.keys(cfg.metas).sort().pop();
-  return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, lojaPct: {} };
+  return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, seg: 0, lojaPct: {} };
 }
 function monthDays(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m, 0).getDate(); }
 
@@ -314,6 +315,7 @@ function aggregateRows(json) {
     const tipo = String(r['Tipo de Ativação'] ?? '').trim();
     let ind = DEPARA[tipo]; if (!ind) { ind = 'nc'; unmapped[tipo] = (unmapped[tipo] || 0) + 1; }
     if (ind === 'nc') continue;
+    if (/seguro/i.test(String(r['Plano/Serviço'] ?? ''))) ind = 'seguro'; // seguro: meta em quantidade, comissão em percentual editável
     const combo = String(r['Combo'] ?? '').trim();
     const vv = num(r['Valor Venda']);
     rows.push({ mk, day: d.getDate(), loja: titleLoja(r['Loja (Venda)']), vend: String(r['Vendedor'] ?? '').trim() || 'SEM VENDEDOR', ind, tipo,
@@ -393,6 +395,11 @@ function calcScope(real, ap, meta, metaAp, cfg, kind, servLib) {
     o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct) * tv, tv, idx: faixaIdx(ating, sc.gat) };
     o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM * tv; o.comExtra += fm * (pctM - pct) * tv;
   }
+  { // seguro: meta em quantidade, comissão = percentual editável sobre a receita (comissão + residencial)
+    const sg = (real && real.seguro) || { f: 0, r: 0, q: 0, qp: 0 }, sgm = (meta && meta.seguro) || 0, sgq = sg.qp != null ? sg.qp : (sg.q || 0), sgp = ((cfg.segp || cfg.svp) || {})[kind] || 0, sgc = (sg.r || 0) * sgp;
+    o.seg = { meta: sgm, q: sg.q || 0, qp: sgq, r: sg.r || 0, ating: sgm > 0 ? sgq / sgm : null, pct: sgp, com: sgc };
+    o.comSv += sgc;
+  }
   const a = ap || { fat: 0, q: 0 }, aAting = metaAp > 0 ? a.fat / metaAp : null, apQ = cfg.esc.ap.modo === 'qtd', aPct = faixaPct(aAting, cfg.esc.ap.gat, apQ ? (cfg.esc.ap.q || { v: [], g: [] })[kind] : cfg.esc.ap[kind]);
   const tvA = travaF(aAting, (cfg.travaInd || {}).ap);
   o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, tv: tvA, modo: apQ ? 'qtd' : 'fat', com: (apQ ? (a.q || 0) * aPct : a.fat * aPct) * tvA, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
@@ -415,7 +422,7 @@ function buildModel(data, cfg, mk, k, vw) {
   const dm = monthDays(mk), dd = Math.min(data.D[mk] || dm, dm);
   const recs = data.R.filter(r => r[0] === mk), aps = data.A.filter(a => a[0] === mk);
   const realV = {}, realL = {}, apV = {}, apL = {}, vLoja = {};
-  const add = (o, key, ind, q, f, r, mu) => { const x = ((o[key] = o[key] || {})[ind] = (o[key][ind] || { f: 0, r: 0, q: 0, fm: 0, qm: 0 })); x.f += f * k; x.r += r * k; x.q += q; if (mu > 0 && ind !== 'servico') { x.fm += f * k; x.qm += q; } };
+  const add = (o, key, ind, q, f, r, mu) => { const x = ((o[key] = o[key] || {})[ind] = (o[key][ind] || { f: 0, r: 0, q: 0, fm: 0, qm: 0 })); x.f += f * k; x.r += r * k; x.q += q; x.qp = (x.qp || 0) + q * k; if (mu > 0 && ind !== 'servico' && ind !== 'seguro') { x.fm += f * k; x.qm += q; } };
   for (const [, li, vi, ind, , mu, q, f, r] of recs) {
     add(realL, li, ind, q, f, r, mu);
     if (data.V[vi] !== 'SEM VENDEDOR') { add(realV, vi, ind, q, f, r, mu); vLoja[vi] = li; }
@@ -426,6 +433,7 @@ function buildModel(data, cfg, mk, k, vw) {
   }
   const M = metaOf(cfg, mk), mixSum = FRK.reduce((s, k) => s + (+M.mix[k] || 0), 0) || 1;
   const metaEmp = {}; for (const { k: ik } of IND) metaEmp[ik] = ik === 'servico' ? 0 : (+M.total || 0) * ((+M.mix[ik] || 0) / mixSum);
+  metaEmp.seguro = +M.seg || 0;
   const metaAp = +M.ap || 0;
   const pctRaw = Object.values(M.lojaPct || {}).reduce((s, x) => s + (+x || 0), 0), pctSum = pctRaw || 1;
   const hcL = {}; for (const vi of Object.keys(vLoja)) hcL[vLoja[vi]] = (hcL[vLoja[vi]] || 0) + 1; const hcT = Object.values(hcL).reduce((x, y) => x + y, 0) || 1;
@@ -440,9 +448,9 @@ function buildModel(data, cfg, mk, k, vw) {
       const wv = vw[nome] && vw[nome][data.V[vi]] != null ? +vw[nome][data.V[vi]] : (ativo ? 1 : 0);
       w[vi] = wv; sw += wv;
     }
-    const metaL = {}; for (const { k: ik } of IND) metaL[ik] = metaEmp[ik] * share; const metaApL = metaAp * share;
+    const metaL = {}; for (const { k: ik } of IND) metaL[ik] = metaEmp[ik] * share; metaL.seguro = metaEmp.seguro * share; const metaApL = metaAp * share;
     const vl = vis.map(vi => {
-      const meta = {}; for (const { k: ik } of IND) meta[ik] = sw > 0 ? metaL[ik] * w[vi] / sw : 0;
+      const meta = {}; for (const { k: ik } of IND) meta[ik] = sw > 0 ? metaL[ik] * w[vi] / sw : 0; meta.seguro = sw > 0 ? metaL.seguro * w[vi] / sw : 0;
       const mAp = sw > 0 ? metaApL * w[vi] / sw : 0;
       return { nome: data.V[vi], loja: nome, w: w[vi], pctMeta: sw > 0 ? w[vi] / sw : 0, meta, metaAp: mAp, real: realV[vi] || {}, ap: apV[vi],
         res: calcScope(realV[vi] || {}, apV[vi], meta, mAp, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos) };
@@ -452,8 +460,10 @@ function buildModel(data, cfg, mk, k, vw) {
       res: calcScope(realL[li] || {}, apL[li], metaL, metaApL, cfg, 'g', cfg.lib[mk] && cfg.lib[mk].servicos) });
   }
   const tot = {}; for (const { k: ik } of IND) { tot[ik] = { f: 0, r: 0, q: 0, fm: 0, qm: 0 }; for (const l of lojas) { const x = l.real[ik]; if (x) { tot[ik].f += x.f; tot[ik].r += x.r; tot[ik].q += x.q; tot[ik].fm += x.fm || 0; tot[ik].qm += x.qm || 0; } } }
+  tot.seguro = { f: 0, r: 0, q: 0, fm: 0, qm: 0, qp: 0 }; for (const l of lojas) { const x = l.real.seguro; if (x) { tot.seguro.r += x.r; tot.seguro.q += x.q; tot.seguro.qp += x.qp || 0; } }
   const totAp = { fat: lojas.reduce((s, l) => s + (l.ap ? l.ap.fat : 0), 0), q: lojas.reduce((s, l) => s + (l.ap ? l.ap.q : 0), 0) };
   const metaTodas = {}; for (const { k: ik } of IND) metaTodas[ik] = lojas.reduce((s, l) => s + l.meta[ik], 0);
+  metaTodas.seguro = lojas.reduce((s, l) => s + (l.meta.seguro || 0), 0);
   const metaApTodas = lojas.reduce((s, l) => s + l.metaAp, 0);
   const empresa = calcScope(tot, totAp, metaTodas, metaApTodas, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos);
   return { mk, k, dm, dd, M, mixSum, metaEmp, metaAp, lojas, vends, tot, totAp, empresa,
@@ -478,6 +488,7 @@ function custoCenario(B, cfg, s) {
       const tvk = travaF(s, (cfg.travaInd || {})[k]);
       v += base * ((1 - ms) * pv + ms * pvm) * tvk; g += base * ((1 - ms) * pg + ms * pgm) * tvk;
     }
+    { const ts = B.tot.seguro, avg = ts && ts.qp > 0 ? ts.r / ts.qp : 0, sgr = (l.meta.seguro || 0) * s * avg, sp = cfg.segp || cfg.svp || {}; recServ += sgr; v += sgr * (sp.v || 0); g += sgr * (sp.g || 0); }
     const sr = recL * svRatio; recServ += sr; v += sr * ((cfg.svp || {}).v || 0); g += sr * ((cfg.svp || {}).g || 0);
     const fa = l.metaAp * s, tvA = travaF(s, (cfg.travaInd || {}).ap);
     if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v) * tvA; g += un * faixaPct(s, cfg.esc.ap.gat, qq.g) * tvA; }
@@ -731,12 +742,15 @@ function detalhe(B, res, real, li, vi, kind, nome) {
     return `${tgl(k, INDN[k])}<td>${mq == null ? '—' : mq}</td><td>${rq}</td><td>${at(x.ating)}</td><td>${brl(x.f)}</td><td>${x.tv < 1 ? `<span class="pill ${x.tv > 0 ? 'mid' : 'low'}">${x.tv > 0 ? 'trava: ' + pc(x.tv) : 'travado'}</span> ` : ''}<b>${brl(x.com)}</b>${x.comExtra > 0.005 ? ` <em class="mx">+${brl(x.comExtra)} multi</em>` : ''}</td></tr>${ok(k) ? strip(k, x, rq, mq) : ''}`; }).join('');
   const svOpen = ok('servico');
   const svRow = `<tr class="click tg ${svOpen ? 'op' : ''}" data-act="tg" data-v="servico" tabindex="0" aria-expanded="${svOpen}"><td class="name"><b>${chev(svOpen)}Serviços</b><div class="sub">fora da meta · ${pc1(svp)} sobre a comissão</div></td><td>—</td><td>${Math.round(sv.q * kf)}</td><td>—</td><td>—</td><td>${lib ? `<b>${brl(sv.com)}</b>` : `<small>${brl(sv.com)} a liberar</small>`}</td></tr>${svOpen ? `<tr class="dtl"><td colspan="6">${prodInd(li, vi, res, 'servico')}</td></tr>` : ''}`;
+  const sg = res.seg || { meta: 0, q: 0, qp: 0, ating: null, pct: 0, com: 0 };
+  const sgRow = `<tr><td class="name"><b>Seguro</b><div class="sub">${pc1(sg.pct)} sobre a comissão</div></td><td>${sg.meta > 0 ? Math.ceil(sg.meta) : '—'}</td><td>${Math.round(sg.qp)}</td><td>${at(sg.ating)}</td><td>—</td><td>${lib ? `<b>${brl(sg.com)}</b>` : `<small>${brl(sg.com)} a liberar</small>`}</td></tr>`;
   const comFr = res.comFr;
   const resumo = `<section class="sumry"><div class="sumhead"><div><small>${kind === 'v' ? 'Comissão do vendedor' : 'Comissão do gerente'}</small><div class="big2">${brl(res.total)}</div></div><div class="sumact">${libPill(res.lib)}${kind === 'v' && nome ? `<button class="btn primary" data-act="goV" data-v='${esc(nome)}'>Simular minha comissão</button>` : ''}</div></div>
     <div class="scroll"><table class="sumtb"><thead><tr><th>Indicador</th><th>Meta (vendas)</th><th>Real (vendas)</th><th>Ating.</th><th>Franquia</th><th>Comissão</th></tr></thead><tbody>${rows}
     <tr class="sub1"><td><b>Total dos indicadores</b></td><td></td><td>${qTot}</td><td>${at(res.atTotal)}</td><td><b>${brl(fTot)}</b><div class="sub">média ${brl2(qTot ? fTot / qTot : 0)} por plano</div></td><td><b>${brl(comFr)}</b>${res.comExtra > 0.005 ? ` <em class="mx">+${brl(res.comExtra)} multi</em>` : ''}</td></tr>
     <tr><td class="name"><b>Aparelho</b><div class="sub">${a.meta > 0 ? 'meta ' + brl(a.meta) : ''}</div></td><td>${brl(a.meta)}</td><td>${brl(a.fat)}</td><td>${at(a.ating)}</td><td>—</td><td>${a.tv < 1 ? `<span class="pill ${a.tv > 0 ? 'mid' : 'low'}">${a.tv > 0 ? 'trava: ' + pc(a.tv) : 'travado'}</span> ` : ''}<b>${brl(a.com)}</b></td></tr>
     ${svRow}
+    ${sgRow}
     ${kind === 'v' ? `<tr><td class="name"><b>Bônus</b></td><td colspan="4"><span class="sub">${res.bonusBruto > 0 ? 'meta total batida' : 'a partir de ' + pc(cfg.bonus[0].a) + ' do total'}</span></td><td><b>${brl(res.bonus)}</b></td></tr>` : ''}
     <tr class="tr"><td colspan="5"><b>Total a receber</b>${res.lib < 1 ? ` <span class="sub">· trava de BL: libera ${pc(res.lib)} do valor</span>` : ''}</td><td><b>${brl(res.total)}</b></td></tr></tbody></table></div>
     <div class="note">Clique em um indicador para ver os produtos vendidos. ${res.comExtra > 0.005 ? `O multi já está incluído: ${brl(res.comExtra * res.lib)} a mais do que se fossem vendas single.` : 'Venda multi paga percentual maior sobre a franquia.'}</div></section>`;
@@ -845,12 +859,16 @@ function viewReceita() {
   const gRows = T1.map(t => { const ex = B.empresa.ind[t.k], fl = Math.max(0, ex.meta - ex.r); return `<tr><td><b>${t.n}</b></td><td>${fl > 0 ? brl(fl) : 'meta batida'}</td><td>${t.s ? brl2(t.s) : '—'}</td><td>${t.m ? brl2(t.m) : '—'}</td><td>${fl > 0 && t.s ? Math.ceil(fl / t.s) : '—'}</td><td>${fl > 0 && t.m ? Math.ceil(fl / t.m) : '—'}</td></tr>`; }).join('');
   const xRows = T1.map(a1 => `<tr><td class="name"><b>1 multi de ${a1.n}</b></td>${FRK.map(k => { const sT = T1.find(z => z.k === k).s; return `<td>${a1.m && sT ? num(a1.m / sT, 1) : '—'}</td>`; }).join('')}</tr>`).join('');
   const svM = ms.map(m => recMes(m, y => y[3] === 'servico'));
-  const svP = `<section class="panel"><header><h2>Serviços (fora da meta e do total)</h2><span class="n">Serviços geram comissão própria, por isso não somam com os indicadores. Aqui: quantidade e o que geram.</span></header>
+  const sgM = ms.map(m => recMes(m, y => y[3] === 'seguro'));
+  const svP = `<section class="panel"><header><h2>Serviços e seguro (fora do total de receita)</h2><span class="n">Serviços geram comissão própria, por isso não somam com os indicadores. Aqui: quantidade e o que geram.</span></header>
     <div class="scroll"><table><thead><tr><th></th>${ms.map(m => `<th>${mlabel(m)}${(D.D[m] || 0) < monthDays(m) ? '<div class="sub">parcial</div>' : ''}</th>`).join('')}</tr></thead><tbody>
     <tr><td><b>Quantidade</b></td>${svM.map(x => `<td>${x.q}</td>`).join('')}</tr>
     <tr><td><b>Receita gerada</b></td>${svM.map(x => `<td>${brl(x.r)}</td>`).join('')}</tr>
     <tr><td><b>Ticket médio</b></td>${svM.map(x => `<td>${x.q ? brl2(x.r / x.q) : '—'}</td>`).join('')}</tr>
-    <tr><td><b>Comissão paga (vendedor ${pc1((S.cfg.svp || {}).v)} + gerente ${pc1((S.cfg.svp || {}).g)})</b></td>${svM.map(x => `<td>${brl(x.r * (((S.cfg.svp || {}).v || 0) + ((S.cfg.svp || {}).g || 0)))}</td>`).join('')}</tr></tbody></table></div></section>`;
+    <tr><td><b>Comissão paga (vendedor ${pc1((S.cfg.svp || {}).v)} + gerente ${pc1((S.cfg.svp || {}).g)})</b></td>${svM.map(x => `<td>${brl(x.r * (((S.cfg.svp || {}).v || 0) + ((S.cfg.svp || {}).g || 0)))}</td>`).join('')}</tr>
+    <tr class="sec2"><td><b>Seguro · quantidade</b></td>${sgM.map(x => `<td>${x.q}</td>`).join('')}</tr>
+    <tr><td><b>Seguro · receita gerada</b></td>${sgM.map(x => `<td>${brl(x.r)}</td>`).join('')}</tr>
+    <tr><td><b>Seguro · comissão paga (vendedor ${pc1((S.cfg.segp || {}).v)} + gerente ${pc1((S.cfg.segp || {}).g)})</b></td>${sgM.map(x => `<td>${brl(x.r * (((S.cfg.segp || {}).v || 0) + ((S.cfg.segp || {}).g || 0)))}</td>`).join('')}</tr></tbody></table></div></section>`;
   return `${kp}
   <section class="panel"><header><h2>Meta sugerida pelos melhores meses</h2><span class="n">Referência: o melhor mês fechado de cada loja em cada indicador (${ref.map(mlabel).join(', ')}). O mês aberto entra pela projeção (aparece marcado como parcial).</span></header>
     <div class="pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="fld">Crescimento sobre o melhor mês ${inp(['cres'], +S.cfg.cres || 0, 'pct', '1', '80px')}</label>
@@ -924,7 +942,7 @@ function viewMetas() {
     <section class="panel"><header><h2>Receber ajustes do dono</h2></header><div class="pad" style="display:grid;gap:8px"><div class="note">${hasServer() ? 'As metas e regras do dono chegam sozinhas quando você abre a página.' : 'Cole o código que o dono enviou para atualizar metas, regras e a liberação de serviços.'}</div>${hasServer() ? '' : `<textarea id="pkt" rows="3" placeholder="Código do dono" style="width:100%"></textarea><div><button class="btn primary" data-act="impkt">Aplicar código</button></div>`}</div></section>`;
   }
   const lib = servLiberado();
-  const lojasRows = B.lojas.map(l => `<tr><td class="name"><b>${esc(l.nome)}</b><div class="sub">${l.hc} vendedores ativos</div></td><td>${inp(['metas', S.mk, 'lojaPct', l.nome], (+(M.lojaPct || {})[l.nome] || 0) / 100, 'pct', '0.5', '70px')}</td><td>${brl(l.res.mTot)}</td><td>${brl(l.metaAp)}</td><td>${brl(l.hc ? l.res.mTot / l.hc : 0)}</td><td>${brl(l.res.rTot)}</td><td>${at(l.res.atTotal)}</td><td>${at(l.res.ap.ating)}</td></tr>`).join('');
+  const lojasRows = B.lojas.map(l => `<tr><td class="name"><b>${esc(l.nome)}</b><div class="sub">${l.hc} vendedores ativos</div></td><td>${inp(['metas', S.mk, 'lojaPct', l.nome], (+(M.lojaPct || {})[l.nome] || 0) / 100, 'pct', '0.5', '70px')}</td><td>${brl(l.res.mTot)}</td><td>${brl(l.metaAp)}</td><td>${Math.ceil(l.meta.seguro || 0)} un</td><td>${brl(l.hc ? l.res.mTot / l.hc : 0)}</td><td>${brl(l.res.rTot)}</td><td>${at(l.res.atTotal)}</td><td>${at(l.res.ap.ating)}</td><td>${at(l.res.seg.ating)}</td></tr>`).join('');
   const pctSum = Object.values(M.lojaPct || {}).reduce((s, x) => s + (+x || 0), 0);
   const bate = B.lojas.map(l => { const n = l.vends.filter(v => v.w > 0).length, ok = l.vends.filter(v => v.w > 0 && v.res.atTotal != null && v.res.atTotal >= 1).length; const a = l.res.atTotal;
     return `<tr><td class="name"><b>${esc(l.nome)}</b></td><td>${at(a)}</td><td>${a == null ? '—' : a >= 1 ? '<span class="pill ok">Batendo</span>' : a >= 0.8 ? '<span class="pill mid">Perto</span>' : '<span class="pill low">Abaixo</span>'}</td><td>${ok} de ${n}</td><td>${at(l.res.ind.bl.ating)}</td><td>${libPill(l.res.lib)}</td><td>${brl(l.res.total)}</td></tr>`; }).join('');
@@ -932,7 +950,7 @@ function viewMetas() {
   const c100 = custoCenario(B, S.cfg, 1), lojaCusto = B.lojas.filter(l => l.res.mTot > 0).map(l => ({ l, c: custoCenario({ ...B, lojas: [l] }, S.cfg, 1) }));
   const lcRows = lojaCusto.map(({ l, c }) => `<tr><td class="name"><b>${esc(l.nome)}</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td><td>${brl(c.rec - c.total)}</td></tr>`).join('');
   const topo = `<section class="panel"><header><h2>Meta de receita e impacto da comissão</h2><span class="n">Receita = comissão + comissão residencial de Controle, Pós, BL e TV (serviços ficam fora da meta). Ao informar a meta, o custo de vendedores e gerentes é calculado em cima dela, pela escala atual.</span></header>
-    <div class="pad"><div class="form" style="grid-template-columns:auto auto;max-width:380px"><span>Meta de receita (R$)</span>${inp(['metas', S.mk, 'total'], +M.total || 0, 'num', '1000', '130px')}<span>Meta de faturamento de aparelho (R$)</span>${inp(['metas', S.mk, 'ap'], +M.ap || 0, 'num', '1000', '130px')}</div></div>
+    <div class="pad"><div class="form" style="grid-template-columns:auto auto;max-width:380px"><span>Meta de receita (R$)</span>${inp(['metas', S.mk, 'total'], +M.total || 0, 'num', '1000', '130px')}<span>Meta de faturamento de aparelho (R$)</span>${inp(['metas', S.mk, 'ap'], +M.ap || 0, 'num', '1000', '130px')}<span>Meta de seguro (unidades)</span>${inp(['metas', S.mk, 'seg'], +M.seg || 0, 'num', '1', '130px')}</div></div>
     <div class="pad"><div class="kpis">${kpi('Receita na meta', brl(c100.rec), 'comissão + residencial · Controle, Pós, BL e TV')}${kpi('Franquia na meta', brl(c100.fr), 'base da comissão · ' + pc1(c100.rec ? c100.fr / c100.rec : 0) + ' da receita')}${kpi('Serviços (estimativa)', brl(c100.recServ), 'fora da meta; mesma proporção de hoje')}${kpi('Custo dos vendedores', brl(c100.v), pc1(c100.rec ? c100.v / c100.rec : 0) + ' da receita · ' + pc1(c100.fr ? c100.v / c100.fr : 0) + ' da franquia')}${kpi('Custo dos gerentes', brl(c100.g), pc1(c100.rec ? c100.g / c100.rec : 0) + ' da receita · ' + pc1(c100.fr ? c100.g / c100.fr : 0) + ' da franquia')}${kpi('Bônus', brl(c100.bonus), 'se atingirem ' + pc(S.cfg.bonus[0].a) + '+')}${kpi('Custo total de comissão', brl(c100.total), pc1(c100.pct) + ' da receita · ' + pc1(c100.pctFr) + ' da franquia')}${kpi('Sobra para o parceiro', brl(c100.rec - c100.total), 'receita menos comissões')}</div></div>
     <div class="scroll"><table><thead><tr><th>Indicador</th><th>Mix da meta</th><th>Meta de receita</th><th>Franquia na meta</th><th>Realizado</th><th>Ating.</th><th>Falta ou sobra</th></tr></thead><tbody>${FRK.map(k => { const i = { k, n: INDN[k] }; const x = B.empresa.ind[i.k]; const rho = B.tot[i.k].r > 0 ? B.tot[i.k].f / B.tot[i.k].r : 0; return `<tr><td><b>${i.n}</b></td><td>${inp(['metas', S.mk, 'mix', i.k], +M.mix[i.k] || 0, 'num', '1', '70px')}<span class="sub"> %</span></td><td>${brl(x.meta)}</td><td>${brl(x.meta * rho)}</td><td>${brl(x.r)}</td><td>${at(x.ating)}</td><td>${dlHtml(x.r, x.meta)}</td></tr>`; }).join('')}</tbody></table></div>
     <div class="pad note">${Math.abs(B.mixSum - 100) < 0.01 ? '<span class="okk">O mix fecha em 100%.</span>' : `<span class="err">O mix soma ${num(B.mixSum, 1)}%: a meta foi proporcionalizada.</span>`}</div>
@@ -941,7 +959,7 @@ function viewMetas() {
   const cr = cen.map(c => `<tr><td><b>${pc(c.s)} da meta</b></td><td>${brl(c.rec)}</td><td>${brl(c.fr)}</td><td>${brl(c.v)}</td><td>${brl(c.g)}</td><td>${c.bonus ? brl(c.bonus) : '—'}</td><td><b>${brl(c.total)}</b></td><td>${pc1(c.pct)}</td><td>${pc1(c.pctFr)}</td></tr>`).join('');
   return `${topo}${viewSug()}<section class="panel"><header><h2>Divisão da meta por loja</h2><span class="n">Cada loja recebe uma parte da meta de receita (${brl(M.total)}) e de aparelho (${brl(M.ap)}). A meta de cada loja cai igual entre os vendedores; o gerente pode ajustar.</span>
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="lojarec3">Média da receita (3 meses)</button><button class="btn" data-act="lojaigual">Dividir igualmente</button><button class="btn" data-act="lojahc">Dividir por nº de vendedores</button></span></header>
-    <div class="scroll"><table><thead><tr><th>Loja</th><th>Parte da meta</th><th>Meta de receita</th><th>Meta de aparelho</th><th>Meta por vendedor</th><th>Realizado</th><th>Ating. receita</th><th>Ating. aparelho</th></tr></thead><tbody>${lojasRows}</tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Loja</th><th>Parte da meta</th><th>Meta de receita</th><th>Meta de aparelho</th><th>Meta de seguro</th><th>Meta por vendedor</th><th>Realizado</th><th>Ating. receita</th><th>Ating. aparelho</th><th>Ating. seguro</th></tr></thead><tbody>${lojasRows}</tbody></table></div>
     <div class="pad note">${Math.abs(pctSum - 100) < 0.01 ? '<span class="okk">As partes fecham em 100%.</span>' : `<span class="err">As partes somam ${num(pctSum, 1)}%: a meta foi proporcionalizada.</span>`} O valor da meta e o mix por indicador estão no topo desta aba; a aba Receita sugere valores pelos melhores meses.</div></section>
   <section class="panel"><header><h2>Quem está batendo meta</h2></header><div class="scroll"><table><thead><tr><th>Loja</th><th>Ating. total</th><th>Situação</th><th>Vendedores ≥100%</th><th>BL</th><th>Trava BL</th><th>Comissão da loja</th></tr></thead><tbody>${bate}</tbody></table></div></section>
   <section class="panel"><header><h2>Custo de comissão sobre as metas</h2><span class="n">Se todos os indicadores e o aparelho chegarem ao percentual da meta. Considera serviços liberados e a escala atual.</span></header><div class="scroll"><table><thead><tr><th>Cenário</th><th>Receita</th><th>Franquia</th><th>Vendedores</th><th>Gerentes</th><th>Bônus</th><th>Total</th><th>% da receita</th><th>% da franquia</th></tr></thead><tbody>${cr}</tbody></table></div></section>
@@ -1101,6 +1119,8 @@ function viewRegras() {
     ${escTable('Controle, Pós, BL e TV', 'fr', 'percentual sobre a franquia total (coluna BT). Venda multi (coluna Combo) paga o percentual da coluna Multi')}
     <div><div class="note" style="margin-bottom:6px"><b>Serviços</b> · percentual fixo sobre a comissão e a comissão residencial (colunas Comissão e Comissão Res). Sem meta e sem faixa.</div>
       <div class="form" style="grid-template-columns:auto auto;max-width:300px"><span>Vendedor</span>${inp(['svp', 'v'], (c.svp || {}).v || 0, 'pct', '0.5')}<span>Gerente</span>${inp(['svp', 'g'], (c.svp || {}).g || 0, 'pct', '0.5')}</div></div>
+    <div><div class="note" style="margin-bottom:6px"><b>Seguro</b> · percentual fixo sobre a comissão e a comissão residencial das vendas de Seguro Proteção Móvel. Tem meta em quantidade (para acompanhar o atingimento), mas o percentual não muda com a meta.</div>
+      <div class="form" style="grid-template-columns:auto auto;max-width:300px"><span>Vendedor</span>${inp(['segp', 'v'], (c.segp || {}).v || 0, 'pct', '0.5')}<span>Gerente</span>${inp(['segp', 'g'], (c.segp || {}).g || 0, 'pct', '0.5')}</div></div>
     ${escTable('Aparelho', 'ap', 'percentual sobre o faturamento (coluna N, itens acima de ' + brl(AP_MIN) + ')')}
     <div><div class="note" style="margin-bottom:6px"><b>Trava de comissão por produto</b> · se ativada, o produto só paga quando o atingimento dele na meta chegar ao mínimo. Abaixo do mínimo não paga; entre o mínimo e o pleno paga o percentual parcial do valor; a partir do pleno paga tudo. Vale para vendedor e gerente. Vem desligada.</div>
       <div class="scroll"><table><thead><tr><th>Produto</th><th>Trava</th><th>Abaixo de (não paga)</th><th>Paga parcial</th><th>Paga tudo a partir de</th></tr></thead><tbody>${[['controle', 'Controle'], ['pos', 'Pós'], ['bl', 'BL'], ['tv', 'TV'], ['ap', 'Aparelho']].map(([k, n]) => { const ti = (c.travaInd || {})[k] || { ativa: 'nao', min: .8, parcial: .5, pleno: 1 }; return `<tr><td><b>${n}</b></td><td><select data-p='["travaInd","${k}","ativa"]' data-t="txt" ${isDono() ? '' : 'disabled'}><option value="nao" ${ti.ativa === 'sim' ? '' : 'selected'}>Desligada</option><option value="sim" ${ti.ativa === 'sim' ? 'selected' : ''}>Ligada</option></select></td><td>${inp(['travaInd', k, 'min'], ti.min, 'pct', '1')}</td><td>${inp(['travaInd', k, 'parcial'], ti.parcial, 'pct', '1')}</td><td>${inp(['travaInd', k, 'pleno'], ti.pleno, 'pct', '1')}</td></tr>`; }).join('')}</tbody></table></div></div>
@@ -1114,7 +1134,8 @@ function viewRegras() {
     <p>1b. Venda multi (coluna Combo) paga percentual maior que a venda single, na mesma faixa: ${c.esc.fr.gat.map((x, i) => `${pc(x)} da meta paga ${pc1(c.esc.fr.v[i])} single e ${pc1((c.esc.fr.vm || c.esc.fr.v)[i])} multi`).join('; ')} (vendedor).</p>
     <p>2. Nada é pago abaixo do primeiro gatilho (${pc(c.esc.fr.gat[0])} da meta). Entre os gatilhos vale o percentual da faixa mais alta já alcançada.</p>
     <p>3. Trava de BL: com BL abaixo de ${pc(t.min)} da meta ninguém recebe comissão. De ${pc(t.min)} a ${pc(t.pleno)} libera ${pc(t.parcial)} do valor; a partir de ${pc(t.pleno)} libera tudo. A trava vale para franquia, serviços, aparelho e bônus.</p>
-    <p>4. Serviços (Troca de aparelho, Upgrade, Pré-pago, Adicionais e demais) não têm meta e não entram no atingimento: pagam um percentual fixo (vendedor ${pc1((c.svp || {}).v)}, gerente ${pc1((c.svp || {}).g)}) sobre a comissão e a comissão residencial, e só são pagos depois que o dono libera o mês. Hoje: <b>${servLiberado() ? 'liberados' : 'aguardando liberação'}</b> em ${mlabel(S.mk)}.</p>
+    <p>4. Seguro (Seguro Proteção Móvel) tem meta em quantidade, mas paga percentual fixo editável sobre a comissão e a comissão residencial (vendedor ${pc1((c.segp || {}).v)}, gerente ${pc1((c.segp || {}).g)}), liberado junto com os serviços.</p>
+    <p>5. Serviços (Troca de aparelho, Upgrade, Pré-pago, Adicionais e demais) não têm meta e não entram no atingimento: pagam um percentual fixo (vendedor ${pc1((c.svp || {}).v)}, gerente ${pc1((c.svp || {}).g)}) sobre a comissão e a comissão residencial, e só são pagos depois que o dono libera o mês. Hoje: <b>${servLiberado() ? 'liberados' : 'aguardando liberação'}</b> em ${mlabel(S.mk)}.</p>
     <p>5. Aparelho paga ${c.esc.ap.modo === 'qtd' ? 'um valor em reais por aparelho vendido' : 'percentual sobre o faturamento'} de itens acima de ${brl(AP_MIN)}; a faixa vem do atingimento da meta de faturamento de aparelho.</p>
     <p>6. Bônus do vendedor: ${brl(b[0].valor)} ao passar de ${pc(b[0].a)} da meta total e ${brl(b[1].valor)} ao passar de ${pc(b[1].a)}. Vale o maior gatilho atingido.</p>
     <p>7. Gerente recebe o percentual da escala dele sobre o resultado da loja, com as mesmas travas.</p>
@@ -1203,6 +1224,7 @@ async function metasParaRitmo(silencioso) {
   for (const l of B.lojas) {
     const nm = nomes[nz(S.data.L[l.li]).slice(0, 6)]; if (!nm) { sem.push(S.data.L[l.li]); continue; }
     for (const k of FRK) { const q = tk[k] > 0 ? Math.ceil((l.meta[k] || 0) / tk[k]) : 0; const key = S.mk + '|' + nm + '|' + ID[k]; if (q > 0) cfgR.metas[key] = q; else delete cfgR.metas[key]; n++; }
+    { const qs = Math.ceil(l.meta.seguro || 0), ks = S.mk + '|' + nm + '|SEG'; if (qs > 0) cfgR.metas[ks] = qs; else delete cfgR.metas[ks]; }
     const qa = apT > 0 ? Math.ceil((l.metaAp || 0) / apT) : 0, ka = S.mk + '|' + nm + '|AP'; if (qa > 0) cfgR.metas[ka] = qa; else delete cfgR.metas[ka];
   }
   try {

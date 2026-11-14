@@ -9,35 +9,57 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("painel_tema")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
-<link rel="stylesheet" href="assets/shell.css?v=13">
+<link rel="stylesheet" href="assets/shell.css?v=14">
 </head>
 <body>
 
 <main id="telaLogin" class="login" hidden>
-  <form id="formLogin" class="login-card" autocomplete="on">
-    <div class="marca"><span class="bola"></span><span id="loginTitulo">Painel Comercial</span></div>
-    <p class="sub">Entre com o seu e-mail e a senha que a sua liderança cadastrou.</p>
-    <label for="lgEmail">E-mail</label>
-    <input id="lgEmail" type="email" autocomplete="username" required inputmode="email">
-    <label for="lgSenha">Senha</label>
-    <input id="lgSenha" type="password" autocomplete="current-password" required>
-    <button class="btn principal" id="btnEntrar" type="submit">Entrar</button>
-    <p class="msg" id="lgMsg" role="alert"></p>
-    <p class="dica">Esqueceu a senha? Peça a redefinição para quem cadastrou o seu acesso.</p>
-  </form>
+  <div class="login-wrap">
+    <aside class="login-hero">
+      <div class="lh-brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M12 20V5M19 20V9"/></svg></span><span class="js-titulo" id="loginTitulo">Painel Comercial</span></div>
+      <div class="lh-body">
+        <h2>Vendas, metas e comissões em um só lugar.</h2>
+        <p>Acompanhe o resultado da sua operação e saiba exatamente onde agir para bater a meta.</p>
+        <ul class="lh-feat"><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><span><b>Ritmo do mês em tempo real</b><small>Veja quanto falta para bater a meta, dia a dia.</small></span></li><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span><span><b>Metas claras para cada pessoa</b><small>Loja, gerente e vendedor acompanham a própria meta.</small></span></li><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></span><span><b>Comissão transparente</b><small>Simule o ganho e entenda cada faixa de pagamento.</small></span></li></ul>
+      </div>
+      <div class="lh-foot">Acesso restrito à equipe cadastrada</div>
+      <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i>
+    </aside>
+    <form id="formLogin" class="login-card" autocomplete="on">
+      <div class="lc-head"><h1>Bem-vindo de volta</h1><p class="sub">Entre com o seu e-mail e a senha que a sua liderança cadastrou.</p></div>
+      <label for="lgEmail">E-mail</label>
+      <input id="lgEmail" type="email" autocomplete="username" required inputmode="email" placeholder="voce@empresa.com.br">
+      <label for="lgSenha">Senha</label>
+      <div class="campo-senha"><input id="lgSenha" type="password" autocomplete="current-password" required placeholder="Sua senha"><button type="button" class="olho" aria-label="Mostrar ou ocultar a senha" data-olho><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <button class="btn principal" id="btnEntrar" type="submit">Entrar</button>
+      <p class="msg" id="lgMsg" role="alert"></p>
+      <p class="dica">Esqueceu a senha? Peça a redefinição para quem cadastrou o seu acesso.</p>
+    </form>
+  </div>
 </main>
 
 <main id="telaSenha" class="login" hidden>
-  <form id="formSenha" class="login-card" autocomplete="off">
-    <div class="marca"><span class="bola"></span><span>Crie a sua senha</span></div>
-    <p class="sub">Bem-vindo! Escolha uma senha para os seus próximos acessos.</p>
-    <label for="snSenha">Nova senha (mínimo 8 caracteres)</label>
-    <input id="snSenha" type="password" autocomplete="new-password" minlength="8" required>
-    <label for="snSenha2">Repita a senha</label>
-    <input id="snSenha2" type="password" autocomplete="new-password" minlength="8" required>
-    <button class="btn principal" id="btnSenha" type="submit">Salvar e entrar</button>
-    <p class="msg" id="snMsg" role="alert"></p>
-  </form>
+  <div class="login-wrap">
+    <aside class="login-hero">
+      <div class="lh-brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M12 20V5M19 20V9"/></svg></span><span class="js-titulo">Painel Comercial</span></div>
+      <div class="lh-body">
+        <h2>Vendas, metas e comissões em um só lugar.</h2>
+        <p>Acompanhe o resultado da sua operação e saiba exatamente onde agir para bater a meta.</p>
+        <ul class="lh-feat"><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><span><b>Ritmo do mês em tempo real</b><small>Veja quanto falta para bater a meta, dia a dia.</small></span></li><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span><span><b>Metas claras para cada pessoa</b><small>Loja, gerente e vendedor acompanham a própria meta.</small></span></li><li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></span><span><b>Comissão transparente</b><small>Simule o ganho e entenda cada faixa de pagamento.</small></span></li></ul>
+      </div>
+      <div class="lh-foot">Acesso restrito à equipe cadastrada</div>
+      <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i>
+    </aside>
+    <form id="formSenha" class="login-card" autocomplete="off">
+      <div class="lc-head"><h1>Crie a sua senha</h1><p class="sub">Bem-vindo! Escolha uma senha para os seus próximos acessos.</p></div>
+      <label for="snSenha">Nova senha (mínimo 8 caracteres)</label>
+      <div class="campo-senha"><input id="snSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="olho" aria-label="Mostrar ou ocultar a senha" data-olho><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <label for="snSenha2">Repita a senha</label>
+      <input id="snSenha2" type="password" autocomplete="new-password" minlength="8" required>
+      <button class="btn principal" id="btnSenha" type="submit">Salvar e entrar</button>
+      <p class="msg" id="snMsg" role="alert"></p>
+    </form>
+  </div>
 </main>
 
 <div id="telaApp" class="app" hidden>
@@ -45,7 +67,7 @@
     <div class="topo-in">
       <button class="icone menu-btn" id="btnMenu" aria-label="Abrir o menu">☰</button>
       <div class="marca">
-        <span class="bola"></span>
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M12 20V5M19 20V9"/></svg></span>
         <h1 id="tituloTxt">Painel Comercial</h1>
         <button class="icone" id="btnEditarTitulo" title="Alterar o título" aria-label="Alterar o título" hidden>✎</button>
         <form id="formTitulo" class="titulo-form" hidden>
@@ -54,6 +76,7 @@
           <button class="btn mini" type="button" id="btnCancTitulo">Cancelar</button>
         </form>
       </div>
+      <span class="crumb" id="crumb" aria-live="polite"></span>
       <div class="quem">
         <span class="chip-user"><b id="uNome">—</b><small id="uPapel">—</small></span>
         <button class="btn mini tema" id="btnTema" title="Alternar entre visão clara e escura" aria-label="Alternar tema">☾ Escuro</button>
@@ -65,7 +88,9 @@
   <div class="corpo-app">
     <aside id="menu" class="menu" aria-label="Menu">
       <div id="empBox" class="emp-box" hidden></div>
+      <div class="menu-rot">Menu</div>
       <nav id="abas" class="abas" aria-label="Seções"></nav>
+      <div id="menuUser" class="menu-user"></div>
     </aside>
     <div id="menuVeu" class="veu" hidden></div>
     <section id="palco" class="palco"></section>
@@ -89,6 +114,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="assets/comissao-nucleo.js?v=5"></script>
-<script src="assets/shell.js?v=14"></script>
+<script src="assets/shell.js?v=17"></script>
+<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-olho]');if(!b)return;var i=b.parentNode.querySelector('input');if(i){i.type=i.type==='password'?'text':'password';}});</script>
 </body>
 </html>

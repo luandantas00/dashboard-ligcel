@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Simulador de Comissão AA</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Simulador de comissão do canal AA (Manual de Remuneração 04.2026 v3): classificação no topo, tabelas Single / Multi e totalizador. */
+:root{
+  --bg:#f6f4f3; --surface:#ffffff; --fg:#231f20; --muted:#6d6566; --line:#e4dedc;
+  --accent:#d3201a; --accent-fg:#ffffff; --accent-soft:#fbe9e7;
+  --multi:#1f5f8b; --multi-soft:#e5eff6;
+  --good:#1b7a43;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171415; --surface:#221e1f; --fg:#f2eeed; --muted:#a69d9e; --line:#383233;
+  --accent:#ef4b43; --accent-fg:#1a0b0a; --accent-soft:#3a1d1b;
+  --multi:#6bb3e0; --multi-soft:#1c2c38; --good:#5fcf8a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171415; --surface:#221e1f; --fg:#f2eeed; --muted:#a69d9e; --line:#383233;
+  --accent:#ef4b43; --accent-fg:#1a0b0a; --accent-soft:#3a1d1b;
+  --multi:#6bb3e0; --multi-soft:#1c2c38; --good:#5fcf8a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.4;
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--f-display);font-size:36px;line-height:1;margin:0;letter-spacing:.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0}
+.lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cls{display:flex;flex-direction:column;gap:8px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg button{font:inherit;font-family:var(--f-display);font-size:22px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+  padding:10px 6px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.seg button:focus-visible,input:focus-visible{outline:3px solid var(--multi);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.panel h2{font-family:var(--f-display);font-size:26px;margin:0;letter-spacing:.02em;text-transform:uppercase}
+.single h2{color:var(--accent)} .multi h2{color:var(--multi)}
+.panel header span{color:var(--muted);font-size:13px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px;font-variant-numeric:tabular-nums}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right;font-weight:600;padding:8px 12px}
+td{padding:8px 12px;text-align:right;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left;padding-left:16px}
+td:first-child{font-weight:600}
+td small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+input{font:inherit;width:100%;max-width:96px;padding:7px 8px;text-align:right;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-variant-numeric:tabular-nums}
+input.q{max-width:80px;font-weight:600}
+tfoot td{font-weight:700;background:var(--bg)}
+.single .com{color:var(--accent);font-weight:700} .multi .com{color:var(--multi);font-weight:700}
+.tot{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.grand{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.big{font-family:var(--f-display);font-size:52px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.kpi b{display:block;font-family:var(--f-display);font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:13px}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+.bar i{display:block;height:100%;transition:width .2s}
+.bar .s{background:var(--accent)} .bar .m{background:var(--multi)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.hint{font-size:13px;color:var(--muted)}
+.btn{font:inherit;font-weight:600;padding:8px 14px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;cursor:pointer;align-self:flex-start}
+.up{color:var(--good);font-weight:600}
+.imp{display:flex;flex-direction:column;gap:8px}
+.imp .seg{grid-template-columns:repeat(2,1fr);max-width:260px}
+.imp .seg button[aria-pressed="true"]{background:var(--multi);border-color:var(--multi);color:var(--bg)}
+@media (max-width:520px){h1{font-size:30px}.big{font-size:42px}.seg button{font-size:19px}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div>
+    <h1>Simulador de Comissão AA</h1>
+    <p class="sub">Manual de Remuneração Canal AA, versão 04.2026 v3. Comissão = receita do plano × fator da classificação.</p>
+  </div>
+
+  <div class="cls">
+    <span class="lbl">Classificação do parceiro</span>
+    <div class="seg" id="seg" role="group" aria-label="Classificação"></div>
+  </div>
+
+  <div class="imp">
+    <span class="lbl">Impulso</span>
+    <div class="seg" id="impseg" role="group" aria-label="Impulso">
+      <button type="button" data-v="0">Não</button>
+      <button type="button" data-v="1">Sim</button>
+    </div>
+    <span class="hint">Com Impulso, soma +0,8 ao fator de Conta, Controle, BL e TV, no Single e no Multi.</span>
+  </div>
+
+  <section class="panel single" id="p-single"></section>
+  <section class="panel multi" id="p-multi"></section>
+
+  <section class="tot" aria-live="polite">
+    <div class="grand">
+      <div><span class="lbl">Comissão total</span><div class="big" id="t-all">R$ 0,00</div></div>
+      <div class="hint" id="t-cls"></div>
+    </div>
+    <div class="grid3">
+      <div class="kpi"><span><i class="dot" style="background:var(--accent)"></i>Single</span><b id="t-s">R$ 0,00</b><span id="t-sq"></span></div>
+      <div class="kpi"><span><i class="dot" style="background:var(--multi)"></i>Multi</span><b id="t-m">R$ 0,00</b><span id="t-mq"></span></div>
+      <div class="kpi"><span>Vendas no total</span><b id="t-q">0</b><span id="t-mix"></span></div>
+    </div>
+    <div>
+      <div class="bar" role="img" aria-label="Divisão entre Single e Multi"><i class="s" id="b-s" style="width:50%"></i><i class="m" id="b-m" style="width:50%"></i></div>
+      <div class="legend" style="margin-top:8px"><span id="l-s"></span><span id="l-m"></span></div>
+    </div>
+    <div class="hint" id="what-if"></div>
+    <button class="btn" id="reset" type="button">Zerar quantidades</button>
+  </section>
+
+  <p class="hint">Os tickets vêm dos exemplos do manual (Controle R$ 59,90, Conta R$ 119,90, Banda Larga R$ 104,90). O ticket de TV é uma estimativa e todos podem ser editados. Vale o preço sem desconto de DCC e fatura digital. O Impulso entra como incremento de +0,8 sobre o fator da classificação. Estornos, plugins e eventos unitários não entram no cálculo. Multi só vale se a marcação ocorrer até a quinzena seguinte à venda.</p>
+</div>
+
+<script>
+var CLS=["Elite","Prime","Select","Starter"];
+var F={
+  single:{Elite:2.8,Prime:2.7,Select:2.4,Starter:1.9},
+  multiMovel:{Elite:4.4,Prime:4.1,Select:3.6,Starter:3.0},
+  multiRes:{Elite:4.5,Prime:4.2,Select:3.7,Starter:3.1}
+};
+var IND=[
+  {k:"conta",n:"Conta",seg:"Móvel",t:119.90},
+  {k:"controle",n:"Controle",seg:"Móvel",t:59.90},
+  {k:"bl",n:"Banda Larga Fixa",seg:"Residencial",t:104.90},
+  {k:"tv",n:"TV",seg:"Residencial",t:99.90}
+];
+var IMP=0.8;
+var state={cls:"Prime",imp:false,q:{single:{},multi:{}},t:{single:{},multi:{}}};
+IND.forEach(function(i){state.q.single[i.k]=0;state.q.multi[i.k]=0;state.t.single[i.k]=i.t;state.t.multi[i.k]=i.t});
+try{var s=JSON.parse(localStorage.getItem("simAA")||"null");if(s&&s.cls){state=s}}catch(e){}
+function save(){try{localStorage.setItem("simAA",JSON.stringify(state))}catch(e){}}
+
+var brl=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+var fx=new Intl.NumberFormat("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
+function fator(mod,i){
+  var add=state.imp?IMP:0;
+  if(mod==="single")return F.single[state.cls]+add;
+  return (i.seg==="Móvel"?F.multiMovel:F.multiRes)[state.cls]+add;
+}
+function num(v){v=parseFloat(String(v).replace(",","."));return isFinite(v)&&v>=0?v:0}
+
+function build(mod,title,desc){
+  var el=document.getElementById("p-"+mod);
+  var h='<header><h2>'+title+'</h2><span>'+desc+'</span></header><div class="tbl"><table><thead><tr>'+
+   '<th>Indicador</th><th>Qtd. vendas</th><th>Ticket (R$)</th><th>Fator</th><th>Receita entrante</th><th>Comissão</th></tr></thead><tbody>';
+  IND.forEach(function(i){
+    h+='<tr><td>'+i.n+'<small>'+i.seg+'</small></td>'+
+    '<td><input class="q" id="q-'+mod+'-'+i.k+'" type="number" min="0" step="1" inputmode="numeric" aria-label="Quantidade '+i.n+' '+title+'"></td>'+
+    '<td><input id="t-'+mod+'-'+i.k+'" type="number" min="0" step="0.01" inputmode="decimal" aria-label="Ticket '+i.n+' '+title+'"></td>'+
+    '<td id="f-'+mod+'-'+i.k+'"></td><td id="r-'+mod+'-'+i.k+'"></td><td class="com" id="c-'+mod+'-'+i.k+'"></td></tr>';
+  });
+  h+='</tbody><tfoot><tr><td>Total '+title+'</td><td id="sq-'+mod+'"></td><td></td><td></td><td id="sr-'+mod+'"></td><td class="com" id="sc-'+mod+'"></td></tr></tfoot></table></div>';
+  el.innerHTML=h;
+  IND.forEach(function(i){
+    var q=document.getElementById("q-"+mod+"-"+i.k),t=document.getElementById("t-"+mod+"-"+i.k);
+    q.value=state.q[mod][i.k]||"";t.value=state.t[mod][i.k];
+    q.addEventListener("input",function(){state.q[mod][i.k]=Math.floor(num(q.value));calc()});
+    t.addEventListener("input",function(){state.t[mod][i.k]=num(t.value);calc()});
+  });
+}
+
+function calc(){
+  var tot={single:{q:0,r:0,c:0},multi:{q:0,r:0,c:0}}, allMultiC=0;
+  ["single","multi"].forEach(function(mod){
+    IND.forEach(function(i){
+      var q=state.q[mod][i.k]||0,t=state.t[mod][i.k]||0,f=fator(mod,i);
+      var r=q*t,c=r*f;
+      document.getElementById("f-"+mod+"-"+i.k).textContent=fx.format(f)+"×";
+      document.getElementById("r-"+mod+"-"+i.k).textContent=brl.format(r);
+      document.getElementById("c-"+mod+"-"+i.k).textContent=brl.format(c);
+      tot[mod].q+=q;tot[mod].r+=r;tot[mod].c+=c;
+      if(mod==="single"){var fm=(i.seg==="Móvel"?F.multiMovel:F.multiRes)[state.cls]+(state.imp?IMP:0);allMultiC+=r*fm}
+      else allMultiC+=r*f;
+    });
+    document.getElementById("sq-"+mod).textContent=tot[mod].q;
+    document.getElementById("sr-"+mod).textContent=brl.format(tot[mod].r);
+    document.getElementById("sc-"+mod).textContent=brl.format(tot[mod].c);
+  });
+  var all=tot.single.c+tot.multi.c,q=tot.single.q+tot.multi.q;
+  document.getElementById("t-all").textContent=brl.format(all);
+  document.getElementById("t-cls").textContent="Classificação "+state.cls+" · Impulso "+(state.imp?"SIM":"NÃO");
+  document.getElementById("t-s").textContent=brl.format(tot.single.c);
+  document.getElementById("t-m").textContent=brl.format(tot.multi.c);
+  document.getElementById("t-sq").textContent=tot.single.q+" vendas · receita "+brl.format(tot.single.r);
+  document.getElementById("t-mq").textContent=tot.multi.q+" vendas · receita "+brl.format(tot.multi.r);
+  document.getElementById("t-q").textContent=q;
+  var ps=q?Math.round(tot.single.q/q*100):0,pm=q?100-ps:0;
+  document.getElementById("t-mix").textContent=q?ps+"% single · "+pm+"% multi":"Sem vendas lançadas";
+  var cs=all?tot.single.c/all*100:50;
+  document.getElementById("b-s").style.width=(all?cs:50)+"%";
+  document.getElementById("b-m").style.width=(all?100-cs:50)+"%";
+  document.getElementById("l-s").innerHTML='<i class="dot" style="background:var(--accent)"></i>Single '+(all?Math.round(cs):0)+'% da comissão';
+  document.getElementById("l-m").innerHTML='<i class="dot" style="background:var(--multi)"></i>Multi '+(all?Math.round(100-cs):0)+'% da comissão';
+  var gain=allMultiC-all;
+  document.getElementById("what-if").innerHTML=gain>0.005?
+    'Se todas as vendas fossem Multi, a comissão seria <b>'+brl.format(allMultiC)+'</b> (<span class="up">+'+brl.format(gain)+'</span>).':
+    (q?'Todas as vendas já estão no Multi.':'Lance as quantidades para ver quanto o Multi acrescenta.');
+  save();
+}
+
+var seg=document.getElementById("seg");
+CLS.forEach(function(c){
+  var b=document.createElement("button");b.type="button";b.textContent=c;b.dataset.c=c;
+  b.addEventListener("click",function(){state.cls=c;paint();calc()});
+  seg.appendChild(b);
+});
+var impseg=document.getElementById("impseg");
+Array.prototype.forEach.call(impseg.children,function(b){
+  b.addEventListener("click",function(){state.imp=b.dataset.v==="1";paint();calc()});
+});
+function paint(){
+  Array.prototype.forEach.call(seg.children,function(b){b.setAttribute("aria-pressed",b.dataset.c===state.cls)});
+  Array.prototype.forEach.call(impseg.children,function(b){b.setAttribute("aria-pressed",(b.dataset.v==="1")===!!state.imp)});
+}
+document.getElementById("reset").addEventListener("click",function(){
+  IND.forEach(function(i){state.q.single[i.k]=0;state.q.multi[i.k]=0;
+    document.getElementById("q-single-"+i.k).value="";document.getElementById("q-multi-"+i.k).value=""});
+  calc();
+});
+build("single","Single","Planos sem marcação de Multi (faturas separadas)");
+build("multi","Multi","Planos marcados como Multi (fatura única)");
+paint();calc();
+</script>
+</body>
+</html>

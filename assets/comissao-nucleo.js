@@ -24,6 +24,7 @@ function defaultCfg() {
       ap: { gat: gat.slice(), v: [0.005, 0.01, 0.015], g: [0.0025, 0.005, 0.0075], modo: 'fat', q: { v: [5, 10, 15], g: [2, 4, 6] } }
     },
     svp: { v: 0.10, g: 0.04 },
+    segp: { v: 0.10, g: 0.04 },
     trava: { min: 0.8, parcial: 0.5, pleno: 1.0 },
     travaInd: { controle: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, pos: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, bl: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, tv: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 }, ap: { ativa: 'nao', min: 0.8, parcial: 0.5, pleno: 1.0 } },
     bonus: [{ a: 1.2, valor: 100 }, { a: 1.5, valor: 250 }],
@@ -49,7 +50,7 @@ function mergeCfg(base, over) {
 function metaOf(cfg, mk) {
   if (cfg.metas[mk]) return cfg.metas[mk];
   const prev = Object.keys(cfg.metas).filter(k => k < mk).sort().pop() || Object.keys(cfg.metas).sort().pop();
-  return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, lojaPct: {} };
+  return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, seg: 0, lojaPct: {} };
 }
 function monthDays(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m, 0).getDate(); }
 
@@ -71,6 +72,7 @@ function aggregateRows(json) {
     const tipo = String(r['Tipo de Ativação'] ?? '').trim();
     let ind = DEPARA[tipo]; if (!ind) { ind = 'nc'; unmapped[tipo] = (unmapped[tipo] || 0) + 1; }
     if (ind === 'nc') continue;
+    if (/seguro/i.test(String(r['Plano/Serviço'] ?? ''))) ind = 'seguro'; // seguro: meta em quantidade, comissão em percentual editável
     const combo = String(r['Combo'] ?? '').trim();
     const vv = num(r['Valor Venda']);
     rows.push({ mk, day: d.getDate(), loja: titleLoja(r['Loja (Venda)']), vend: String(r['Vendedor'] ?? '').trim() || 'SEM VENDEDOR', ind, tipo,
@@ -150,6 +152,11 @@ function calcScope(real, ap, meta, metaAp, cfg, kind, servLib) {
     o.ind[k] = { meta: m, r: rr.r, f: rr.f, q: rr.q || 0, fm, qm: rr.qm || 0, ating, pct, pctM, base: rr.f, com, comExtra: fm * (pctM - pct) * tv, tv, idx: faixaIdx(ating, sc.gat) };
     o.rTot += rr.r; o.mTot += m; o.fTot += rr.f; o.comFr += com; o.comMulti += fm * pctM * tv; o.comExtra += fm * (pctM - pct) * tv;
   }
+  { // seguro: meta em quantidade, comissão = percentual editável sobre a receita (comissão + residencial)
+    const sg = (real && real.seguro) || { f: 0, r: 0, q: 0, qp: 0 }, sgm = (meta && meta.seguro) || 0, sgq = sg.qp != null ? sg.qp : (sg.q || 0), sgp = ((cfg.segp || cfg.svp) || {})[kind] || 0, sgc = (sg.r || 0) * sgp;
+    o.seg = { meta: sgm, q: sg.q || 0, qp: sgq, r: sg.r || 0, ating: sgm > 0 ? sgq / sgm : null, pct: sgp, com: sgc };
+    o.comSv += sgc;
+  }
   const a = ap || { fat: 0, q: 0 }, aAting = metaAp > 0 ? a.fat / metaAp : null, apQ = cfg.esc.ap.modo === 'qtd', aPct = faixaPct(aAting, cfg.esc.ap.gat, apQ ? (cfg.esc.ap.q || { v: [], g: [] })[kind] : cfg.esc.ap[kind]);
   const tvA = travaF(aAting, (cfg.travaInd || {}).ap);
   o.ap = { meta: metaAp || 0, fat: a.fat, q: a.q || 0, ating: aAting, pct: aPct, tv: tvA, modo: apQ ? 'qtd' : 'fat', com: (apQ ? (a.q || 0) * aPct : a.fat * aPct) * tvA, idx: faixaIdx(aAting, cfg.esc.ap.gat) };
@@ -172,7 +179,7 @@ function buildModel(data, cfg, mk, k, vw) {
   const dm = monthDays(mk), dd = Math.min(data.D[mk] || dm, dm);
   const recs = data.R.filter(r => r[0] === mk), aps = data.A.filter(a => a[0] === mk);
   const realV = {}, realL = {}, apV = {}, apL = {}, vLoja = {};
-  const add = (o, key, ind, q, f, r, mu) => { const x = ((o[key] = o[key] || {})[ind] = (o[key][ind] || { f: 0, r: 0, q: 0, fm: 0, qm: 0 })); x.f += f * k; x.r += r * k; x.q += q; if (mu > 0 && ind !== 'servico') { x.fm += f * k; x.qm += q; } };
+  const add = (o, key, ind, q, f, r, mu) => { const x = ((o[key] = o[key] || {})[ind] = (o[key][ind] || { f: 0, r: 0, q: 0, fm: 0, qm: 0 })); x.f += f * k; x.r += r * k; x.q += q; x.qp = (x.qp || 0) + q * k; if (mu > 0 && ind !== 'servico' && ind !== 'seguro') { x.fm += f * k; x.qm += q; } };
   for (const [, li, vi, ind, , mu, q, f, r] of recs) {
     add(realL, li, ind, q, f, r, mu);
     if (data.V[vi] !== 'SEM VENDEDOR') { add(realV, vi, ind, q, f, r, mu); vLoja[vi] = li; }
@@ -183,6 +190,7 @@ function buildModel(data, cfg, mk, k, vw) {
   }
   const M = metaOf(cfg, mk), mixSum = FRK.reduce((s, k) => s + (+M.mix[k] || 0), 0) || 1;
   const metaEmp = {}; for (const { k: ik } of IND) metaEmp[ik] = ik === 'servico' ? 0 : (+M.total || 0) * ((+M.mix[ik] || 0) / mixSum);
+  metaEmp.seguro = +M.seg || 0;
   const metaAp = +M.ap || 0;
   const pctRaw = Object.values(M.lojaPct || {}).reduce((s, x) => s + (+x || 0), 0), pctSum = pctRaw || 1;
   const hcL = {}; for (const vi of Object.keys(vLoja)) hcL[vLoja[vi]] = (hcL[vLoja[vi]] || 0) + 1; const hcT = Object.values(hcL).reduce((x, y) => x + y, 0) || 1;
@@ -197,9 +205,9 @@ function buildModel(data, cfg, mk, k, vw) {
       const wv = vw[nome] && vw[nome][data.V[vi]] != null ? +vw[nome][data.V[vi]] : (ativo ? 1 : 0);
       w[vi] = wv; sw += wv;
     }
-    const metaL = {}; for (const { k: ik } of IND) metaL[ik] = metaEmp[ik] * share; const metaApL = metaAp * share;
+    const metaL = {}; for (const { k: ik } of IND) metaL[ik] = metaEmp[ik] * share; metaL.seguro = metaEmp.seguro * share; const metaApL = metaAp * share;
     const vl = vis.map(vi => {
-      const meta = {}; for (const { k: ik } of IND) meta[ik] = sw > 0 ? metaL[ik] * w[vi] / sw : 0;
+      const meta = {}; for (const { k: ik } of IND) meta[ik] = sw > 0 ? metaL[ik] * w[vi] / sw : 0; meta.seguro = sw > 0 ? metaL.seguro * w[vi] / sw : 0;
       const mAp = sw > 0 ? metaApL * w[vi] / sw : 0;
       return { nome: data.V[vi], loja: nome, w: w[vi], pctMeta: sw > 0 ? w[vi] / sw : 0, meta, metaAp: mAp, real: realV[vi] || {}, ap: apV[vi],
         res: calcScope(realV[vi] || {}, apV[vi], meta, mAp, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos) };
@@ -209,8 +217,10 @@ function buildModel(data, cfg, mk, k, vw) {
       res: calcScope(realL[li] || {}, apL[li], metaL, metaApL, cfg, 'g', cfg.lib[mk] && cfg.lib[mk].servicos) });
   }
   const tot = {}; for (const { k: ik } of IND) { tot[ik] = { f: 0, r: 0, q: 0, fm: 0, qm: 0 }; for (const l of lojas) { const x = l.real[ik]; if (x) { tot[ik].f += x.f; tot[ik].r += x.r; tot[ik].q += x.q; tot[ik].fm += x.fm || 0; tot[ik].qm += x.qm || 0; } } }
+  tot.seguro = { f: 0, r: 0, q: 0, fm: 0, qm: 0, qp: 0 }; for (const l of lojas) { const x = l.real.seguro; if (x) { tot.seguro.r += x.r; tot.seguro.q += x.q; tot.seguro.qp += x.qp || 0; } }
   const totAp = { fat: lojas.reduce((s, l) => s + (l.ap ? l.ap.fat : 0), 0), q: lojas.reduce((s, l) => s + (l.ap ? l.ap.q : 0), 0) };
   const metaTodas = {}; for (const { k: ik } of IND) metaTodas[ik] = lojas.reduce((s, l) => s + l.meta[ik], 0);
+  metaTodas.seguro = lojas.reduce((s, l) => s + (l.meta.seguro || 0), 0);
   const metaApTodas = lojas.reduce((s, l) => s + l.metaAp, 0);
   const empresa = calcScope(tot, totAp, metaTodas, metaApTodas, cfg, 'v', cfg.lib[mk] && cfg.lib[mk].servicos);
   return { mk, k, dm, dd, M, mixSum, metaEmp, metaAp, lojas, vends, tot, totAp, empresa,
@@ -235,6 +245,7 @@ function custoCenario(B, cfg, s) {
       const tvk = travaF(s, (cfg.travaInd || {})[k]);
       v += base * ((1 - ms) * pv + ms * pvm) * tvk; g += base * ((1 - ms) * pg + ms * pgm) * tvk;
     }
+    { const ts = B.tot.seguro, avg = ts && ts.qp > 0 ? ts.r / ts.qp : 0, sgr = (l.meta.seguro || 0) * s * avg, sp = cfg.segp || cfg.svp || {}; recServ += sgr; v += sgr * (sp.v || 0); g += sgr * (sp.g || 0); }
     const sr = recL * svRatio; recServ += sr; v += sr * ((cfg.svp || {}).v || 0); g += sr * ((cfg.svp || {}).g || 0);
     const fa = l.metaAp * s, tvA = travaF(s, (cfg.travaInd || {}).ap);
     if (cfg.esc.ap.modo === 'qtd') { const un = B.totAp.q > 0 ? fa / (B.totAp.fat / B.totAp.q) : 0, qq = cfg.esc.ap.q || { v: [], g: [] }; v += un * faixaPct(s, cfg.esc.ap.gat, qq.v) * tvA; g += un * faixaPct(s, cfg.esc.ap.gat, qq.g) * tvA; }
