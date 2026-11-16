@@ -129,7 +129,7 @@ async function carregarEmpresa() {
     else if (S.me.papel === 'dono' && S.empresa) S.titulo = S.empresa.nome;
   }
   S.me.loja = S.lojas.find(l => l.id === S.me.loja_id) || null;
-  S.aparelhos = null; S.ritmoTxt = null;
+  S.aparelhos = null; S.ritmoTxt = null; S.modelos = null;
 }
 async function trocarEmpresa(id) {
   const e = S.empresas.find(x => x.id === id); if (!e) return;
@@ -372,7 +372,8 @@ async function abrirAparelhos() {
       return aviso('Ainda sem dados', 'Nenhuma base de Aparelhos e Chip foi carregada. Vá em <b>Importar dados</b> para carregar.');
     }
     S.aparelhos = payload;
-    const prelude = `window.__SEED=parent.__painel.aparelhosSeed(); window.__EXCL=parent.__painel.aparelhosExcl();
+    try { S.modelos = await lerDataset('aparelhos-modelos'); } catch (e) { S.modelos = null; }
+    const prelude = `window.__MOD=${jsonSeguro(S.modelos || null)}; window.__SEED=parent.__painel.aparelhosSeed(); window.__EXCL=parent.__painel.aparelhosExcl();
       window.claude={use:function(){return Promise.resolve({publish:function(doc){return parent.__painel.aparelhosSalvar(doc);}});}};`;
     let html = await texto('apps/aparelhos.html');
     html = html.replace('<script id="pagedata" type="application/json">{}</script>', '<script id="pagedata" type="application/json">' + jsonSeguro(payload.page || {}) + '</script>');
@@ -652,7 +653,7 @@ function montarAparelhos(linhas, pay, modo, raw) {
   const porNome = new Map(); S.lojas.filter(l => l.ativa).forEach(l => [l.nome].concat(l.apelidos || []).forEach(n => porNome.set(nomeBase(n), l.nome)));
   lojasSeed.forEach(l => { if (!porNome.has(nomeBase(l))) porNome.set(nomeBase(l), l); });
   const regras = ((raw && raw.regrasLoja) || []).map(r => ({ loja: r.loja, desde: r.desde || '0000-00-00', vends: (r.vendedores || []).map(v => String(v).toUpperCase()) }));
-  const dias = new Map(); let ap = 0, ch = 0, seg = 0, fora = 0, ign = 0;
+  const dias = new Map(), modDias = new Map(); let ap = 0, ch = 0, seg = 0, fora = 0, ign = 0;
   linhas.forEach(x => {
     let loja = null;
     for (const r of regras) if (r.vends.indexOf(x.vend) >= 0 && x.ds >= r.desde) { loja = porNome.get(nomeBase(r.loja)); break; }
@@ -663,6 +664,10 @@ function montarAparelhos(linhas, pay, modo, raw) {
     const v = x.valor; let ty; if (v > LIM_APARELHO) ty = 0; else if (v >= 10) ty = 1; else { ign++; return; }
     ty ? ch++ : ap++;
     const k = Number(x.ds.replace(/-/g, '')), vend = x.vend ? tcase(x.vend) : 'Sem vendedor', br = ty ? '-' : marcaDe(x.desc);
+    if (ty === 0 && window.ModeloUtil) {
+      const mo = ModeloUtil.chaveModelo(x.desc);
+      if (mo) { if (!modDias.has(k)) modDias.set(k, new Map()); const mm = modDias.get(k), k2 = loja + '|' + mo.k, o2 = mm.get(k2) || [loja, mo.k, mo.nome, mo.marca, 0, 0]; o2[4]++; o2[5] = Math.round((o2[5] + v) * 100) / 100; mm.set(k2, o2); }
+    }
     if (!dias.has(k)) dias.set(k, new Map());
     const m = dias.get(k), kk = loja + '|' + vend + '|' + ty + '|' + br, o = m.get(kk) || [loja, vend, ty, br, 0, 0];
     o[4]++; o[5] = Math.round((o[5] + v) * 100) / 100; m.set(kk, o);
@@ -685,7 +690,68 @@ function montarAparelhos(linhas, pay, modo, raw) {
   }
   novo.page.log = [{ em: new Date().toISOString(), arquivo: pay.__arquivo || 'Excel', de: ks[0], ate: ks[ks.length - 1], dias: ks.length, aparelhos: ap, chips: ch }].concat(novo.page.log || []).slice(0, 60);
   delete novo.__arquivo;
-  return { pay: novo, ap, ch, seg, fora, ign, dias: ks.length };
+  return { pay: novo, ap, ch, seg, fora, ign, dias: ks.length, modDias };
+}
+
+/* --- Aparelhos por modelo: vendas (do Excel), estoque físico, Mapa de Ofertas e Tabela Nacional --- */
+function montarModelos(antigo, modDias, modo) {
+  const novo = antigo ? JSON.parse(JSON.stringify(antigo)) : {};
+  const ks = [...modDias.keys()].sort((a, b) => a - b); if (!ks.length) return novo;
+  const lojasV = novo.lojas || [], modsV = novo.mods || [];
+  let linhas = (novo.vendas || []).map(r => [r[0], lojasV[r[1]], modsV[r[2]] && modsV[r[2]].k, modsV[r[2]] && modsV[r[2]].nome, modsV[r[2]] && modsV[r[2]].marca, r[3], r[4]]).filter(r => r[1] && r[2]);
+  if (modo === 'tudo') linhas = []; else { const k0 = ks[0], k1 = ks[ks.length - 1]; linhas = linhas.filter(r => r[0] < k0 || r[0] > k1); }
+  ks.forEach(k => modDias.get(k).forEach(o => linhas.push([k, o[0], o[1], o[2], o[3], o[4], o[5]])));
+  const lojas = [], mods = [], li = new Map(), mi = new Map(), vendas = [];
+  linhas.sort((a, b) => a[0] - b[0]).forEach(r => {
+    let l = li.get(r[1]); if (l === undefined) { l = lojas.length; li.set(r[1], l); lojas.push(r[1]); }
+    let m = mi.get(r[2]); if (m === undefined) { m = mods.length; mi.set(r[2], m); mods.push({ k: r[2], nome: r[3], marca: r[4] }); }
+    vendas.push([r[0], l, m, r[5], r[6]]);
+  });
+  novo.lojas = lojas; novo.mods = mods; novo.vendas = vendas; novo.vendasEm = new Date().toISOString();
+  return novo;
+}
+function mapaLojasModelo() {
+  const porNome = new Map(); S.lojas.filter(l => l.ativa).forEach(l => [l.nome].concat(l.apelidos || []).forEach(n => porNome.set(nomeBase(n), l.nome)));
+  return { mapa: porNome, lojas: [...new Set(porNome.values())] };
+}
+async function gravarModelos(fn) {
+  const atual = (await lerDataset('aparelhos-modelos')) || {};
+  const novo = fn(atual); await gravar([{ chave: 'aparelhos-modelos', loja_id: null, payload: novo }]); S.modelos = novo; return novo;
+}
+const hojeISO = () => new Date().toISOString().slice(0, 10);
+async function lerPlanilha(file, opts) {
+  await carregarXLSX(); return XLSX.read(new Uint8Array(await file.arrayBuffer()), Object.assign({ type: 'array', cellDates: true }, opts || {}));
+}
+async function enviarEstoque(file) {
+  const m = $('#esMsg'); m.className = 'msg'; m.textContent = 'Lendo o estoque…';
+  try {
+    const wb = await lerPlanilha(file), linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+    const { mapa, lojas } = mapaLojasModelo(), r = ModeloUtil.lerEstoque(linhas, mapa, lojas);
+    if (!r.total) throw new Error('Não encontrei aparelhos no arquivo (colunas esperadas: Descrição, Estoque, Local).');
+    await gravarModelos(a => Object.assign(a, { estoque: { em: hojeISO(), arquivo: file.name, itens: r.itens } }));
+    const sl = Object.keys(r.semLoja);
+    m.className = 'msg ok';
+    m.textContent = `Estoque carregado: ${r.total} aparelhos em ${new Set(r.itens.map(i => i.k)).size} modelos${r.defeito ? ` (${r.defeito} com defeito ficaram de fora)` : ''}.` + (sl.length ? ` Locais que não bateram com nenhuma loja cadastrada (entraram como local separado): ${sl.join(', ')} — se forem uma loja sua, inclua o nome como apelido no cadastro da loja e envie o estoque de novo.` : '');
+  } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); }
+}
+async function enviarMapa(file) {
+  const m = $('#mpMsg'); m.className = 'msg'; m.textContent = 'Lendo o Mapa de Ofertas…';
+  try {
+    const wb = await lerPlanilha(file), r = ModeloUtil.lerMapa(XLSX, wb);
+    if (!r.itens.length) throw new Error('Não achei ofertas. ' + r.avisos.join(' '));
+    const fims = r.itens.flatMap(o => o.ofertas.map(x => x.fim).concat(o.boost ? [o.boost.fim] : [])).filter(Boolean).sort();
+    await gravarModelos(a => Object.assign(a, { mapa: { em: hojeISO(), arquivo: file.name, itens: r.itens } }));
+    m.className = 'msg ok'; m.textContent = `Mapa de Ofertas carregado: ${r.itens.length} modelos, ${r.itens.filter(o => o.boost).length} com Boost Claro Troca${fims.length ? ', vigências até ' + brData(fims[fims.length - 1]) : ''}.` + (r.avisos.length ? ' Avisos: ' + r.avisos.join(' ') : '');
+  } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); }
+}
+async function enviarTabela(file) {
+  const m = $('#tbMsg'); m.className = 'msg'; m.textContent = 'Lendo a Tabela Nacional…';
+  try {
+    const wb = await lerPlanilha(file), preco = ModeloUtil.lerTabela(XLSX, wb), n = Object.keys(preco).length;
+    if (!n) throw new Error('Não achei a aba "Aparelhos Consumo" com preços.');
+    await gravarModelos(a => Object.assign(a, { tabela: { em: hojeISO(), arquivo: file.name, preco } }));
+    m.className = 'msg ok'; m.textContent = `Tabela Nacional carregada: ${n} modelos com preço de tabela.`;
+  } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); }
 }
 
 function montarComissao(wb, antigo, modo) {
@@ -741,7 +807,7 @@ async function confirmarExcel() {
     const modo = ($('input[name="xlModo"]:checked') || {}).value || 'periodo';
     const r = montarRitmo(P.linhas.map(x => ({ ...x })), P.raw, modo);
     const n = await salvarRitmo(r.raw);
-    if (P.apar && P.apar.seed) { const a = montarAparelhos(P.linhas, Object.assign({ __arquivo: P.file }, P.apar), modo, P.raw); await gravar([{ chave: 'aparelhos', loja_id: null, payload: a.pay }]); }
+    if (P.apar && P.apar.seed) { const a = montarAparelhos(P.linhas, Object.assign({ __arquivo: P.file }, P.apar), modo, P.raw); await gravar([{ chave: 'aparelhos', loja_id: null, payload: a.pay }]); await gravarModelos(ant => montarModelos(ant, a.modDias, modo)); }
     const c = montarComissao(P.wb, P.comis, modo); let txtC = '';
     if (c.data) { await salvarComissao(c.data, (P.comis && P.comis.cfg) || ComissaoNucleo.defaultCfg(), (P.comis && P.comis.cfgAt) || 0); txtC = ' e Comissão e Meta'; }
     m.className = 'msg ok'; m.textContent = `Pronto. Ritmo (${r.depois} registros, ${n} recortes de loja)${P.apar && P.apar.seed ? ', Aparelhos e Chip' : ''}${txtC} atualizados. Base agora até ${brData(P.fim)}.${c.pulou ? ' A comissão ficou como estava (arquivo não começa no dia 1).' : ''}`;
@@ -762,16 +828,28 @@ function abrirDados() {
     </div></div>
     <div class="cartao"><header><h2>Importar dados</h2><span>Carrega os arquivos de dados no servidor (somente dono e administrador)</span></header>
     <div class="corpo">
-      <div class="solta"><b>Escolha o arquivo de dados</b><br><span class="nota">Aceita o arquivo do Ritmo Comercial (<code>ritmo.json</code>) ou de Aparelhos e Chip (<code>aparelhos.json</code>).</span><br>
+      <div class="solta"><b>Escolha o arquivo de dados</b><br><span class="nota">Aceita o arquivo do Ritmo Comercial (<code>ritmo.json</code>), de Aparelhos e Chip (<code>aparelhos.json</code>) ou os destaques de campanha (<code>campanha-aparelhos.json</code>).</span><br>
       <input type="file" id="arqDados" accept=".json,application/json"></div>
       <p class="msg" id="dadosMsg" role="status"></p>
       <p class="nota">Este cartão serve só para a primeira carga. As atualizações do dia a dia entram pelo Excel, no cartão acima.</p>
+    </div></div>
+    <div class="cartao"><header><h2>Estoque e ofertas de aparelho</h2><span>Alimenta a visão "Aparelhos por modelo" em Aparelhos e Chip</span></header>
+    <div class="corpo">
+      <div class="solta"><b>1. Estoque físico (.xlsx)</b><br><span class="nota">Relatório "Produtos - Estoque Físico" (colunas Descrição, Estoque, Local, Dias). Substitui o estoque anterior — envie a posição mais recente.</span><br>
+      <input type="file" id="arqEstoque" accept=".xlsx,.xlsm,.xls"></div><p class="msg" id="esMsg" role="status"></p>
+      <div class="solta"><b>2. Mapa de Ofertas (.xlsx)</b><br><span class="nota">Lê as abas "Ofertas Regulares" e "Boost Claro Troca". Substitui as ofertas do mapa anterior.</span><br>
+      <input type="file" id="arqMapa" accept=".xlsx,.xlsm,.xls"></div><p class="msg" id="mpMsg" role="status"></p>
+      <div class="solta"><b>3. Tabela Nacional de preços (.xlsx) — opcional</b><br><span class="nota">Serve de preço de tabela quando o modelo não tem oferta. Se oferta e tabela divergirem, vale a oferta.</span><br>
+      <input type="file" id="arqTabela" accept=".xlsx,.xlsm,.xls"></div><p class="msg" id="tbMsg" role="status"></p>
     </div></div>
     <div class="cartao"><header><h2>Refazer os recortes por loja</h2><span>Use depois de cadastrar uma loja nova ou mudar os nomes (apelidos) de uma loja</span></header>
     <div class="corpo"><button class="btn" id="btnRefazer">Refazer recortes do Ritmo Comercial</button><p class="msg" id="refMsg" role="status"></p></div></div>
   </div>`;
   $('#arqXl').addEventListener('change', e => { const f = e.target.files[0]; if (f) lerExcelUnico(f); });
   document.querySelectorAll('input[name="xlModo"]').forEach(r => r.addEventListener('change', () => { const f = $('#arqXl').files[0]; if (f) lerExcelUnico(f); }));
+  $('#arqEstoque').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await enviarEstoque(f); e.target.value = ''; });
+  $('#arqMapa').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await enviarMapa(f); e.target.value = ''; });
+  $('#arqTabela').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await enviarTabela(f); e.target.value = ''; });
   $('#arqDados').addEventListener('change', async (e) => {
     const f = e.target.files[0]; if (!f) return; const m = $('#dadosMsg'); m.className = 'msg'; m.textContent = 'Lendo o arquivo…';
     try {
@@ -784,6 +862,9 @@ function abrirDados() {
         m.textContent = 'Enviando Aparelhos e Chip…';
         await gravar([{ chave: 'aparelhos', loja_id: null, payload: d }]);
         m.className = 'msg ok'; m.textContent = `Aparelhos e Chip carregado (${d.seed.rows.length} linhas da base).`;
+      } else if (d && d.campanha && Array.isArray(d.campanha.itens)) {
+        await gravarModelos(a => Object.assign(a, { campanha: d.campanha }));
+        m.className = 'msg ok'; m.textContent = `Destaques da campanha carregados (${d.campanha.itens.length} modelos, ${d.campanha.nome || 'campanha'}).`;
       } else throw new Error('Arquivo não reconhecido.');
     } catch (err) { m.className = 'msg'; m.textContent = 'Não deu certo: ' + msgErro(err); }
     e.target.value = '';

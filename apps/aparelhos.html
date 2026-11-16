@@ -253,6 +253,26 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
 .heat .hc.cur{outline:2px solid var(--red);outline-offset:-2px}
 .mixbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--grid)}
 .mixbar i{display:block;height:100%}
+/* aparelhos por modelo */
+.mdk{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}
+.mdk .gbox{padding:12px 14px;gap:2px}.mdk .mk{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.mdk .mv{font-family:var(--disp);font-size:clamp(18px,2.2vw,24px);font-weight:700}.mdk .ms{font-size:12px;color:var(--muted)}
+.mdbox{margin-top:10px}.mdgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}.mdgrid .mdbox{margin-top:0}
+.mdrow{display:grid;grid-template-columns:minmax(150px,2.2fr) .8fr .9fr .9fr .9fr 1.7fr 1fr;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--grid);font-size:13px}
+.mdrow.mdh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-bottom:4px}
+.mdrow>div{min-width:0}.mdn{font-weight:600;overflow-wrap:anywhere}.mdn small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.mdc{text-align:right}.mdh .mdc{text-align:right}
+.mdo{font-size:12.5px;line-height:1.35}.mdo b{font-weight:700}.mdo s{color:var(--muted)}
+.mtg{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin:1px 3px 1px 0;background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.mtg.bo{background:var(--up-bg);color:var(--up);border-color:transparent}.mtg.vc{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.mac{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.mac.ab{background:var(--down-bg);color:var(--down)}.mac.at{background:var(--warn-bg);color:var(--warn)}.mac.gi{background:var(--surface);border:1px solid var(--line);color:var(--ink2)}.mac.ok{background:var(--up-bg);color:var(--up)}
+.mdli{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--grid);font-size:13px}.mdli:last-child{border-bottom:0}
+.mdli>div:first-child{min-width:0}.mdli .mdr{text-align:right;white-space:nowrap}.mdli small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35}
+.mdmore{margin-top:8px;align-self:flex-start;color:var(--ink2);border-color:var(--line)}
+@media (max-width:900px){.mdk{grid-template-columns:repeat(2,1fr)}.mdgrid{grid-template-columns:1fr}
+  .mdrow{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;padding:10px 2px}.mdrow.mdh{display:none}.mdrow>div:first-child,.mdrow>div.mdo,.mdrow>div:last-child{grid-column:1/-1}.mdrow>div:last-child{display:flex;align-items:center;gap:8px}.mdrow>div:last-child::before{display:none!important}
+  .mdrow .mdc{text-align:left}.mdrow [data-l]::before{content:attr(data-l);display:block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}}
 </style>
 
 <div class="wrap">
@@ -413,6 +433,26 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div class="chart" id="chDia"></div>
     <div class="legend" style="margin-top:2px"><span><i style="background:var(--bar)"></i>Segunda a sexta</span><span><i style="background:var(--bar);opacity:.55"></i>Sábado</span><span><i style="border-top:2px dashed var(--ink2);height:0;width:14px;display:inline-block"></i>Média por dia com venda</span></div>
     <div class="note" id="diaNote"></div>
+  </section>
+
+  <section class="q" id="secMod" aria-labelledby="h-mod">
+    <div class="qhead">
+      <div><div class="qtag">Aparelho · por modelo</div><h2 id="h-mod">Aparelhos por modelo: o que vende, quanto cresceu e onde abastecer</h2><div class="sub" id="modSub"></div></div>
+    </div>
+    <div id="modVazio" class="note" hidden></div>
+    <div id="modCorpo">
+      <div class="lm" id="modRef" role="group" aria-label="Mês analisado"></div>
+      <div class="lm" id="modLoja" role="group" aria-label="Loja"></div>
+      <div class="mdk" id="modKpis"></div>
+      <div class="gbox mdbox"><h3>O que está vendendo <small id="modTabSub"></small></h3><div id="modTab"></div><button class="pill ghost mdmore" id="modMore" hidden></button></div>
+      <div class="mdgrid">
+        <div class="gbox mdbox"><h3>Abastecer agora <small id="modASub"></small></h3><div id="modA"></div></div>
+        <div class="gbox mdbox"><h3>Ofertas vigentes sem estoque <small>modelos em campanha que a loja não tem</small></h3><div id="modB"></div></div>
+        <div class="gbox mdbox"><h3>Estoque parado ou em excesso <small>girar com oferta ou transferir</small></h3><div id="modC"></div></div>
+        <div class="gbox mdbox" id="modDbox"><h3>Transferências entre lojas <small>sobra de uma, falta na outra</small></h3><div id="modD"></div></div>
+      </div>
+      <div class="note" id="modNote"></div>
+    </div>
   </section>
 
   <footer id="foot"></footer>
@@ -1011,7 +1051,7 @@ function bindUpload(){
 function seg(id,key,fn){const el=document.getElementById(id);
   const paint=()=>el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===S[key]));paint();
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.m;paint();save();fn();});}
-function render(){paintFilters();renderKpis();renderGer();renderDia();renderExec();renderMeta();renderRt();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();}
+function render(){paintFilters();renderKpis();renderGer();renderDia();renderExec();renderMeta();renderRt();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();renderMod();}
 
 /* ---------- venda diária de aparelho (loja ou total do grupo) ---------- */
 const DIA={m:null,s:-1,k:'q'};
@@ -1060,6 +1100,184 @@ seg('segQ1','q1',renderQ1);seg('segQ2','q2',renderQ2);seg('segQ4','q4',renderQ4)
 document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;S.tab=t.dataset.t;S.all=false;save();renderQ2();});
 document.getElementById('moreBtn').addEventListener('click',()=>{S.all=!S.all;renderQ2();});
 bindStoreRows('tStores');bindStoreRows('tChip');
+/* ---------- aparelhos por modelo: vendas x estoque x ofertas ---------- */
+const MOD=window.__MOD||null;
+const MS={mes:null,loja:'',all:false};
+let MD=null,MDyr=null;
+const isoD=dt=>dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate();
+const dateOfKey=k=>new Date(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100);
+function modBuild(){
+  MD=null;MDyr=YR;
+  if(!MOD||!MOD.vendas||!MOD.vendas.length||!MOD.mods)return;
+  const rows=[],info=new Map();let max=0;
+  for(const r of MOD.vendas){const d=r[0];if(Math.floor(d/10000)!==YR)continue;const m=MOD.mods[r[2]];if(!m)continue;
+    info.set(m.k,{nome:m.nome,marca:m.marca});rows.push({d,m:Math.floor(d/100)%100,l:MOD.lojas[r[1]],k:m.k,q:r[3],r:r[4]});if(d>max)max=d;}
+  if(!rows.length)return;
+  const hoje=isoD(new Date());
+  const est=((MOD.estoque&&MOD.estoque.itens)||[]).map(i=>{info.set(i.k,info.get(i.k)||{nome:i.nome,marca:i.marca});return {l:i.loja,k:i.k,q:i.qtd,dias:i.dias||0,custo:i.custo||0};});
+  const CAMP={};for(const i of (MOD.campanha&&MOD.campanha.itens)||[]){(CAMP[i.k]=CAMP[i.k]||[]).push(i);info.set(i.k,info.get(i.k)||{nome:i.nome,marca:i.marca});}
+  const MAPA={};for(const o of (MOD.mapa&&MOD.mapa.itens)||[]){MAPA[o.k]=o;info.set(o.k,info.get(o.k)||{nome:o.nome,marca:o.marca});}
+  const TAB=(MOD.tabela&&MOD.tabela.preco)||{};
+  const lojas=[];for(const n of D.stores)if(!lojas.includes(n))lojas.push(n);
+  for(const n of rows.map(r=>r.l).concat(est.map(e=>e.l)))if(n&&!lojas.includes(n))lojas.push(n);
+  MD={rows,est,info,CAMP,MAPA,TAB,lojas,max,hoje,months:[...new Set(rows.map(r=>r.m))].sort((a,b)=>a-b)};
+  MD.lastM=MD.months[MD.months.length-1];
+  // janela de ritmo: últimos 30 dias corridos até o último dia de venda, em dias úteis
+  const fim=dateOfKey(max),ini=new Date(fim);ini.setDate(ini.getDate()-29);MD.winIni=isoD(ini);
+  let du=0;for(let i=0;i<30;i++){const dt=new Date(fim);dt.setDate(dt.getDate()-i);du+=DU.peso(dt.getFullYear(),dt.getMonth()+1,dt.getDate());}
+  MD.winDU=du;
+  // horizonte: do dia seguinte ao dado mais recente (vendas ou estoque, no máximo hoje) até o fim do mês; se sobrar pouco, vai ao mês seguinte
+  const ed=MOD.estoque&&MOD.estoque.em?Number(MOD.estoque.em.replace(/-/g,'')):0;
+  let ref=Math.max(max,Math.min(ed,hoje));if(Math.floor(ref/10000)!==YR)ref=max;
+  const rm=Math.floor(ref/100)%100,rd=ref%100;let h=bd(YR,rm,rd+1,dim(YR,rm)),lab=MESL[rm-1];
+  if(h<3&&rm<12){h+=bd(YR,rm+1,1,dim(YR,rm+1));lab=MESL[rm];}
+  MD.hor=h;MD.horLab=lab;
+}
+const vigF=(ini,fim,hoje)=>{const i=ini?Number(ini.replace(/-/g,'')):0,f=fim?Number(fim.replace(/-/g,'')):99999999;return hoje>=i&&hoje<=f;};
+function modOferta(k){
+  const hoje=MD.hoje,mp=MD.MAPA[k],cs=MD.CAMP[k]||[],tab=MD.TAB[k]||null,o={preco:null,plano:'',frente:'',boost:0,boostVenc:false,bogo:null,tab,fonte:'',vigente:false,foco:false,tier:mp&&mp.tier||''};
+  if(mp){
+    const reg=mp.ofertas.filter(x=>!/BOGO|DEPENDENTE/i.test(x.obs+' '+x.plano)),bg=mp.ofertas.find(x=>/BOGO|DEPENDENTE/i.test(x.obs+' '+x.plano));
+    const pr=x=>x.multi||x.single||Infinity;
+    const b=reg.slice().sort((a,c)=>(/FOCO/i.test(c.obs)-/FOCO/i.test(a.obs))||pr(a)-pr(c))[0];
+    if(b){o.preco=pr(b);o.plano=b.plano;o.frente=b.obs;o.vigente=vigF(b.ini,b.fim,hoje);o.foco=/FOCO/i.test(b.obs);o.fonte='Mapa';}
+    if(bg){o.bogo=bg.multi||bg.single;o.vigente=o.vigente||vigF(bg.ini,bg.fim,hoje);}
+    if(mp.boost){if(vigF(mp.boost.ini,mp.boost.fim,hoje))o.boost=mp.boost.v;else o.boostVenc=true;}
+  }
+  const camp=MOD.campanha||{},cv=vigF(camp.ini,camp.fim,hoje);
+  for(const c of cs){
+    if(c.bogo){o.bogo=c.preco;o.vigente=o.vigente||cv;o.foco=true;continue;}
+    o.preco=c.preco;o.plano=c.plano||o.plano;o.frente=c.frente||o.frente;o.fonte=camp.nome||'Campanha';o.vigente=cv;o.foco=true;
+    if(c.boost){o.boost=c.boost;o.boostVenc=false;}
+  }
+  if(!cs.length&&!mp)return null;
+  return o;
+}
+function modCalc(loja){
+  const R=MD,M=MS.mes,open=M===R.lastM&&R.max%100<dim(YR,M),maxD=R.max%100;
+  const Fm=open?(bd(YR,M,1,dim(YR,M))/Math.max(.5,bd(YR,M,1,maxD))):1,P=M-1;
+  const inL=l=>!loja||l===loja,recs=new Map();
+  const get=k=>{let o=recs.get(k);if(!o){o={k,q:0,qp:0,w:0,est:0,dias:0,custo:0,lj:{}};recs.set(k,o);}return o;};
+  const lj=(o,l)=>o.lj[l]||(o.lj[l]={w:0,est:0,dias:0});
+  for(const r of R.rows){
+    const o=get(r.k),L=lj(o,r.l);
+    if(r.d>=R.winIni)L.w+=r.q;
+    if(!inL(r.l))continue;
+    if(r.m===M)o.q+=r.q;else if(r.m===P)o.qp+=r.q;
+    if(r.d>=R.winIni)o.w+=r.q;
+  }
+  for(const e of R.est){const o=get(e.k),L=lj(o,e.l);L.est+=e.q;L.dias=e.dias;if(inL(e.l)){o.dias=(o.dias*o.est+e.dias*e.q)/Math.max(1,o.est+e.q);o.est+=e.q;o.custo+=e.custo;}}
+  const out=[];
+  for(const o of recs.values()){
+    const inf=R.info.get(o.k)||{nome:o.k,marca:''};
+    o.nome=inf.nome;o.marca=inf.marca;
+    o.proj=open?o.q*Fm:o.q;o.base=o.proj;
+    o.cresc=o.qp>0?o.base/o.qp-1:null;o.delta=o.base-o.qp;
+    o.rate=R.winDU>0?o.w/R.winDU:0;
+    o.cob=o.rate>0?o.est/o.rate:(o.est>0?Infinity:0);
+    o.dem=o.rate*R.hor;o.gap=Math.max(0,Math.ceil(o.dem-o.est-1e-9));
+    o.of=modOferta(o.k);
+    o.emOferta=!!(o.of&&o.of.preco&&o.of.vigente);
+    if(o.w>=2&&o.rate>0&&(o.est===0||o.cob<5))o.acao='ab';
+    else if(o.w>=1&&o.rate>0&&o.cob<10)o.acao='at';
+    else if(o.est>=2&&(o.w===0||o.cob>45))o.acao='gi';
+    else o.acao='ok';
+    out.push(o);
+  }
+  return out;
+}
+const unF=v=>nf.format(Math.round(v));
+const cobTxt=c=>c===Infinity?'sem giro':c===0?'sem estoque':DU.fmt(Math.round(c*10)/10)+' d.ú.';
+function ofHtml(o){
+  const f=o.of;if(!f)return '<span class="note">sem oferta no mapa</span>';
+  if(!f.preco&&f.bogo==null)return '<span class="note">sem oferta no mapa</span>';
+  let h='';
+  if(f.preco){const eco=f.tab&&f.tab>f.preco?` <s>${cf.format(f.tab)}</s>`:'';h+=`<b>${cf.format(f.preco)}</b>${eco}${f.plano?` · ${esc(f.plano)}`:''}`;}
+  const tg=[];
+  if(f.boost)tg.push(`<span class="mtg bo">Boost ${cf.format(f.boost)}</span>`);else if(f.boostVenc)tg.push('<span class="mtg vc">Boost vencido</span>');
+  if(f.bogo!=null)tg.push(`<span class="mtg bo">BOGO ${cf.format(f.bogo)}</span>`);
+  if(f.preco&&!f.vigente)tg.push('<span class="mtg vc">fora da vigência</span>');
+  if(f.foco&&f.vigente)tg.push('<span class="mtg">foco</span>');
+  return h+(tg.length?'<br>'+tg.join(''):'');
+}
+const ACAO={ab:['Abastecer','ab'],at:['Atenção','at'],gi:['Girar','gi'],ok:['Em dia','ok']};
+function renderMod(){
+  const root=document.getElementById('secMod');if(!root)return;
+  if(MDyr!==YR||(MD===null&&MOD))modBuild();
+  const vz=document.getElementById('modVazio'),corpo=document.getElementById('modCorpo');
+  if(!MD){corpo.hidden=true;vz.hidden=false;
+    vz.innerHTML=!MOD?'Esta visão precisa de três coisas: as <b>vendas por modelo</b> (reenvie o Excel do Controle Celular em <b>Importar dados</b>), o <b>estoque físico</b> e o <b>Mapa de Ofertas</b> (cartão "Estoque e ofertas de aparelho", na mesma tela).'
+      :'Ainda não há vendas por modelo carregadas. Reenvie o Excel do Controle Celular em <b>Importar dados</b> (ele agora guarda o modelo de cada aparelho vendido).';
+    document.getElementById('modSub').textContent='aguardando dados';return;}
+  corpo.hidden=false;vz.hidden=true;
+  const R=MD;if(MS.mes==null||!R.months.includes(MS.mes))MS.mes=R.lastM;
+  if(MS.loja&&!R.lojas.includes(MS.loja))MS.loja='';
+  document.getElementById('modRef').innerHTML='<span class="lbl">Mês</span>'+R.months.map(m=>`<button class="mp" data-m="${m}" aria-pressed="${m===MS.mes}">${MES[m-1]}</button>`).join('');
+  document.getElementById('modLoja').innerHTML='<span class="lbl">Loja</span><button class="mp all" data-l="" aria-pressed="${!MS.loja}">Todas</button>'.replace('${!MS.loja}',String(!MS.loja))+R.lojas.map((n,i)=>`<button class="mp" data-l="${i+1}" aria-pressed="${n===MS.loja}">${esc(n)}</button>`).join('');
+  const M=MS.mes,open=M===R.lastM&&R.max%100<dim(YR,M),dd=String(R.max%100).padStart(2,'0')+'/'+String(R.lastM).padStart(2,'0');
+  const L=modCalc(MS.loja),escopo=MS.loja||'todas as lojas';
+  document.getElementById('modSub').textContent=`${MESL[M-1]} de ${YR}${open?' · parcial até '+dd:''} · ${escopo}`;
+  // KPIs
+  const vend=L.filter(o=>o.q>0),totQ=vend.reduce((a,o)=>a+o.q,0),totP=vend.reduce((a,o)=>a+o.base,0),totPrev=L.reduce((a,o)=>a+o.qp,0);
+  const estT=L.reduce((a,o)=>a+o.est,0),rateT=L.reduce((a,o)=>a+o.rate,0),abast=L.filter(o=>o.acao==='ab').reduce((a,o)=>a+o.gap,0),nAb=L.filter(o=>o.acao==='ab').length;
+  const cresc=totPrev>0?totP/totPrev-1:null,pc=v=>(v>=0?'+':'−')+Math.abs(v*100).toFixed(0)+'%';
+  document.getElementById('modKpis').innerHTML=
+    `<div class="gbox"><div class="mk">Modelos vendidos</div><div class="mv">${vend.length}</div><div class="ms">${unF(totQ)} un no mês${open?` · proj. ${unF(totP)}`:''}</div></div>`+
+    `<div class="gbox"><div class="mk">Crescimento do mês</div><div class="mv">${cresc==null?'—':pc(cresc)}</div><div class="ms">${open?'projeção':'real'} vs ${MESL[(M>1?M-1:12)-1]} (${unF(totPrev)} un)</div></div>`+
+    `<div class="gbox"><div class="mk">Estoque físico</div><div class="mv">${unF(estT)} un</div><div class="ms">${R.est.length?(rateT>0?'dura ~'+DU.fmt(Math.round(estT/rateT*10)/10)+' dias úteis no ritmo atual':'sem giro recente'):'estoque não carregado'}</div></div>`+
+    `<div class="gbox"><div class="mk">Para abastecer</div><div class="mv">${nAb?unF(abast)+' un':'—'}</div><div class="ms">${nAb?nAb+' modelo(s) com risco de faltar até o fim de '+R.horLab:'nenhum modelo em risco'}</div></div>`;
+  // lista principal
+  const lista=L.filter(o=>o.q>0||o.est>0||o.w>0).sort((a,b)=>b.q-a.q||b.est-a.est||b.w-a.w);
+  const lim=MS.all?lista.length:12;
+  const head=`<div class="mdrow mdh"><div>Modelo</div><div class="mdc">Vendas</div><div class="mdc">Cresceu</div><div class="mdc">Estoque</div><div class="mdc">Cobertura</div><div>Oferta vigente</div><div>Ação</div></div>`;
+  document.getElementById('modTab').innerHTML=head+lista.slice(0,lim).map(o=>{
+    const cr=o.qp>0?`<span class="var ${o.cresc>.02?'up':o.cresc<-.02?'down':'flat'}">${pc(o.cresc)}</span>`:'<span class="note">novo</span>';
+    const q=open?`${unF(o.q)} <span class="note">proj. ${unF(o.proj)}</span>`:unF(o.q);
+    const rep=o.acao==='ab'&&o.gap>0?` <span class="note">+${o.gap} un</span>`:'';
+    return `<div class="mdrow"><div class="mdn">${esc(o.nome)}<small>${esc(o.marca)}${o.dias?' · '+Math.round(o.dias)+' dias em estoque':''}</small></div>
+      <div class="mdc" data-l="Vendas">${q}</div><div class="mdc" data-l="Cresceu">${cr}</div><div class="mdc" data-l="Estoque">${R.est.length?unF(o.est):'—'}</div><div class="mdc" data-l="Cobertura">${R.est.length?cobTxt(o.cob):'—'}</div>
+      <div class="mdo" data-l="Oferta vigente">${ofHtml(o)}</div><div data-l="Ação"><span class="mac ${ACAO[o.acao][1]}">${ACAO[o.acao][0]}</span>${rep}</div></div>`;}).join('')||'<div class="note">Nenhuma venda de aparelho por modelo no filtro.</div>';
+  document.getElementById('modTabSub').textContent=`${lista.length} modelos · ordenado por vendas${open?' (projeção = ritmo até hoje levado ao fim do mês, pelos dias úteis)':''}`;
+  const mb=document.getElementById('modMore');mb.hidden=lista.length<=12;mb.textContent=MS.all?'Mostrar os 12 primeiros':`Ver todos (${lista.length})`;
+  // A) abastecer agora
+  const A=L.filter(o=>o.acao==='ab').sort((a,b)=>(b.emOferta-a.emOferta)||b.rate-a.rate);
+  document.getElementById('modASub').textContent=`demanda dos próximos ${DU.fmt(Math.round(R.hor*10)/10)} dias úteis (até o fim de ${R.horLab})`;
+  document.getElementById('modA').innerHTML=!R.est.length?'<div class="note">Carregue o estoque físico para ver o que falta.</div>':A.length?A.map(o=>`<div class="mdli"><div><b>${esc(o.nome)}</b>${o.emOferta?' <span class="mtg bo">em oferta</span>':''}<small>${o.est?`${o.est} em estoque · cobre ${cobTxt(o.cob)}`:'sem estoque'} · vende ${DU.fmt(Math.round(o.rate*10)/10)}/dia útil${o.of&&o.of.boost?` · Boost ${cf.format(o.of.boost)}`:''}</small></div><div class="mdr"><b>+${o.gap} un</b><small>demanda ${unF(o.dem)}</small></div></div>`).join(''):'<div class="note">Nenhum modelo que vende está para faltar.</div>';
+  // B) ofertas vigentes sem estoque
+  const B=L.filter(o=>o.emOferta&&o.est===0&&(o.of.foco||o.q>0||o.w>0)).sort((a,b)=>(b.q+b.w)-(a.q+a.w)||(b.of.foco-a.of.foco));
+  document.getElementById('modB').innerHTML=!R.est.length?'<div class="note">Carregue o estoque físico para cruzar com as ofertas.</div>':B.length?B.slice(0,12).map(o=>`<div class="mdli"><div><b>${esc(o.nome)}</b><small>${o.q+o.w>0?`vendeu ${unF(o.q)} no mês · ${unF(o.w)} nos últimos 30 dias`:'sem venda recente nesta rede'}${o.of.frente?' · '+esc(o.of.frente):''}</small></div><div class="mdr"><b>${cf.format(o.of.preco)}</b>${o.of.boost?`<small>Boost ${cf.format(o.of.boost)}</small>`:''}</div></div>`).join('')+(B.length>12?`<div class="note">+ ${B.length-12} modelos em oferta sem estoque</div>`:''):'<div class="note">Todos os modelos em campanha que você vende têm estoque.</div>';
+  // C) parado ou em excesso
+  const C=L.filter(o=>o.acao==='gi').sort((a,b)=>b.est-a.est);
+  document.getElementById('modC').innerHTML=!R.est.length?'<div class="note">Carregue o estoque físico.</div>':C.length?C.slice(0,12).map(o=>`<div class="mdli"><div><b>${esc(o.nome)}</b><small>${o.w===0?'sem venda nos últimos 30 dias':'cobre '+cobTxt(o.cob)}${o.dias?' · '+Math.round(o.dias)+' dias parado':''} · ${o.emOferta?'tem oferta: '+cf.format(o.of.preco)+(o.of.boost?' + Boost '+cf.format(o.of.boost):'')+' — empurrar':'sem oferta no mapa'}</small></div><div class="mdr"><b>${o.est} un</b></div></div>`).join(''):'<div class="note">Sem estoque parado.</div>';
+  // D) transferências
+  const dbox=document.getElementById('modDbox');dbox.hidden=!!MS.loja;
+  if(!MS.loja){
+    const T=[],all=modCalc('');
+    for(const o of all){
+      const need=[],don=[];
+      for(const [l,x] of Object.entries(o.lj)){
+        const rate=R.winDU>0?x.w/R.winDU:0,dem=rate*R.hor;
+        if(x.w>=1&&rate>0&&(x.est===0||x.est/rate<5)){const g=Math.ceil(dem-x.est-1e-9);if(g>=1)need.push({l,g,rate});}
+        else if(x.est>=2&&(rate===0||x.est/rate>20)){const s=Math.floor(x.est-Math.max(dem,0)-(rate>0?1:0));if(s>=1)don.push({l,s});}
+      }
+      need.sort((a,b)=>b.rate-a.rate);don.sort((a,b)=>b.s-a.s);
+      for(const n of need){for(const d of don){if(!n.g||!d.s)continue;const q=Math.min(n.g,d.s);T.push({o,de:d.l,para:n.l,q,rate:n.rate});n.g-=q;d.s-=q;}}
+    }
+    T.sort((a,b)=>b.q*b.rate-a.q*a.rate);
+    document.getElementById('modD').innerHTML=!R.est.length?'<div class="note">Carregue o estoque físico.</div>':T.length?T.slice(0,12).map(t=>`<div class="mdli"><div><b>${t.q} × ${esc(t.o.nome)}</b><small>de <b>${esc(t.de)}</b> para <b>${esc(t.para)}</b> · ${esc(t.para)} vende ${DU.fmt(Math.round(t.rate*10)/10)}/dia útil</small></div><div class="mdr">${t.o.emOferta?'<span class="mtg bo">em oferta</span>':''}</div></div>`).join(''):'<div class="note">Nenhuma transferência vantajosa agora.</div>';
+  }
+  // rodapé: fontes
+  const fb=s=>s?String(s).split('-').reverse().join('/'):'—',ns=[];
+  ns.push(`Vendas por modelo até ${dd} · ritmo = últimos 30 dias (${DU.fmt(Math.round(R.winDU*10)/10)} dias úteis).`);
+  ns.push(R.est.length?`Estoque físico de ${fb(MOD.estoque.em)}${MOD.estoque.em<new Date().toISOString().slice(0,10)?' (atualize para refletir hoje)':''}.`:'Estoque físico não carregado.');
+  ns.push(MOD.mapa?`Ofertas: ${esc(MOD.mapa.arquivo||'Mapa')} (${fb(MOD.mapa.em)})${MOD.campanha?` + destaques ${esc(MOD.campanha.nome||'da campanha')}`:''}. Se a oferta e a tabela divergirem, vale a oferta${MOD.tabela?'; tabela nacional de '+fb(MOD.tabela.em):''}.`:'Mapa de Ofertas não carregado.');
+  ns.push('Cobertura em dias úteis (seg–sex 1, sáb 0,5, sem domingos e feriados). Ação: Abastecer = cobre menos de 5 dias úteis; Atenção = menos de 10; Girar = parado há 30 dias ou cobertura acima de 45.');
+  document.getElementById('modNote').innerHTML=ns.join(' ');
+}
+document.getElementById('modRef').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b)return;MS.mes=+b.dataset.m;renderMod();});
+document.getElementById('modLoja').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=b.dataset.l;MS.loja=i?MD.lojas[+i-1]:'';renderMod();});
+document.getElementById('modMore').addEventListener('click',()=>{MS.all=!MS.all;renderMod();});
+
 document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 60 = aparelho, de R$ 10 a R$ 60 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
 setDbState();renderLog();render();paintPub();
 document.getElementById('btnPub').addEventListener('click',publicar);
