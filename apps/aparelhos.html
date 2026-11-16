@@ -401,6 +401,20 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     </div>
   </section>
 
+  <section class="q" aria-labelledby="h-dia">
+    <div class="qhead">
+      <div><div class="qtag">Aparelho · dia a dia</div><h2 id="h-dia">Venda diária de aparelho</h2><div class="sub" id="diaSub"></div></div>
+      <div class="seg" id="segDia" role="group" aria-label="Métrica da venda diária">
+        <button data-m="q" aria-pressed="true">Quantidade</button><button data-m="r" aria-pressed="false">Receita</button>
+      </div>
+    </div>
+    <div class="lm" id="dMes" role="group" aria-label="Mês"></div>
+    <div class="lm" id="dLoja" role="group" aria-label="Loja"></div>
+    <div class="chart" id="chDia"></div>
+    <div class="legend" style="margin-top:2px"><span><i style="background:var(--bar)"></i>Segunda a sexta</span><span><i style="background:var(--bar);opacity:.55"></i>Sábado</span><span><i style="border-top:2px dashed var(--ink2);height:0;width:14px;display:inline-block"></i>Média por dia com venda</span></div>
+    <div class="note" id="diaNote"></div>
+  </section>
+
   <footer id="foot"></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
@@ -428,7 +442,7 @@ const S={store:-1,months:new Set(),mR:new Set(),mM:new Set(),ref:null,q1:'q',q2:
 try{const s=JSON.parse(localStorage.getItem('ligcel-ap')||'null');if(s){for(const k of ['q1','q2','q4','mt','cp','tab'])if(s[k])S[k]=s[k];}}catch(e){}
 const save=()=>{try{localStorage.setItem('ligcel-ap',JSON.stringify({q1:S.q1,q2:S.q2,q4:S.q4,mt:S.mt,cp:S.cp,tab:S.tab}))}catch(e){}};
 const dim=(y,m)=>new Date(y,m,0).getDate();
-const bd=(y,m,a,b)=>{let n=0;for(let d=a;d<=b;d++)if(new Date(y,m-1,d).getDay()!==0)n++;return n;}; // seg–sáb
+const bd=(y,m,a,b)=>DU.soma(y,m,a,b); // calendário único: seg–sex 1, sáb 0,5, sem domingo/feriado (ajustes manuais do menu Dias úteis)
 const mkey=m=>YR+'-'+String(m).padStart(2,'0');
 
 function rebuild(){
@@ -568,7 +582,7 @@ function renderMeta(keepFocus){
   paintRef();
   const m=S.ref,k=S.mt,total=bd(YR,m,1,dim(YR,m)),open=m===lastM&&partial,el=open?bd(YR,m,1,maxDD):total,rem=total-el;
   document.getElementById('mtSub').textContent=`${MESL[m-1]} de ${YR}${open?` · parcial até ${String(maxDD).padStart(2,'0')}/${String(m).padStart(2,'0')}`:' · mês fechado'} · ${k==='q'?'em unidades':'em receita (R$)'}`;
-  document.getElementById('mtDias').innerHTML=`<span>Dias úteis no mês <b>${total}</b></span><span>Decorridos <b>${el}</b></span><span>Restantes <b>${rem}</b></span><span>Segunda a sábado</span>`;
+  document.getElementById('mtDias').innerHTML=`<span>Dias úteis no mês <b>${DU.fmt(total)}</b></span><span>Decorridos <b>${DU.fmt(el)}</b></span><span>Restantes <b>${DU.fmt(rem)}</b></span><span>Seg–sex 1 · sáb 0,5${DU.manual?' · com ajustes manuais':''}</span>`;
   const f=v=>k==='q'?nf.format(Math.round(v)):cf.format(v);
   const rows=D.stores.map((n,i)=>{const a=agg(x=>x[3]===0&&x[1]===i&&x[0]===m);const real=a[k];const meta=metaOf(m,k,n);
     const proj=el?real/el*rem+real:real;return{i,n,real,meta,proj};}).sort((a,b)=>b.real-a.real);
@@ -997,7 +1011,47 @@ function bindUpload(){
 function seg(id,key,fn){const el=document.getElementById(id);
   const paint=()=>el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===S[key]));paint();
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.m;paint();save();fn();});}
-function render(){paintFilters();renderKpis();renderGer();renderExec();renderMeta();renderRt();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();}
+function render(){paintFilters();renderKpis();renderGer();renderDia();renderExec();renderMeta();renderRt();renderCmp();renderQ1();renderQ2();renderQ3();renderQ4();}
+
+/* ---------- venda diária de aparelho (loja ou total do grupo) ---------- */
+const DIA={m:null,s:-1,k:'q'};
+const DOWN=['dom','seg','ter','qua','qui','sex','sáb'];
+function renderDia(){
+  const el=document.getElementById('chDia');if(!el||!months.length)return;
+  if(DIA.m==null||!months.includes(DIA.m))DIA.m=lastM;
+  const m=DIA.m,k=DIA.k,end=(m===lastM&&partial)?maxDD:dim(YR,m);
+  document.getElementById('dMes').innerHTML='<span class="lbl">Mês</span>'+months.map(mm=>`<button class="mp" data-m="${mm}" aria-pressed="${mm===m}">${MES[mm-1]}${pmark(mm)}</button>`).join('');
+  document.getElementById('dLoja').innerHTML='<span class="lbl">Loja</span><button class="mp" data-s="-1" aria-pressed="${DIA.s<0}">Total grupo</button>'.replace('${DIA.s<0}',DIA.s<0)+D.stores.map((n,i)=>`<button class="mp" data-s="${i}" aria-pressed="${DIA.s===i}">${esc(n)}</button>`).join('');
+  document.querySelectorAll('#segDia button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===k));
+  const grp=new Set(),per=new Array(32).fill(0);
+  for(const x of D.rows){if(x[0]!==m)continue;grp.add(x[7]);if(x[3]===0&&(DIA.s<0||x[1]===DIA.s))per[x[7]]+=k==='q'?x[5]:x[6];}
+  const days=[];for(let d=1;d<=end;d++){if(!grp.has(d))continue;days.push({d,dow:new Date(YR,m-1,d).getDay(),v:per[d]});}
+  const nome=DIA.s<0?'Total do grupo':D.stores[DIA.s],fv=v=>k==='q'?nf.format(Math.round(v))+' un':cf.format(v);
+  document.getElementById('diaSub').textContent=`${nome} · ${MESL[m-1]} de ${YR}${(m===lastM&&partial)?' · parcial até '+String(maxDD).padStart(2,'0')+'/'+String(m).padStart(2,'0'):''} · ${k==='q'?'unidades':'receita (R$)'}`;
+  if(!days.length){el.innerHTML='';document.getElementById('diaNote').textContent='Sem vendas neste mês.';return;}
+  const W=Math.max(320,el.clientWidth),H=300,pl=44,pr=14,pt=30,pb=44,cw=(W-pl-pr)/days.length,bw=Math.max(4,Math.min(40,cw*.66));
+  const tot=days.reduce((a,x)=>a+x.v,0),med=tot/days.length,best=days.reduce((a,x)=>x.v>a.v?x:a,days[0]);
+  let mx=niceMax(Math.max(...days.map(x=>x.v),med,1)*1.15);if(k==='q')mx=Math.max(4,Math.ceil(mx/4)*4);const y=v=>pt+(H-pt-pb)*(1-v/mx);
+  const ink2=css('--ink2'),muted=css('--muted'),grid=css('--grid'),ink=css('--ink'),bar=css('--bar');
+  const ax=v=>k==='q'?nf.format(Math.round(v)):(v>=1e6?(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':v>=1e3?(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil':String(Math.round(v)));
+  let g='';
+  for(let i=0;i<=4;i++){const v=mx*i/4,yy=y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="${grid}"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="10.5" fill="${muted}">${ax(v)}</text>`;}
+  const showAll=cw>=30,lfs=Math.min(11.5,Math.max(9,cw/3.2));
+  days.forEach((x,i)=>{const cx=pl+cw*i+cw/2,xx=cx-bw/2,yy=y(x.v),h=Math.max(1,H-pb-yy),sat=x.dow===6||x.dow===0;
+    g+=`<rect x="${xx.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(4,bw/3).toFixed(1)}" fill="${bar}" opacity="${sat?.55:1}"/>`;
+    if(x.v>0&&(showAll||x===best))g+=`<text x="${cx.toFixed(1)}" y="${(yy-6).toFixed(1)}" text-anchor="middle" font-size="${lfs}" font-weight="700" fill="${ink}">${ax(x.v)}</text>`;
+    const lab=(days.length<=16||i%2===0);
+    if(lab){g+=`<text x="${cx.toFixed(1)}" y="${H-pb+15}" text-anchor="middle" font-size="11" font-weight="600" fill="${ink2}">${x.d}</text>`;
+      g+=`<text x="${cx.toFixed(1)}" y="${H-pb+29}" text-anchor="middle" font-size="9.5" fill="${muted}">${cw>=26?DOWN[x.dow]:DOWN[x.dow][0]}</text>`;}
+    g+=`<rect class="hit" data-i="${i}" x="${(pl+cw*i).toFixed(1)}" y="${pt-20}" width="${cw.toFixed(1)}" height="${H-pt}" fill="transparent"/>`;});
+  const ym=y(med);g+=`<line x1="${pl}" x2="${W-pr}" y1="${ym}" y2="${ym}" stroke="${ink2}" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Venda diária de aparelho">${g}</svg>`;
+  el.querySelectorAll('.hit').forEach(h=>{const x=days[+h.dataset.i];h.addEventListener('mousemove',e=>showTip(e,`<b>${String(x.d).padStart(2,'0')}/${String(m).padStart(2,'0')} · ${DOWN[x.dow]}</b><br>${esc(nome)}<br>${fv(x.v)}<br><span style="opacity:.75">${x.v>med?'acima':'abaixo'} da média (${fv(med)})</span>`));h.addEventListener('mouseleave',hideTip);});
+  document.getElementById('diaNote').innerHTML=`Total <b>${fv(tot)}</b> em <b>${days.length}</b> dias com venda no grupo · média <b>${fv(med)}</b> por dia · melhor dia: <b>${String(best.d).padStart(2,'0')}/${String(m).padStart(2,'0')}</b> (${fv(best.v)}). Domingos, feriados e dias sem venda no grupo ficam de fora do gráfico.`;
+}
+document.getElementById('dMes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;DIA.m=+b.dataset.m;renderDia();});
+document.getElementById('dLoja').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;DIA.s=+b.dataset.s;renderDia();});
+document.getElementById('segDia').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;DIA.k=b.dataset.m;renderDia();});
 
 loadState();
 rebuild();
@@ -1009,7 +1063,7 @@ bindStoreRows('tStores');bindStoreRows('tChip');
 document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 60 = aparelho, de R$ 10 a R$ 60 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
 setDbState();renderLog();render();paintPub();
 document.getElementById('btnPub').addEventListener('click',publicar);
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();renderExec();renderRt();renderGer();},150);});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();renderExec();renderRt();renderGer();renderDia();},150);});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{renderQ1();renderQ4();});
 new MutationObserver(()=>{renderQ1();renderQ4();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 

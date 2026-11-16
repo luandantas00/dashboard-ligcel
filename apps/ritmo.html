@@ -916,15 +916,8 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
 
     <div class="tabpane" data-pane="ref" hidden>
       <div class="dsec">
-        <h3>Dias úteis de <span id="duMes"></span></h3>
-        <p>O painel conta de segunda a sábado. Informe outro número quando houver feriado ou dia fechado — projeção, média/dia e necessidade/dia passam a usar o que você digitar. Deixe em branco para voltar ao cálculo automático.</p>
-        <div class="duwrap">
-          <label>Dias úteis do mês<input id="duTotal" inputmode="numeric" placeholder="auto"><span id="duTotalAuto"></span></label>
-          <label>Dias úteis decorridos<input id="duDec" inputmode="numeric" placeholder="auto"><span id="duDecAuto"></span></label>
-          <button class="iconbtn" id="btnDuAuto">Voltar ao automático</button>
-          <button class="iconbtn" id="btnDuFer">Descontar os dias sem movimento</button>
-        </div>
-        <div class="report" id="duNota"></div>
+        <h3>Dias úteis</h3>
+        <p>Regra única para todos os painéis: segunda a sexta vale 1, sábado vale 0,5; domingos e feriados não entram. Quando achar algum dia incoerente, ajuste no menu lateral <b>Dias úteis</b> — a mudança vale para Ritmo, Minha Meta, Aparelhos, Receita e Comissão.</p>
       </div>
       <div class="dsec">
         <h3>Headcount por loja</h3>
@@ -956,7 +949,7 @@ table.dep td:last-child{text-align:right;font-family:var(--mono);font-size:11px}
   </section>
 
   <div class="foot">
-    <span><b>Dias úteis:</b> segunda a sábado.</span>
+    <span><b>Dias úteis:</b> seg–sex 1, sáb 0,5; sem domingos e feriados.</span>
     <span><b>% Atingimento:</b> Real ÷ Meta. A marca clara na barra é onde o mês deveria estar hoje.</span>
     <span><b>Aparelho:</b> Valor Venda acima de R$ 63,00.</span>
     <span><b>Conversão:</b> indicador ÷ volume atendido; seguro e Claro Troca convertem sobre aparelho.</span>
@@ -1044,7 +1037,8 @@ let PUB=null, GAS=(typeof google!=='undefined'&&google.script&&google.script.run
 
 /* ---------- datas ---------- */
 const ym=d=>d.slice(0,7);
-function wdaysIn(y,m,upto){const last=upto||new Date(y,m,0).getDate();let n=0;for(let d=1;d<=last;d++){if(new Date(y,m-1,d).getDay()!==0)n++;}return n;}
+/* calendário único (menu Dias úteis): seg–sex 1, sáb 0,5, domingo/feriado 0, ajustes manuais por cima */
+function wdaysIn(y,m,upto){const last=upto||new Date(y,m,0).getDate();return DU.soma(y,m,1,last);}
 function prevYm(k){let[y,m]=k.split('-').map(Number);m--;if(m===0){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
 const mesLabel=k=>{const[y,m]=k.split('-').map(Number);return MESNM[m]+'/'+y;};
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -1132,10 +1126,8 @@ function periodo(mes){
   const isAtual=mes===REF.mesAtual;
   const upto=isAtual?Number(REF.maxDs.slice(8,10)):new Date(y,m,0).getDate();
   const totalAuto=wdaysIn(y,m), decAuto=wdaysIn(y,m,upto);
-  const total=duGet(mes,'total')!==null?duGet(mes,'total'):totalAuto;
-  const dec=duGet(mes,'dec')!==null?duGet(mes,'dec'):decAuto;
-  return{y,m,total,dec,rest:Math.max(0,total-dec),isAtual,totalAuto,decAuto,
-         manual:duGet(mes,'total')!==null||duGet(mes,'dec')!==null};
+  const total=totalAuto, dec=decAuto;
+  return{y,m,total,dec,rest:Math.max(0,total-dec),isAtual,totalAuto,decAuto,manual:DU.manual};
 }
 const lojasSel=()=>S.loja==='__all'?LOJAS:[S.loja];
 function cnt(mes,test,pred){let n=0;for(const r of recs){if(ym(r.ds)===mes&&test(r)&&(!pred||pred(r)))n++;}return n;}
@@ -1168,7 +1160,7 @@ function metrics(mes,test,pred,meta,hc){
   const nec=meta<=0?null:(P.rest>0?falta/P.rest:(falta>0?Infinity:0));
   return{real,proj,meta,ating,atingProj,pace,m1,varr,media,nec,falta,prod:hc>0?real/hc:null,P};
 }
-function diaUtilIdx(ds){const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);if(dt.getDay()===0)return 0;return wdaysIn(y,m,d);}
+function diaUtilIdx(ds){const[y,m,d]=ds.split('-').map(Number);if(DU.peso(y,m,d)===0)return 0;return wdaysIn(y,m,d);}
 
 /* ---------- formato ---------- */
 const N=v=>nf.format(Math.round(v)), N1=v=>nf1.format(v);
@@ -1291,7 +1283,7 @@ function renderMain(){
   const P=periodo(S.mes),ls=lojasSel(),t=testSel();
   document.getElementById('tblTitle').textContent=S.view==='loja'?'Ranking por loja':'Ranking por vendedor';
   document.getElementById('tblHint').textContent=selLabel()+' · '+mesLabel(S.mes)+' · venda '+periodoTexto(S.mes)+
-    ' · '+P.dec+' de '+P.total+' dias úteis'+(P.manual?' (informados)':'')+(P.isAtual?' · mês em curso':' · fechado');
+    ' · '+DU.fmt(P.dec)+' de '+DU.fmt(P.total)+' dias úteis'+(P.manual?' (com ajustes manuais)':'')+(P.isAtual?' · mês em curso':' · fechado');
   const sp2=document.getElementById('stampPer');if(sp2)sp2.textContent=mesLabel(S.mes)+' '+periodoTexto(S.mes);
   const el=document.getElementById('tbl');
   el.innerHTML=S.sel.length?tabela(t,S.sel,'main'):'<tbody><tr><td class="l" style="padding:22px">Marque ao menos um indicador.</td></tr></tbody>';
@@ -1301,7 +1293,7 @@ function renderMain(){
   if(!S.sel.length)n.innerHTML='Nenhum indicador marcado.';
   else if(m.meta<=0)n.innerHTML='Sem meta cadastrada para '+mesLabel(S.mes)+'. Use <b>⚙ Metas</b> para informar a meta por loja.';
   else if(P.rest===0)n.innerHTML='Mês fechado: <b>'+N(m.real)+'</b> contra meta de <b>'+N(m.meta)+'</b> — <b>'+pct(m.ating)+'</b>.';
-  else n.innerHTML='<b>'+pct(m.ating)+'</b> da meta com <b>'+pct(m.pace)+'</b> do mês corrido. Faltam <b>'+N(m.falta)+'</b> em <b>'+P.rest+'</b> dias úteis — <b>'+(m.nec===Infinity?'—':N1(m.nec))+'</b> por dia contra média de <b>'+N1(m.media)+'</b>.';
+  else n.innerHTML='<b>'+pct(m.ating)+'</b> da meta com <b>'+pct(m.pace)+'</b> do mês corrido. Faltam <b>'+N(m.falta)+'</b> em <b>'+DU.fmt(P.rest)+'</b> dias úteis — <b>'+(m.nec===Infinity?'—':N1(m.nec))+'</b> por dia contra média de <b>'+N1(m.media)+'</b>.';
 }
 
 /* ---------- blocos por indicador ---------- */
@@ -1682,7 +1674,7 @@ function mRenderHero(){
         '<div class="anel-num" style="color:var(--'+CORNOME[cl]+')">'+(meta>0?pct(n.at):N(n.real))+'</div></div>'+
       '<div class="hero-txt">'+
         '<div class="quem">'+esc(mQuem())+'</div>'+
-        '<div class="mesinfo">'+mesLabel(S.mes)+' · '+P.dec+' de '+P.total+' dias úteis</div>'+
+        '<div class="mesinfo">'+mesLabel(S.mes)+' · '+DU.fmt(P.dec)+' de '+DU.fmt(P.total)+' dias úteis</div>'+
         '<div class="sub">'+(meta>0
           ?'<b>'+N(S.mModo==='proj'?n.proj:n.real)+'</b> de <b>'+N(meta)+'</b><small>'+(S.mModo==='proj'&&P.isAtual?'projeção do mês':'realizado')+'</small>'
           :'<b>'+N(n.real)+'</b> vendas<small>no mês</small>')+'</div>'+
@@ -1727,9 +1719,9 @@ function mRenderLegenda(){
     '<span><i class="fb"></i>! até 79,9%</span>'+
     '<span>⚑ é o indicador com a maior lacuna.</span>';
   document.getElementById('vRodape').innerHTML=
-    'Venda de <b>'+ddmm(j.ini)+'</b> a <b>'+ddmm(j.fim)+'</b> · <b>'+P.dec+'</b> de <b>'+P.total+'</b> dias úteis'+
+    'Venda de <b>'+ddmm(j.ini)+'</b> a <b>'+ddmm(j.fim)+'</b> · <b>'+DU.fmt(P.dec)+'</b> de <b>'+DU.fmt(P.total)+'</b> dias úteis'+
     (P.isAtual?' · mês em curso':' · mês fechado')+'<br>'+
-    'Dias úteis de segunda a sábado. Projeção = real ÷ dias corridos × dias do mês. '+
+    'Dias úteis: segunda a sexta = 1, sábado = 0,5, sem domingos e feriados. Projeção = real ÷ dias úteis decorridos × dias úteis do mês. '+
     'Meta do vendedor = meta da loja dividida pelo quadro.';
 }
 function mRender(){
@@ -1755,8 +1747,7 @@ function metaDe(id,ls){
   return ls.reduce((a,l)=>a+ids.reduce((b,k)=>b+(metas[S.mes+'|'+l+'|'+k]||0),0),0);
 }
 function diasUteisReais(mes){
-  const fer={};feriadosDoMes(mes).forEach(d=>fer[d]=1);
-  return diasDoMes(mes).filter(x=>!fer[x.ds]);
+  return diasDoMes(mes);
 }
 function renderDia2(){
   const svg=document.getElementById('chartDia2');
@@ -1811,13 +1802,12 @@ function renderDia2(){
     '<span><i style="width:14px;height:2px;background:var(--ink-2);display:inline-block"></i>Média do período ('+N1(med)+')</span>'+
     (temMeta?'<span><i style="width:14px;height:2px;background:var(--muted);display:inline-block"></i>Meta por dia ('+N1(metaDia)+')</span>':'')+
     '<span>No pop-up de cada barra: quantidade, meta do dia e % de atingimento.</span>';
-  const fer=feriadosDoMes(S.mes);
   const bateram=temMeta?dias.filter(x=>x.at>=1).length:0;
   document.getElementById('dia2Note').innerHTML='<b>'+N(tot)+'</b> em <b>'+dias.length+'</b> dias — média de <b>'+N1(med)+'</b> por dia.'+
-    (temMeta?' Meta do mês <b>'+N(metaMes)+'</b> ÷ <b>'+P.total+'</b> dias úteis = <b>'+N1(metaDia)+'</b> por dia; '+
+    (temMeta?' Meta do mês <b>'+N(metaMes)+'</b> ÷ <b>'+DU.fmt(P.total)+'</b> dias úteis = <b>'+N1(metaDia)+'</b> por dia; '+
              '<b>'+bateram+'</b> de '+dias.length+' dias bateram.':'')+
     ' Melhor dia: <b>'+melhor.dia+'/'+S.mes.slice(5)+'</b> com <b>'+N(melhor.s)+'</b>'+(temMeta?' ('+pct(melhor.at)+')':'')+'.'+
-    (fer.length?' Fora da série: domingos e '+fer.map(ddmm).join(', ')+' (sem movimento no grupo).':' Fora da série: domingos.');
+    ' Fora da série: domingos e feriados (ajustáveis no menu Dias úteis).';
 }
 function renderFiltDia2Loja(){
   const el=document.getElementById('filtDia2Loja');
@@ -1978,7 +1968,7 @@ function labDia(){
 function diasDoMes(mes){
   const[y,m]=mes.split('-').map(Number),last=new Date(y,m,0).getDate(),out=[];
   const lim=mes===REF.mesAtual?Number(REF.maxDs.slice(8,10)):last;
-  for(let d=1;d<=lim;d++){const dt=new Date(y,m-1,d);if(dt.getDay()===0)continue;
+  for(let d=1;d<=lim;d++){const dt=new Date(y,m-1,d);if(DU.peso(y,m,d)===0)continue;
     out.push({ds:y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'),dia:d,dow:dt.getDay()});}
   return out;
 }
@@ -2121,29 +2111,7 @@ function renderMetas(){
       salvarCfg('metas salvas para todos');renderMetas();renderAll();});
   });
 }
-function renderDU(){
-  const P=periodo(S.mes),o=DUMAN[S.mes]||{},fer=feriadosDoMes(S.mes);
-  document.getElementById('duMes').textContent=mesLabel(S.mes);
-  const it=document.getElementById('duTotal'),id=document.getElementById('duDec');
-  it.value=(o.total===undefined||o.total===null)?'':o.total;
-  id.value=(o.dec===undefined||o.dec===null)?'':o.dec;
-  document.getElementById('duTotalAuto').textContent='automático: '+P.totalAuto;
-  document.getElementById('duDecAuto').textContent='automático: '+P.decAuto;
-  const n=document.getElementById('duNota');
-  if(fer.length){
-    n.className='report on';
-    n.innerHTML='<b>'+fer.length+' dia'+(fer.length>1?'s':'')+' sem nenhum movimento no grupo</b> dentro do período de venda: '+
-      fer.map(ddmm).join(', ')+'. Costuma ser feriado ou loja fechada — o botão ao lado desconta esses dias dos dias úteis.';
-  } else n.className='report';
-  document.getElementById('btnDuFer').disabled=!fer.length;
-}
-function salvarDU(total,dec){
-  const o={};
-  if(total!==''&&total!==null&&total!==undefined)o.total=Number(total)||0;
-  if(dec!==''&&dec!==null&&dec!==undefined)o.dec=Number(dec)||0;
-  if(Object.keys(o).length)DUMAN[S.mes]=o;else delete DUMAN[S.mes];
-  salvarCfg('dias úteis salvos para todos');renderAll();renderDU();
-}
+function renderDU(){}
 function renderHC(){
   let h='<thead><tr><th class="l">Loja</th><th>HC</th><th>Com produção</th></tr></thead><tbody>';
   LOJAS.forEach(l=>{
@@ -2191,7 +2159,7 @@ function renderRef(){
     ['Operadora de origem','<b>'+esc(c.oper||'Operadora')+'</b> — TIM, VIVO e Outros'],
     ['Claro Troca','<b>'+esc(c.motivo||'Motivo')+'</b> = '+esc(mk2.troca||'')],
     ['Volume','todas as linhas da base, por dia e loja'],
-    ['Dias úteis','segunda a sábado'],
+    ['Dias úteis','seg–sex = 1, sáb = 0,5; sem domingos e feriados (ajustes no menu Dias úteis)'],
     ['Fora do quadro',(RAW.foraQuadro||[]).map(v=>esc(titleCase(v))).join(', ')||'—']
   ].map(r=>'<tr><td>'+r[1]+'</td><td>'+r[0]+'</td></tr>').join('');
   const dp=RAW.depara||{};
@@ -2456,16 +2424,6 @@ function wire(){
   ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
   drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)processarArquivo(f);});
   document.getElementById('btnPublicar').addEventListener('click',publicar);
-  const duSalva=()=>salvarDU(document.getElementById('duTotal').value.trim(),
-                             document.getElementById('duDec').value.trim());
-  document.getElementById('duTotal').addEventListener('change',duSalva);
-  document.getElementById('duDec').addEventListener('change',duSalva);
-  document.getElementById('btnDuAuto').addEventListener('click',()=>salvarDU('',''));
-  document.getElementById('btnDuFer').addEventListener('click',()=>{
-    const P=periodo(S.mes),fer=feriadosDoMes(S.mes);if(!fer.length)return;
-    const hoje=REF.maxDs;
-    const passados=fer.filter(d=>d<=hoje).length;
-    salvarDU(P.totalAuto-fer.length, P.decAuto-passados);});
   const aplicarRegras=(rg,msg)=>{
     REGUSER=rg;salvarCfg('regras salvas para todos');
     carregarRegras();rebuild();derive();clearDiv();

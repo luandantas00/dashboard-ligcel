@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("painel_tema")||"light")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
-<link rel="stylesheet" href="assets/shell.css?v=14">
+<link rel="stylesheet" href="assets/shell.css?v=15">
 </head>
 <body>
 
@@ -111,10 +111,27 @@
   </form>
 </dialog>
 
+<dialog id="dlgDias" class="dlg-dias">
+  <div class="dlg">
+    <h2>Dias úteis</h2>
+    <p class="sub">Regra padrão: segunda a sexta = 1, sábado = 0,5; domingos e feriados não contam. Clique num dia para ajustar quando achar incoerente (alterna 1 → 0,5 → 0). Vale para todos os painéis com projeção.</p>
+    <div class="du-nav"><button class="btn" type="button" id="duAnt">‹</button><b id="duMesTit"></b><button class="btn" type="button" id="duProx">›</button></div>
+    <div class="du-grade" id="duGrade"></div>
+    <p class="du-res" id="duRes"></p>
+    <p class="du-leg"><span class="du-d">auto</span><span class="du-d man">ajustado</span> Dias ajustados à mão aparecem destacados.</p>
+    <p class="msg" id="duMsg" role="alert"></p>
+    <div class="linha">
+      <button class="btn principal" type="button" id="duSalvar">Salvar para todos</button>
+      <button class="btn" type="button" id="duLimpaMes">Voltar mês ao automático</button>
+      <button class="btn" type="button" id="duFechar">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="assets/comissao-nucleo.js?v=5"></script>
-<script src="assets/shell.js?v=17"></script>
+<script src="assets/shell.js?v=18"></script>
 <script>document.addEventListener('click',function(e){var b=e.target.closest('[data-olho]');if(!b)return;var i=b.parentNode.querySelector('input');if(i){i.type=i.type==='password'?'text':'password';}});</script>
 </body>
 </html>

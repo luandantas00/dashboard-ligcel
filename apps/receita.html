@@ -367,8 +367,7 @@ var MES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'
 var INDS=['CONTROLE','PÓS','BL FIXA','TV','OUTROS'];
 var IND_MAP={'Ativação Controle':0,'Migração Pré - Controle':0,'Ativação Pós':1,'Ativação Dependente':1,'Ativação Dependente Grátis':1,'Migração Pré - Pós':1,'Instalação Vírtua':2,'Instalação TV':3};
 var FORA=['ananda bispo de jesus','isabell cristina da silva barbosa','maria eduarda papa da conceição','maria eduarda papa da conceicao','daniel pedro do carmo carvalho','amanda silva de jesus','alice da silva souza'];
-var FERIADOS=['2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-11-20','2026-12-25','2027-01-01'];
-var NM,MN,YY,MO,DIM,LASTM,maxDay,pm,F,BD,IND_OF,hx,ACT,absC;
+var NM,MN,YY,MO,DIM,LASTM,maxDay,pm,F,BD,IND_OF,hx,ACT,absC,GDAYS;
 var st={m:0,pmode:'proj',loja:-1,view:'tipo',combo:[true,true,true],hide:false,hl:1,q:'',all:false,fi:{L:new Set(),V:new Set()},xp:{L:new Set(),V:new Set()}};
 var VK={L:[],V:[]},msSig='';
 var GAS=!!(window.parent&&parent.__painel&&parent.__painel.receitaSalvar);
@@ -390,8 +389,13 @@ function recompute(){
   hx=new Set();D.V.forEach((n,i)=>{if(FORA.indexOf(n.toLowerCase())>=0)hx.add(i)});
   ACT={};for(const r of D.R){const a=ACT[r[3]]||(ACT[r[3]]=[]);(a[r[0]]||(a[r[0]]=new Set())).add(r[1])}
   absC={};
-  if(pm>=0){const be=(m,u)=>{let n=0;for(let d=1;d<=u;d++)if(new Date(YY[m],MO[m]-1,d).getDay()!==0)n++;return n};BD=[be(pm,maxDay),be(pm,DIM[pm])];F=BD[1]/Math.max(1,BD[0])}else{F=1;BD=[0,0]}
+  GDAYS=[];for(const r of D.R){(GDAYS[r[0]]||(GDAYS[r[0]]=new Set())).add(r[1])}
+  calcBD();
   if(st.m>LASTM||st.m<0)st.m=LASTM;
+}
+function calcBD(){
+  if(pm<0){F=1;BD=[0,0];return}
+  BD=[DU.soma(YY[pm],MO[pm],1,maxDay),DU.soma(YY[pm],MO[pm],1,DIM[pm])];F=BD[1]/Math.max(1,BD[0]);
 }
 const names=()=>st.view==='tipo'?D.T:INDS;
 const keyOf=r=>st.view==='tipo'?r[4]:IND_OF[r[4]];
@@ -415,7 +419,7 @@ function dl(cur,prev,neu){
 /* ausentes: sem registro no mês ou 5+ dias úteis (seg–sáb, sem feriados) seguidos sem registro */
 function absent(v,m){const k=v+'_'+m;if(k in absC)return absC[k];const s=(ACT[v]&&ACT[v][m])||new Set();let r='';
   if(!s.size)r='Sem vendas no mês';else{let run=0,mx=0;const end=m===LASTM?maxDay:DIM[m];
-    for(let d=1;d<=end;d++){const w=new Date(YY[m],MO[m]-1,d).getDay();if(w===0||FERIADOS.indexOf(YY[m]+'-'+pad2(MO[m])+'-'+pad2(d))>=0)continue;if(s.has(d))run=0;else{run++;if(run>mx)mx=run}}
+    for(let d=1;d<=end;d++){if(DU.peso(YY[m],MO[m],d)===0)continue;if(s.has(d))run=0;else{run++;if(run>mx)mx=run}}
     if(mx>=5)r=mx+' dias úteis seguidos sem venda'}
   return absC[k]=r}
 /* cores por entidade (ranking global, não muda com filtro) */
@@ -549,7 +553,7 @@ function render(){
   {const n=(st.loja>=0)+(st.view!=='tipo')+st.combo.filter(x=>!x).length+((pm>=0&&st.pmode!=='proj')?1:0)+(st.hide?1:0);$('#fToggle').textContent='Filtros'+(n?` · ${n}`:'')}
   $('#fMes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.m===st.m));
   let note='';
-  if(pm>=0){const proj=`Projeção de ${MN[pm]}: realizado até o dia ${maxDay} ÷ ${BD[0]} dias úteis (seg–sáb) × ${BD[1]} do mês, fator ${F.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}.${BD[0]<5?' Com poucos dias úteis decorridos, a projeção é pouco confiável.':''}`;
+  if(pm>=0){const proj=`Projeção de ${MN[pm]}: realizado até o dia ${maxDay} ÷ ${DU.fmt(BD[0])} dias úteis × ${DU.fmt(BD[1])} do mês${' (seg–sex = 1, sáb = 0,5; sem domingos e feriados'+(DU.manual?'; com ajustes manuais do menu Dias úteis':'')+')'}, fator ${F.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}.${BD[0]<5?' Com poucos dias úteis decorridos, a projeção é pouco confiável.':''}`;
     note=st.pmode==='proj'?`${proj} Os valores de ${MN[pm]} mostram a projeção, com o realizado logo abaixo.`:st.pmode==='real'?`${proj} Os valores de ${MN[pm]} mostram o realizado e as variações são calculadas sobre a projeção.`:`Comparação no mesmo período: todos os meses limitados aos dias 1 a ${maxDay}, valores reais.`}
   $('#pnote').textContent=note;$('#pnote').style.display=note?'':'none';
   $('#sub').textContent=`Receita de ${MN[m]}${P?(st.pmode==='proj'?' (projeção)':' (realizado)'):''}. Receita = Comissão + Comissão Res, por indicador, loja e vendedor, comparada com M-1 e M-2.`;

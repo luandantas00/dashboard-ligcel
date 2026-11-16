@@ -116,13 +116,15 @@ async function entrarNoApp() {
 }
 async function carregarEmpresa() {
   const eid = empId();
-  S.titulo = 'Painel Comercial'; S.lojas = [];
+  S.titulo = 'Painel Comercial'; S.lojas = []; S.diasUteis = {};
   if (eid) {
-    const [lj, cf] = await Promise.all([
+    const [lj, cf, du] = await Promise.all([
       sb.from('lojas').select('*').eq('empresa_id', eid).order('nome'),
-      sb.from('app_config').select('valor').eq('empresa_id', eid).eq('chave', 'titulo').maybeSingle()
+      sb.from('app_config').select('valor').eq('empresa_id', eid).eq('chave', 'titulo').maybeSingle(),
+      sb.from('app_config').select('valor').eq('empresa_id', eid).eq('chave', 'dias_uteis').maybeSingle()
     ]);
     S.lojas = lj.data || [];
+    S.diasUteis = (du.data && du.data.valor && du.data.valor.ov) || {};
     if (cf.data && cf.data.valor && cf.data.valor.texto) S.titulo = cf.data.valor.texto;
     else if (S.me.papel === 'dono' && S.empresa) S.titulo = S.empresa.nome;
   }
@@ -150,10 +152,11 @@ function pintarTopo() {
     eb.innerHTML = `<label for="selEmp">Empresa</label><select id="selEmp">${S.empresas.map(x => `<option value="${x.id}"${S.empresa && x.id === S.empresa.id ? ' selected' : ''}>${esc(x.nome)}</option>`).join('')}</select>`;
   } else { eb.hidden = true; eb.innerHTML = ''; }
   $('#abas').innerHTML = abasVisiveis().map(a => `<button class="aba" data-aba="${a.id}"><span class="ico">${icoSvg(a.id)}</span><span class="rot">${esc(a.nome)}</span></button>`).join('');
+  if (gestao() && S.empresa !== undefined && empId()) $('#abas').insertAdjacentHTML('beforeend', `<button class="aba" data-acao="dias"><span class="ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><span class="rot">Dias úteis</span></button>`);
   const nm = S.me.nome || S.me.email || '', ini = nm.replace(/@.*/, '').split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('') || '?';
   $('#menuUser').innerHTML = `<span class="av">${esc(ini)}</span><span class="mu-t"><b>${esc(nm)}</b><small>${esc(ROTULO[S.me.papel] + (S.me.loja ? ' · ' + S.me.loja.nome : ''))}</small></span>`;
 }
-$('#abas').addEventListener('click', e => { const b = e.target.closest('.aba'); if (b) { fecharMenu(); irPara(b.dataset.aba); } });
+$('#abas').addEventListener('click', e => { const b = e.target.closest('.aba'); if (!b) return; fecharMenu(); if (b.dataset.acao === 'dias') return abrirDias(); irPara(b.dataset.aba); });
 $('#empBox').addEventListener('change', e => { if (e.target.id === 'selEmp') { fecharMenu(); trocarEmpresa(e.target.value); } });
 function fecharMenu() { $('#menu').classList.remove('aberto'); $('#menuVeu').hidden = true; }
 $('#btnMenu').addEventListener('click', () => { const a = $('#menu').classList.toggle('aberto'); $('#menuVeu').hidden = !a; });
@@ -236,7 +239,27 @@ const jsonSeguro = o => JSON.stringify(o).replace(/<\//g, '<\\/');
 async function cssTema(app) {
   try { return (await texto('assets/tema/base.css')) + (await texto('assets/tema/' + app + '.css')); } catch (e) { return ''; }
 }
+/* calendário de dias úteis ÚNICO: seg–sex = 1, sábado = 0,5, domingo e feriado = 0; ajustes manuais (ov) valem por cima */
+function duSrc(ov) {
+  return `window.DU=(function(OV){
+  var p2=function(n){return (n<10?'0':'')+n};
+  var FIX=[[1,1],[4,21],[5,1],[7,2],[9,7],[10,12],[11,2],[11,15],[11,20],[12,25]],fc={};
+  function fer(y){if(fc[y])return fc[y];var S={};FIX.forEach(function(x){S[y+'-'+p2(x[0])+'-'+p2(x[1])]=1});
+    var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mm=Math.floor((a+11*h+22*l)/451),
+      mo=Math.floor((h+l-7*mm+114)/31),dd=((h+l-7*mm+114)%31)+1,sx=new Date(y,mo-1,dd-2);
+    S[sx.getFullYear()+'-'+p2(sx.getMonth()+1)+'-'+p2(sx.getDate())]=1;return fc[y]=S}
+  function key(y,m,d){return y+'-'+p2(m)+'-'+p2(d)}
+  function feriado(y,m,d){return !!fer(y)[key(y,m,d)]}
+  function auto(y,m,d){var w=new Date(y,m-1,d).getDay();if(w===0||feriado(y,m,d))return 0;return w===6?0.5:1}
+  function peso(y,m,d){var k=key(y,m,d);return OV[k]!==undefined?OV[k]:auto(y,m,d)}
+  function soma(y,m,a,b){var n=0;for(var d=a;d<=b;d++)n+=peso(y,m,d);return n}
+  function fmt(n){return (Math.round(n*10)/10).toString().replace('.',',')}
+  return {peso:peso,auto:auto,soma:soma,feriado:feriado,key:key,fmt:fmt,ov:OV,manual:Object.keys(OV).length>0};
+})(${jsonSeguro(ov || {})});
+`;
+}
 function montarDoc(html, prelude, css) {
+  prelude = duSrc(S.diasUteis) + (prelude || '');
   const corpo = html.replace(/<\/body>\s*<\/html>\s*$/i, '');
   return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
@@ -1021,4 +1044,47 @@ function ligarCadastros() {
 }
 
 iniciar();
+
+/* ====================== editor de dias úteis ====================== */
+const DU_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let duV = { y: 0, m: 0, ov: {}, du: null };
+function duNovo(ov) { const f = new Function(duSrc(ov) + 'return window.DU;'); return f(); }
+function abrirDias() {
+  const h = new Date(); duV.y = h.getFullYear(); duV.m = h.getMonth() + 1;
+  duV.ov = Object.assign({}, S.diasUteis || {}); $('#duMsg').textContent = '';
+  duDesenha(); $('#dlgDias').showModal();
+}
+function duDesenha() {
+  const du = duNovo(duV.ov), y = duV.y, m = duV.m, dim = new Date(y, m, 0).getDate(), ini = new Date(y, m - 1, 1).getDay();
+  $('#duMesTit').textContent = DU_MESES[m - 1] + ' ' + y;
+  let h = ['D','S','T','Q','Q','S','S'].map(x => `<span class="du-h">${x}</span>`).join('');
+  for (let i = 0; i < ini; i++) h += '<span></span>';
+  for (let d = 1; d <= dim; d++) {
+    const k = du.key(y, m, d), man = duV.ov[k] !== undefined, w = du.peso(y, m, d), fer = du.feriado(y, m, d);
+    h += `<button type="button" class="du-c${man ? ' man' : ''}${w === 0 ? ' zero' : ''}" data-k="${k}" data-d="${d}" title="${fer ? 'Feriado' : ''}"><i>${d}</i><b>${du.fmt(w)}</b></button>`;
+  }
+  $('#duGrade').innerHTML = h;
+  $('#duRes').textContent = 'Total do mês: ' + du.fmt(du.soma(y, m, 1, dim)) + ' dias úteis';
+}
+$('#duGrade').addEventListener('click', e => {
+  const b = e.target.closest('.du-c'); if (!b) return;
+  const k = b.dataset.k, d = +b.dataset.d, du = duNovo(duV.ov), au = du.auto(duV.y, duV.m, d);
+  const ciclo = [1, 0.5, 0], nx = ciclo[(ciclo.indexOf(du.peso(duV.y, duV.m, d)) + 1) % 3];
+  if (nx === au) delete duV.ov[k]; else duV.ov[k] = nx;
+  duDesenha();
+});
+$('#duAnt').addEventListener('click', () => { duV.m--; if (duV.m < 1) { duV.m = 12; duV.y--; } duDesenha(); });
+$('#duProx').addEventListener('click', () => { duV.m++; if (duV.m > 12) { duV.m = 1; duV.y++; } duDesenha(); });
+$('#duLimpaMes').addEventListener('click', () => {
+  const pre = duV.y + '-' + String(duV.m).padStart(2, '0') + '-';
+  Object.keys(duV.ov).forEach(k => { if (k.startsWith(pre)) delete duV.ov[k]; }); duDesenha();
+});
+$('#duFechar').addEventListener('click', () => $('#dlgDias').close());
+$('#duSalvar').addEventListener('click', async () => {
+  $('#duMsg').textContent = 'Salvando…';
+  const { error } = await sb.from('app_config').upsert({ empresa_id: empId(), chave: 'dias_uteis', valor: { ov: duV.ov }, atualizado_em: new Date().toISOString() }, { onConflict: 'empresa_id,chave' });
+  if (error) { $('#duMsg').textContent = 'Não consegui salvar: ' + msgErro(error); return; }
+  S.diasUteis = Object.assign({}, duV.ov); $('#dlgDias').close();
+  irPara(S.aba);
+});
 })();

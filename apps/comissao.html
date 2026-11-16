@@ -295,6 +295,13 @@ function metaOf(cfg, mk) {
   const prev = Object.keys(cfg.metas).filter(k => k < mk).sort().pop() || Object.keys(cfg.metas).sort().pop();
   return prev ? JSON.parse(JSON.stringify(cfg.metas[prev])) : { total: 0, mix: { controle: 40, pos: 20, bl: 20, tv: 10, servico: 10 }, ap: 0, seg: 0, lojaPct: {} };
 }
+/* fator de projeção pelo calendário único de dias úteis (seg–sex 1, sáb 0,5, sem domingo/feriado; ajustes do menu Dias úteis) */
+function duFator(mk, dd) {
+  const [y, m] = mk.split('-').map(Number), dm = new Date(y, m, 0).getDate();
+  if (dd >= dm) return 1;
+  const el = DU.soma(y, m, 1, dd), tot = DU.soma(y, m, 1, dm);
+  return el > 0 ? Math.max(1, tot / el) : dm / dd;
+}
 function monthDays(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m, 0).getDate(); }
 
 // ---------- agregação da planilha (build) ----------
@@ -682,13 +689,13 @@ const pend = () => `<span class="pill zero">Aguardando liberação</span>`;
 
 function kFactor() {
   const dm = monthDays(S.mk), dd = Math.min(S.data.D[S.mk] || dm, dm);
-  return (S.mode === 'proj' && S.projCalc && dd < dm) ? dm / dd : 1;
+  return (S.mode === 'proj' && S.projCalc && dd < dm) ? duFator(S.mk, dd) : 1;
 }
 function gate() { return S.mode === 'proj' && !S.projCalc; }
 function projPrompt() {
   const dm = monthDays(S.mk), dd = Math.min(S.data.D[S.mk] || dm, dm);
   return `<div class="panel pad" style="text-align:center;display:grid;gap:10px;justify-items:center"><div><b>Projeção de ${mlabel(S.mk)}</b></div>
-    <div class="note">${dd < dm ? `Dados até o dia ${dd} de ${dm}. A projeção leva o ritmo atual até o fim do mês.` : 'O mês está fechado, então a projeção é igual ao realizado.'}</div>
+    <div class="note">${dd < dm ? `Dados até o dia ${dd} de ${dm}. A projeção leva o ritmo atual até o fim do mês pelos dias úteis (seg–sex 1, sáb 0,5, sem domingos e feriados).` : 'O mês está fechado, então a projeção é igual ao realizado.'}</div>
     <button class="btn primary" data-act="calcproj">Calcular projeção</button></div>`;
 }
 function model(k) { return buildModel(S.data, S.cfg, S.mk, k == null ? kFactor() : k, S.vw); }
@@ -812,7 +819,7 @@ function sugestao() {
   let ref = ms.filter(completo); if (!ref.length) ref = ms.slice();
   const C = {}; for (const x of D.R) { const key = x[0] + '|' + x[1] + '|' + x[3]; C[key] = (C[key] || 0) + x[8]; }
   const g = (m, li, k) => C[m + '|' + li + '|' + k] || 0;
-  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = dd < dm ? dm / dd : 1, aberto = pk > 1 && !ref.includes(S.mk), cand = aberto ? ref.concat([S.mk]) : ref;
+  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = duFator(S.mk, dd), aberto = pk > 1 && !ref.includes(S.mk), cand = aberto ? ref.concat([S.mk]) : ref;
   const val = (m, li, k) => g(m, li, k) * (m === S.mk && aberto ? pk : 1);
   const best = {}, potI = {}, potL = {};
   for (const k of FRK) potI[k] = 0;
@@ -890,7 +897,7 @@ function viewReceita() {
 // ---------- sugestão de metas por indicador e loja (receita, franquia, quantidade, ticket) ----------
 function sugDet() {
   const Z = sugestao(), D = S.data, f = Z.f, B = model();
-  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = dd < dm ? dm / dd : 1;
+  const dm = monthDays(S.mk), dd = Math.min(D.D[S.mk] || dm, dm), pk = duFator(S.mk, dd);
   const cel = {}; // li|k -> {r,f,q,m}
   D.L.forEach((_, li) => { for (const k of FRK) {
     const b = Z.best[li][k]; let r = 0, fr = 0, q = 0;

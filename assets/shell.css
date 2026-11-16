@@ -263,3 +263,18 @@ html,body{height:auto;min-height:100%}
 .cartao{border-radius:var(--r-card)}
 .cartao>header{padding:16px 20px}
 .pagina{max-width:1180px}
+
+/* editor de dias úteis */
+.dlg-dias{max-width:460px}
+.du-nav{display:flex;align-items:center;justify-content:space-between;margin:10px 0}
+.du-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.du-h{font-size:11px;text-align:center;color:var(--ink2,#667);font-weight:600}
+.du-c{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;border:1px solid var(--t-gb,#d8dee6);border-radius:8px;background:var(--surface,#fff);color:var(--ink,#111);cursor:pointer;font:inherit}
+.du-c i{font-style:normal;font-size:11px;opacity:.65}
+.du-c b{font-size:13px}
+.du-c.zero{opacity:.55;background:rgba(120,130,150,.12)}
+.du-c.man{outline:2px solid #e8590c;opacity:1}
+.du-res{font-weight:600;margin:10px 0 2px}
+.du-leg{font-size:12px;opacity:.75}
+.du-d{display:inline-block;padding:1px 6px;border:1px solid var(--t-gb,#d8dee6);border-radius:6px;margin-right:6px}
+.du-d.man{outline:2px solid #e8590c}
