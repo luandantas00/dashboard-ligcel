@@ -273,6 +273,28 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
 @media (max-width:900px){.mdk{grid-template-columns:repeat(2,1fr)}.mdgrid{grid-template-columns:1fr}
   .mdrow{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;padding:10px 2px}.mdrow.mdh{display:none}.mdrow>div:first-child,.mdrow>div.mdo,.mdrow>div:last-child{grid-column:1/-1}.mdrow>div:last-child{display:flex;align-items:center;gap:8px}.mdrow>div:last-child::before{display:none!important}
   .mdrow .mdc{text-align:left}.mdrow [data-l]::before{content:attr(data-l);display:block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}}
+
+/* abas e visões estratégicas */
+.abas{display:flex;gap:6px;margin:0 0 4px;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;flex-wrap:wrap}
+.abas button{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:10px;padding:9px 16px;cursor:pointer}
+.abas button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+body[data-aba="abast"] [data-aba="geral"],body[data-aba="geral"] [data-aba="abast"]{display:none!important}
+.stb{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-top:6px}
+.stb button{font:inherit;font-size:13px;font-weight:700;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);padding:8px 12px;cursor:pointer;margin-bottom:-1px}
+.stb button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--red)}
+.mdpar{gap:6px 16px}.mdpar label{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.mdpar input{font:inherit;font-size:13px;font-weight:700;width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-align:center}
+.mdrow.gen{grid-template-columns:var(--cols)}
+.cls{display:inline-block;min-width:22px;text-align:center;font-weight:800;font-size:12px;border-radius:6px;padding:2px 6px}
+.cls.A{background:var(--ink);color:var(--surface)}.cls.B{background:var(--surface2);border:1px solid var(--line);color:var(--ink2)}.cls.C{border:1px dashed var(--line);color:var(--muted)}
+.brow{display:grid;grid-template-columns:minmax(90px,1.1fr) 3fr minmax(110px,1fr);gap:8px;align-items:center;font-size:13px;padding:5px 0}
+.brow .bar{height:12px;border-radius:6px;background:var(--grid);overflow:hidden;display:flex}.brow .bar i{display:block;height:100%}
+.brow .bv{text-align:right;font-weight:700;white-space:nowrap}
+@media (max-width:900px){
+  .abas button{flex:1;padding:9px 8px;font-size:13px}
+  .mdrow.gen{grid-template-columns:repeat(4,minmax(0,1fr))}.mdrow.gen>div:last-child{display:block}
+  .mdrow.gen>div.full{grid-column:1/-1}.mdrow.gen>div:last-child::before{display:block!important}
+  .brow{grid-template-columns:1fr 1fr}.brow .bar{grid-column:1/-1;order:3}}
 </style>
 
 <div class="wrap">
@@ -284,14 +306,15 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
       </div>
       <div class="hero-right"><div class="base" id="baseInfo"></div><div class="hbtns"><button class="upbtn" id="btnUp" aria-controls="upSec" aria-expanded="false">↑ Incluir base incremental</button><button class="upbtn pub" id="btnPub" hidden>Publicar versão atualizada</button></div><div class="pubmsg" id="pubMsg"></div></div>
     </div>
-    <div class="filters">
+    <div class="filters" data-aba="geral">
       <div class="frow" id="fStores"><span class="flabel">Loja</span></div>
       <div class="frow" id="fMonths"><span class="flabel">Meses</span></div>
     </div>
-    <div class="kpis" id="kpis"></div>
+    <div class="kpis" id="kpis" data-aba="geral"></div>
   </header>
+  <nav class="abas" id="abas" aria-label="Seções de aparelho e chip"><button data-a="geral" aria-pressed="true">Visão geral</button><button data-a="abast" aria-pressed="false">Estoque e abastecimento</button></nav>
 
-  <section class="q" id="upSec" aria-labelledby="h-up" hidden>
+  <section class="q" data-aba="geral" id="upSec" aria-labelledby="h-up" hidden>
     <div class="qhead">
       <div><div class="qtag">Base incremental</div><h2 id="h-up">Incluir atualização da base</h2>
       <div class="sub">Envie o .xlsx no mesmo formato da base. Os dias que vierem no arquivo substituem esses mesmos dias no painel; o restante da base continua como está.</div></div>
@@ -302,7 +325,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div><div class="qtag" style="color:var(--muted);margin-bottom:6px">Cargas incluídas</div><div class="logl" id="upLog"></div></div>
   </section>
 
-  <section class="q ger" id="secGer" aria-labelledby="h-ger">
+  <section class="q ger" data-aba="geral" id="secGer" aria-labelledby="h-ger">
     <div class="qhead">
       <div><div class="qtag">Visão gerencial</div><h2 id="h-ger">Como cada loja está indo</h2><div class="sub" id="gSub"></div></div>
       <div class="seg" id="segG" role="group" aria-label="Meta em quantidade ou receita">
@@ -318,7 +341,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     </div>
   </section>
 
-  <section class="q exec" id="secExec" aria-labelledby="h-ex">
+  <section class="q exec" data-aba="geral" id="secExec" aria-labelledby="h-ex">
     <div class="qhead">
       <div><div class="qtag">Análise do mês</div><h2 id="h-ex">Onde estamos perdendo e onde estamos ganhando</h2><div class="sub" id="exSub"></div></div>
     </div>
@@ -332,7 +355,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div><h3 class="exh">Oportunidades que estamos deixando na mesa</h3><div class="oppgrid" id="exOpp"></div><div class="mnote" style="margin-top:8px">Valores de oportunidade são estimativas para orientar a conversa, não somam entre si nem são meta. A conta de cada uma está em letra pequena no cartão.</div></div>
   </section>
 
-  <section class="q" aria-labelledby="h-mt">
+  <section class="q" data-aba="geral" aria-labelledby="h-mt">
     <div class="qhead">
       <div><div class="qtag">Ritmo comercial · aparelho</div><h2 id="h-mt">Ritmo comercial: meta, atingimento e projeção</h2><div class="sub" id="mtSub"></div></div>
       <div class="seg" id="segMt" role="group" aria-label="Métrica da meta">
@@ -346,7 +369,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div class="mnote" id="mtNote"></div>
   </section>
 
-  <section class="q" aria-labelledby="h-cp">
+  <section class="q" data-aba="geral" aria-labelledby="h-cp">
     <div class="qhead">
       <div><div class="qtag">Ritmo comercial · comparativo</div><h2 id="h-cp">Comparativo com o mês anterior</h2><div class="sub" id="cpSub"></div></div>
       <div class="seg" id="segCp" role="group" aria-label="Base de comparação">
@@ -358,7 +381,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div class="mnote">Mesmo período compara com os mesmos dias do mês anterior (ex.: 1 a 21 contra 1 a 21), o que deixa a comparação justa em mês ainda aberto. Mês anterior fechado usa o mês inteiro.</div>
   </section>
 
-  <section class="q" aria-labelledby="h-q1">
+  <section class="q" data-aba="geral" aria-labelledby="h-q1">
     <div class="qhead">
       <div><div class="qtag">Aparelho · histórico</div><h2 id="h-q1">Evolução mês a mês</h2><div class="sub" id="q1sub"></div></div>
       <div class="seg" id="segQ1" role="group" aria-label="Métrica do histórico">
@@ -377,7 +400,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     </div>
   </section>
 
-  <div class="grid2">
+  <div class="grid2" data-aba="geral">
     <section class="q" aria-labelledby="h-q2">
       <div class="qhead">
         <div><div class="qtag">Aparelho · ranking</div><h2 id="h-q2">Quem mais vende</h2><div class="sub" id="q2sub"></div></div>
@@ -405,7 +428,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     </section>
   </div>
 
-  <section class="q" aria-labelledby="h-q4">
+  <section class="q" data-aba="geral" aria-labelledby="h-q4">
     <div class="qhead">
       <div><div class="qtag" style="color:var(--chip)">Chip</div><h2 id="h-q4">Chip por mês e por loja</h2><div class="sub" id="q4sub"></div></div>
       <div class="seg" id="segQ4" role="group" aria-label="Métrica do chip">
@@ -421,7 +444,7 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     </div>
   </section>
 
-  <section class="q" aria-labelledby="h-dia">
+  <section class="q" data-aba="geral" aria-labelledby="h-dia">
     <div class="qhead">
       <div><div class="qtag">Aparelho · dia a dia</div><h2 id="h-dia">Venda diária de aparelho</h2><div class="sub" id="diaSub"></div></div>
       <div class="seg" id="segDia" role="group" aria-label="Métrica da venda diária">
@@ -435,22 +458,59 @@ footer{font-size:12px;color:var(--muted);color:var(--muted);text-align:center;pa
     <div class="note" id="diaNote"></div>
   </section>
 
-  <section class="q" id="secMod" aria-labelledby="h-mod">
+  <section class="q" id="secMod" data-aba="abast" aria-labelledby="h-mod">
     <div class="qhead">
-      <div><div class="qtag">Aparelho · por modelo</div><h2 id="h-mod">Aparelhos por modelo: o que vende, quanto cresceu e onde abastecer</h2><div class="sub" id="modSub"></div></div>
+      <div><div class="qtag">Aparelho · estoque e abastecimento</div><h2 id="h-mod">Giro, cobertura e pedido: o que vende, o que falta e o que sobra</h2><div class="sub" id="modSub"></div></div>
     </div>
     <div id="modVazio" class="note" hidden></div>
     <div id="modCorpo">
       <div class="lm" id="modRef" role="group" aria-label="Mês analisado"></div>
       <div class="lm" id="modLoja" role="group" aria-label="Loja"></div>
-      <div class="mdk" id="modKpis"></div>
-      <div class="gbox mdbox"><h3>O que está vendendo <small id="modTabSub"></small></h3><div id="modTab"></div><button class="pill ghost mdmore" id="modMore" hidden></button></div>
-      <div class="mdgrid">
-        <div class="gbox mdbox"><h3>Abastecer agora <small id="modASub"></small></h3><div id="modA"></div></div>
-        <div class="gbox mdbox"><h3>Ofertas vigentes sem estoque <small>modelos em campanha que a loja não tem</small></h3><div id="modB"></div></div>
-        <div class="gbox mdbox"><h3>Estoque parado ou em excesso <small>girar com oferta ou transferir</small></h3><div id="modC"></div></div>
-        <div class="gbox mdbox" id="modDbox"><h3>Transferências entre lojas <small>sobra de uma, falta na outra</small></h3><div id="modD"></div></div>
+      <div class="lm mdpar" id="modPar" role="group" aria-label="Parâmetros">
+        <span class="lbl">Premissas</span>
+        <label>Cobertura-alvo <input type="number" id="parAlvo" min="3" max="90" step="1" inputmode="numeric"> dias úteis</label>
+        <label>Oferta agressiva vende <input type="number" id="parUp" min="0" max="300" step="5" inputmode="numeric"> % a mais</label>
       </div>
+      <div class="stb" id="modSubTabs" role="tablist" aria-label="Visões de estoque">
+        <button data-p="visao">Por modelo</button><button data-p="giro">Giro e cobertura</button><button data-p="ped">Pedido sugerido</button><button data-p="ofx">Oferta x estoque</button><button data-p="cap">Capital parado</button>
+      </div>
+
+      <div class="mpan" data-p="visao">
+        <div class="mdk" id="modKpis"></div>
+        <div class="gbox mdbox"><h3>O que está vendendo <small id="modTabSub"></small></h3><div id="modTab"></div><button class="pill ghost mdmore" id="modMore" hidden></button></div>
+        <div class="mdgrid">
+          <div class="gbox mdbox"><h3>Abastecer agora <small id="modASub"></small></h3><div id="modA"></div></div>
+          <div class="gbox mdbox"><h3>Ofertas vigentes sem estoque <small>modelos em campanha que a loja não tem</small></h3><div id="modB"></div></div>
+          <div class="gbox mdbox"><h3>Estoque parado ou em excesso <small>girar com oferta ou transferir</small></h3><div id="modC"></div></div>
+          <div class="gbox mdbox" id="modDbox"><h3>Transferências entre lojas <small>sobra de uma, falta na outra</small></h3><div id="modD"></div></div>
+        </div>
+      </div>
+
+      <div class="mpan" data-p="giro" hidden>
+        <div class="mdk" id="gKpis"></div>
+        <div class="gbox mdbox"><h3>Curva ABC e cobertura <small id="gSub2"></small></h3><div id="gTab"></div><button class="pill ghost mdmore" id="gMore" hidden></button></div>
+      </div>
+
+      <div class="mpan" data-p="ped" hidden>
+        <div class="mdk" id="pKpis"></div>
+        <div class="gbox mdbox"><h3>Pedido sugerido por modelo <small id="pSub"></small></h3><div id="pTab"></div><button class="pill ghost mdmore" id="pMore" hidden></button></div>
+        <div class="gbox mdbox" id="pLojaBox"><h3>Pedido sugerido por loja <small>quanto cada loja precisa para chegar na cobertura-alvo</small></h3><div id="pLoja"></div></div>
+      </div>
+
+      <div class="mpan" data-p="ofx" hidden>
+        <div class="mdk" id="oKpis"></div>
+        <div class="gbox mdbox"><h3>Oferta agressiva x estoque <small id="oSub"></small></h3><div id="oTab"></div><button class="pill ghost mdmore" id="oMore" hidden></button></div>
+      </div>
+
+      <div class="mpan" data-p="cap" hidden>
+        <div class="mdk" id="cKpis"></div>
+        <div class="mdgrid">
+          <div class="gbox mdbox"><h3>Capital por tempo em estoque <small>valor ao custo</small></h3><div id="cAge"></div></div>
+          <div class="gbox mdbox"><h3>Capital por loja <small>total e parte em excesso</small></h3><div id="cLoja"></div></div>
+        </div>
+        <div class="gbox mdbox"><h3>Onde o dinheiro está parado <small id="cSub"></small></h3><div id="cTab"></div><button class="pill ghost mdmore" id="cMore" hidden></button></div>
+      </div>
+
       <div class="note" id="modNote"></div>
     </div>
   </section>
@@ -1102,7 +1162,9 @@ document.getElementById('moreBtn').addEventListener('click',()=>{S.all=!S.all;re
 bindStoreRows('tStores');bindStoreRows('tChip');
 /* ---------- aparelhos por modelo: vendas x estoque x ofertas ---------- */
 const MOD=window.__MOD||null;
-const MS={mes:null,loja:'',all:false};
+const MS={mes:null,loja:'',all:false,p:'visao',alvo:15,up:30,mx:{}};
+try{const z=JSON.parse(localStorage.getItem('ligcel-ap-est')||'null');if(z){if(z.alvo>=3&&z.alvo<=90)MS.alvo=z.alvo;if(z.up>=0&&z.up<=300)MS.up=z.up;if(z.p)MS.p=z.p;}}catch(e){}
+const saveEst=()=>{try{localStorage.setItem('ligcel-ap-est',JSON.stringify({alvo:MS.alvo,up:MS.up,p:MS.p}));}catch(e){}};
 let MD=null,MDyr=null;
 const isoD=dt=>dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate();
 const dateOfKey=k=>new Date(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100);
@@ -1131,7 +1193,8 @@ function modBuild(){
   let ref=Math.max(max,Math.min(ed,hoje));if(Math.floor(ref/10000)!==YR)ref=max;
   const rm=Math.floor(ref/100)%100,rd=ref%100;let h=bd(YR,rm,rd+1,dim(YR,rm)),lab=MESL[rm-1];
   if(h<3&&rm<12){h+=bd(YR,rm+1,1,dim(YR,rm+1));lab=MESL[rm];}
-  MD.hor=h;MD.horLab=lab;
+  MD.hor=h;MD.horLab=lab;MD.ref=ref;
+  MD.uc={};{const a={};for(const e of est){const o=a[e.k]||(a[e.k]={q:0,c:0});o.q+=e.q;o.c+=e.custo;}for(const k in a)MD.uc[k]=a[k].q>0?a[k].c/a[k].q:0;}
 }
 const vigF=(ini,fim,hoje)=>{const i=ini?Number(ini.replace(/-/g,'')):0,f=fim?Number(fim.replace(/-/g,'')):99999999;return hoje>=i&&hoje<=f;};
 function modOferta(k){
@@ -1140,14 +1203,14 @@ function modOferta(k){
     const reg=mp.ofertas.filter(x=>!/BOGO|DEPENDENTE/i.test(x.obs+' '+x.plano)),bg=mp.ofertas.find(x=>/BOGO|DEPENDENTE/i.test(x.obs+' '+x.plano));
     const pr=x=>x.multi||x.single||Infinity;
     const b=reg.slice().sort((a,c)=>(/FOCO/i.test(c.obs)-/FOCO/i.test(a.obs))||pr(a)-pr(c))[0];
-    if(b){o.preco=pr(b);o.plano=b.plano;o.frente=b.obs;o.vigente=vigF(b.ini,b.fim,hoje);o.foco=/FOCO/i.test(b.obs);o.fonte='Mapa';}
+    if(b){o.fim=b.fim?Number(b.fim.replace(/-/g,'')):0;o.preco=pr(b);o.plano=b.plano;o.frente=b.obs;o.vigente=vigF(b.ini,b.fim,hoje);o.foco=/FOCO/i.test(b.obs);o.fonte='Mapa';}
     if(bg){o.bogo=bg.multi||bg.single;o.vigente=o.vigente||vigF(bg.ini,bg.fim,hoje);}
     if(mp.boost){if(vigF(mp.boost.ini,mp.boost.fim,hoje))o.boost=mp.boost.v;else o.boostVenc=true;}
   }
   const camp=MOD.campanha||{},cv=vigF(camp.ini,camp.fim,hoje);
   for(const c of cs){
     if(c.bogo){o.bogo=c.preco;o.vigente=o.vigente||cv;o.foco=true;continue;}
-    o.preco=c.preco;o.plano=c.plano||o.plano;o.frente=c.frente||o.frente;o.fonte=camp.nome||'Campanha';o.vigente=cv;o.foco=true;
+    o.preco=c.preco;o.plano=c.plano||o.plano;o.frente=c.frente||o.frente;o.fonte=camp.nome||'Campanha';o.vigente=cv;o.foco=true;if(camp.fim)o.fim=Number(camp.fim.replace(/-/g,''));
     if(c.boost){o.boost=c.boost;o.boostVenc=false;}
   }
   if(!cs.length&&!mp)return null;
@@ -1266,6 +1329,7 @@ function renderMod(){
     T.sort((a,b)=>b.q*b.rate-a.q*a.rate);
     document.getElementById('modD').innerHTML=!R.est.length?'<div class="note">Carregue o estoque físico.</div>':T.length?T.slice(0,12).map(t=>`<div class="mdli"><div><b>${t.q} × ${esc(t.o.nome)}</b><small>de <b>${esc(t.de)}</b> para <b>${esc(t.para)}</b> · ${esc(t.para)} vende ${DU.fmt(Math.round(t.rate*10)/10)}/dia útil</small></div><div class="mdr">${t.o.emOferta?'<span class="mtg bo">em oferta</span>':''}</div></div>`).join(''):'<div class="note">Nenhuma transferência vantajosa agora.</div>';
   }
+  modPaineis(L,R);
   // rodapé: fontes
   const fb=s=>s?String(s).split('-').reverse().join('/'):'—',ns=[];
   ns.push(`Vendas por modelo até ${dd} · ritmo = últimos 30 dias (${DU.fmt(Math.round(R.winDU*10)/10)} dias úteis).`);
@@ -1274,12 +1338,182 @@ function renderMod(){
   ns.push('Cobertura em dias úteis (seg–sex 1, sáb 0,5, sem domingos e feriados). Ação: Abastecer = cobre menos de 5 dias úteis; Atenção = menos de 10; Girar = parado há 30 dias ou cobertura acima de 45.');
   document.getElementById('modNote').innerHTML=ns.join(' ');
 }
+
+/* ---------- visões estratégicas: giro, pedido, oferta x estoque, capital ---------- */
+const rs=v=>'R$ '+nf.format(Math.round(v));
+const duEntre=(a,b)=>{let t=0,d=dateOfKey(a);const e=dateOfKey(b);for(let i=0;i<200&&d<=e;i++){t+=DU.peso(d.getFullYear(),d.getMonth()+1,d.getDate());d.setDate(d.getDate()+1);}return t;};
+const addD=(k,n)=>{const d=dateOfKey(k);d.setDate(d.getDate()+n);return isoD(d);};
+const f1=v=>DU.fmt(Math.round(v*10)/10);
+const agress=o=>{const f=o.of;if(!o.emOferta)return false;const dsc=f.tab&&f.preco&&f.tab>f.preco?(f.tab-f.preco)/f.tab:0;return !!(f.boost||f.bogo!=null||f.foco||dsc>=.15);};
+const efOf=o=>agress(o)?1+MS.up/100:1;
+const scopeLj=o=>Object.entries(o.lj).filter(([l])=>!MS.loja||l===MS.loja);
+function gTable(cols,head,rows,lim,btn,all){
+  const cs=cols.join(' ');
+  const h=`<div class="mdrow gen mdh" style="--cols:${cs}">${head.map((x,i)=>`<div class="${i?'mdc':''}">${x}</div>`).join('')}</div>`;
+  btn.hidden=rows.length<=lim;btn.textContent=all?`Mostrar os ${lim} primeiros`:`Ver todos (${rows.length})`;
+  return h+(all?rows:rows.slice(0,lim)).map(r=>`<div class="mdrow gen" style="--cols:${cs}">${r}</div>`).join('');
+}
+const kp=(k,v,sub)=>`<div class="gbox"><div class="mk">${k}</div><div class="mv">${v}</div><div class="ms">${sub}</div></div>`;
+const semEst=R=>R.est.length?'':'<div class="note">Carregue o <b>estoque físico</b> (Importar dados → "Estoque e ofertas de aparelho") para liberar esta visão.</div>';
+
+function renderGiro(L,R){
+  const k=document.getElementById('gKpis'),t=document.getElementById('gTab'),b=document.getElementById('gMore');
+  if(!R.est.length){k.innerHTML='';t.innerHTML=semEst(R);b.hidden=true;return;}
+  const it=L.filter(o=>o.w>0||o.est>0).sort((a,c)=>c.w-a.w||c.est-a.est);
+  const W=it.reduce((a,o)=>a+o.w,0);let cum=0;
+  for(const o of it){const antes=W>0?cum/W:1;cum+=o.w;o.cum=W>0?cum/W:1;o.cls=o.w===0?'C':antes<.8?'A':antes<.95?'B':'C';}
+  const n=c=>it.filter(o=>o.cls===c),A=n('A'),Aw=A.reduce((a,o)=>a+o.w,0);
+  const E=it.reduce((a,o)=>a+o.est,0),RT=it.reduce((a,o)=>a+o.rate,0);
+  const Arisco=A.filter(o=>o.est===0||o.cob<MS.alvo*.5);
+  k.innerHTML=
+    kp('Classe A',`${A.length} modelos`,`${W?Math.round(Aw/W*100):0}% das vendas dos últimos 30 dias`)+
+    kp('Cobertura da rede',RT>0?f1(E/RT)+' d.ú.':'—',`meta: ${MS.alvo} dias úteis · ${unF(E)} un em estoque`)+
+    kp('Giro em 30 dias',E>0?DU.fmt(Math.round(W/E*100)/100)+'×':'—',`vendeu ${unF(W)} un sobre ${unF(E)} em estoque`)+
+    kp('Classe A em risco',Arisco.length?Arisco.length+' modelo(s)':'nenhum',Arisco.length?'abaixo de metade da cobertura-alvo ou sem estoque':'campeões de venda com estoque confortável');
+  const sit=o=>{if(o.w===0&&o.est>0)return['Parado','gi'];if(o.est===0)return['Ruptura','ab'];if(o.cob<MS.alvo*.5)return['Abaixo do alvo','at'];if(o.cob>MS.alvo*2)return['Acima do alvo','gi'];return['No alvo','ok'];};
+  const rows=it.map(o=>{const s2=sit(o);return `<div class="full mdn">${esc(o.nome)}<small>${esc(o.marca)}${o.dias?' · '+Math.round(o.dias)+' dias em estoque':''}</small></div>
+    <div class="mdc" data-l="Classe"><span class="cls ${o.cls}">${o.cls}</span></div><div class="mdc" data-l="Vendas 30d">${unF(o.w)}</div><div class="mdc" data-l="% acum.">${o.w>0?Math.round(o.cum*100)+'%':'—'}</div>
+    <div class="mdc" data-l="Estoque">${unF(o.est)}</div><div class="mdc" data-l="Giro">${o.est>0?DU.fmt(Math.round(o.w/o.est*100)/100)+'×':'—'}</div>
+    <div class="mdc" data-l="Cobertura">${cobTxt(o.cob)}</div><div class="mdc" data-l="Situação"><span class="mac ${s2[1]}">${s2[0]}</span></div>`;});
+  document.getElementById('gSub2').textContent=`${it.length} modelos · A = 80% das vendas, B = próximos 15%, C = restante`;
+  t.innerHTML=gTable(['2.2fr','.6fr','.8fr','.8fr','.8fr','.7fr','1fr','1.2fr'],['Modelo','Classe','Vendas 30d','% acum.','Estoque','Giro','Cobertura','Situação'],rows,15,b,MS.mx.g);
+}
+
+function modPedido(L,R){
+  const out=[];
+  for(const o of L){
+    const ef=efOf(o),fr=[];let meta=0;
+    for(const [l,x] of scopeLj(o)){
+      if(x.w<1)continue;const rate=x.w/R.winDU,m=rate*ef*MS.alvo;meta+=m;
+      const need=Math.max(0,m-x.est);if(need>1e-9)fr.push({l,f:need,rate});
+    }
+    const ped=Math.ceil(fr.reduce((a,z)=>a+z.f,0)-1e-9);if(ped<1)continue;
+    // reparte as unidades pelas lojas (maior resto primeiro) para a soma bater com o pedido do modelo
+    fr.forEach(z=>z.n=Math.floor(z.f+1e-9));let sobra=ped-fr.reduce((a,z)=>a+z.n,0);
+    fr.slice().sort((a,c)=>(c.f-c.n)-(a.f-a.n)).forEach(z=>{if(sobra>0){z.n++;sobra--;}});
+    const porL=fr.filter(z=>z.n>0),uc=R.uc[o.k]||0;
+    out.push({o,ped,porL,meta,ef,uc,val:ped*uc,urg:o.est===0||o.cob<5});
+  }
+  out.sort((a,b)=>(b.urg-a.urg)||(a.o.cob-b.o.cob)||(b.o.rate-a.o.rate));
+  return out;
+}
+function renderPed(L,R){
+  const k=document.getElementById('pKpis'),t=document.getElementById('pTab'),b=document.getElementById('pMore'),lb=document.getElementById('pLojaBox');
+  if(!R.est.length){k.innerHTML='';t.innerHTML=semEst(R);b.hidden=true;lb.hidden=true;return;}
+  const P=modPedido(L,R),un=P.reduce((a,x)=>a+x.ped,0),val=P.reduce((a,x)=>a+x.val,0),urg=P.filter(x=>x.urg);
+  const semCusto=P.filter(x=>!x.uc).length;
+  k.innerHTML=
+    kp('Unidades a pedir',P.length?unF(un)+' un':'—',P.length?`${P.length} modelos · cobertura-alvo ${MS.alvo} d.ú.`:'estoque já cobre a meta em todos os modelos')+
+    kp('Valor ao custo',val>0?rs(val):'—',semCusto?`${semCusto} modelo(s) sem custo no estoque (valor subestimado)`:'custo unitário do estoque físico')+
+    kp('Urgentes',urg.length?urg.length+' modelo(s)':'nenhum',urg.length?`${unF(urg.reduce((a,x)=>a+x.ped,0))} un · sem estoque ou cobrem menos de 5 d.ú.`:'ninguém em risco imediato')+
+    kp('Com oferta agressiva',P.filter(x=>x.ef>1).length+' modelo(s)',`pedido já considera +${MS.up}% de venda nesses modelos`);
+  const rows=P.map(x=>{const o=x.o,lojas=!MS.loja&&x.porL.length>1?x.porL.sort((a,c)=>c.n-a.n).map(z=>`${esc(z.l)} ${z.n}`).join(' · '):'';
+    return `<div class="full mdn">${esc(o.nome)}${x.urg?' <span class="mac ab">Urgente</span>':''}${x.ef>1?` <span class="mtg bo">oferta +${MS.up}%</span>`:''}<small>${lojas||esc(o.marca)}</small></div>
+    <div class="mdc" data-l="Vende/dia útil">${f1(o.rate)}</div><div class="mdc" data-l="Estoque">${unF(o.est)}</div><div class="mdc" data-l="Cobre">${cobTxt(o.cob)}</div>
+    <div class="mdc" data-l="Meta">${unF(x.meta)}</div><div class="mdc" data-l="Pedir"><b>${unF(x.ped)}</b></div><div class="mdc" data-l="Valor ao custo">${x.uc?rs(x.val):'—'}</div>`;});
+  document.getElementById('pSub').textContent=`pedido = vende por dia útil × ${MS.alvo} dias úteis − estoque atual, arredondado para cima`;
+  t.innerHTML=P.length?gTable(['2.4fr','.9fr','.8fr','1fr','.8fr','.8fr','1fr'],['Modelo','Vende/dia útil','Estoque','Cobre','Meta','Pedir','Valor ao custo'],rows,15,b,MS.mx.p):'<div class="note">Com a cobertura-alvo de '+MS.alvo+' dias úteis, o estoque atual já cobre o ritmo de todos os modelos. Aumente a meta ou espere a próxima venda.</div>';
+  if(!P.length)b.hidden=true;
+  lb.hidden=!!MS.loja;
+  if(!MS.loja){
+    const a=new Map();for(const x of P)for(const z of x.porL){const q=a.get(z.l)||{n:0,v:0,m:0};q.n+=z.n;q.v+=z.n*x.uc;q.m++;a.set(z.l,q);}
+    const mx=Math.max(1,...[...a.values()].map(q=>q.n));
+    document.getElementById('pLoja').innerHTML=a.size?[...a.entries()].sort((x,y)=>y[1].n-x[1].n).map(([l,q])=>`<div class="brow"><div>${esc(l)}</div><div class="bar"><i style="width:${q.n/mx*100}%;background:var(--red)"></i></div><div class="bv">${unF(q.n)} un · ${q.m} mod. · ${rs(q.v)}</div></div>`).join(''):'<div class="note">Nenhuma loja precisa de reposição para a meta.</div>';
+  }
+}
+
+function renderOfx(L,R){
+  const k=document.getElementById('oKpis'),t=document.getElementById('oTab'),b=document.getElementById('oMore');
+  if(!R.est.length){k.innerHTML='';t.innerHTML=semEst(R);b.hidden=true;return;}
+  const it=L.filter(o=>o.emOferta&&(o.w>0||o.est>0||o.of.foco));
+  if(!it.length){k.innerHTML='';t.innerHTML='<div class="note">Nenhuma oferta vigente na data de hoje. Quando o Mapa de Ofertas ou a campanha cobrirem hoje, os modelos aparecem aqui cruzados com o estoque.</div>';b.hidden=true;return;}
+  const ini=addD(R.ref,1);
+  for(const o of it){
+    const ef=efOf(o),rate=o.rate*ef;o.ef=ef;o.rateE=rate;
+    o.duV=o.of.fim&&o.of.fim>=ini?Math.max(.5,duEntre(ini,o.of.fim)):R.hor;
+    o.demV=rate*o.duV;o.cobE=rate>0?o.est/rate:(o.est>0?Infinity:0);
+    if(o.est===0)o.st=['Sem estoque','ab',0];
+    else if(rate>0&&o.est<o.demV*.9)o.st=['Vai faltar na oferta','ab',1];
+    else if(o.est-o.demV>=2&&o.est>o.demV*1.5)o.st=['Sobra: oferta ajuda a girar','gi',3];
+    else o.st=['Estoque cobre','ok',2];
+    o.pedir=o.st[2]<=1?Math.max(0,Math.ceil(o.demV-o.est-1e-9)):0;
+  }
+  it.sort((a,c)=>a.st[2]-c.st[2]||c.w-a.w);
+  const falta=it.filter(o=>o.st[2]<=1),pedU=it.reduce((a,o)=>a+o.pedir,0),pedV=it.reduce((a,o)=>a+o.pedir*(R.uc[o.k]||0),0),sobra=it.filter(o=>o.st[2]===3);
+  k.innerHTML=
+    kp('Modelos em oferta',it.length+' modelos',`${it.filter(agress).length} com oferta agressiva (Boost, BOGO, foco ou desconto de 15%+)`)+
+    kp('Vão faltar',falta.length?falta.length+' modelo(s)':'nenhum',falta.length?'estoque não chega ao fim da vigência no ritmo com oferta':'estoque cobre as ofertas vigentes')+
+    kp('Pedir por causa da oferta',pedU?unF(pedU)+' un':'—',pedU?`≈ ${rs(pedV)} ao custo`:'sem necessidade de reforço')+
+    kp('Sobra para girar',sobra.length?sobra.length+' modelo(s)':'nenhum',sobra.length?unF(sobra.reduce((a,o)=>a+Math.max(0,o.est-Math.ceil(o.demV)),0))+' un acima da demanda da oferta':'sem excesso nas ofertas');
+  const rows=it.map(o=>`<div class="full mdn">${esc(o.nome)}<small>${esc(o.marca)}${o.of.fim?' · oferta até '+String(o.of.fim%100).padStart(2,'0')+'/'+String(Math.floor(o.of.fim/100)%100).padStart(2,'0'):''}</small></div>
+    <div class="mdo full" data-l="Oferta">${ofHtml(o)}</div><div class="mdc" data-l="Dias úteis restantes">${f1(o.duV)}</div>
+    <div class="mdc" data-l="Vende/dia útil">${f1(o.rate)}${o.ef>1?` → <b>${f1(o.rateE)}</b>`:''}</div><div class="mdc" data-l="Estoque">${unF(o.est)}</div><div class="mdc" data-l="Cobre c/ oferta">${cobTxt(o.cobE)}</div>
+    <div data-l="Situação"><span class="mac ${o.st[1]}">${o.st[0]}</span></div><div class="mdc" data-l="Pedir">${o.pedir?'<b>'+unF(o.pedir)+'</b>':'—'}</div>`);
+  document.getElementById('oSub').textContent=`vendas com oferta = ritmo dos últimos 30 dias +${MS.up}% nos modelos de oferta agressiva, até o fim da vigência`;
+  t.innerHTML=gTable(['1.8fr','1.8fr','.8fr','1fr','.7fr','.9fr','1.4fr','.6fr'],['Modelo','Oferta','D.ú. restantes','Vende/dia útil','Estoque','Cobre','Situação','Pedir'],rows,12,b,MS.mx.o);
+}
+
+function renderCap(L,R){
+  const k=document.getElementById('cKpis'),t=document.getElementById('cTab'),b=document.getElementById('cMore');
+  if(!R.est.length){k.innerHTML='';t.innerHTML=semEst(R);b.hidden=true;document.getElementById('cAge').innerHTML='';document.getElementById('cLoja').innerHTML='';return;}
+  const inL=l=>!MS.loja||l===MS.loja,E=R.est.filter(e=>inL(e.l)&&e.q>0);
+  const exc=(est,w,ef)=>{if(w<=0)return est;const m=Math.ceil(w/R.winDU*ef*MS.alvo);return Math.max(0,est-m);};
+  const cap=E.reduce((a,e)=>a+e.custo,0),un=E.reduce((a,e)=>a+e.q,0);
+  // por modelo
+  const rows0=L.filter(o=>o.est>0).map(o=>{const uc=R.uc[o.k]||0,ef=efOf(o),e=o.w<=0?o.est:Math.max(0,o.est-Math.ceil(o.rate*ef*MS.alvo));
+    return {o,uc,cap:o.custo,exc:e,excV:e*uc,par:o.w<=0};});
+  const par=rows0.filter(x=>x.par).reduce((a,x)=>a+x.cap,0),excT=rows0.reduce((a,x)=>a+x.excV,0),excU=rows0.reduce((a,x)=>a+x.exc,0);
+  const v60=E.filter(e=>e.dias>60).reduce((a,e)=>a+e.custo,0);
+  const pc=v=>cap>0?Math.round(v/cap*100)+'%':'—';
+  k.innerHTML=
+    kp('Capital em estoque',rs(cap),`${unF(un)} aparelhos ao custo`)+
+    kp('Parado (sem venda em 30 dias)',rs(par),`${pc(par)} do capital`)+
+    kp('Acima da cobertura-alvo',rs(excT),`${unF(excU)} un além de ${MS.alvo} d.ú. de venda`)+
+    kp('Mais de 60 dias em estoque',rs(v60),`${pc(v60)} do capital`);
+  // idade
+  const fx=[['Até 30 dias',0,30],['31 a 60',31,60],['61 a 90',61,90],['Mais de 90',91,1e9]],mxA=Math.max(1,...fx.map(f=>E.filter(e=>e.dias>=f[1]&&e.dias<=f[2]).reduce((a,e)=>a+e.custo,0)));
+  document.getElementById('cAge').innerHTML=fx.map((f,i)=>{const v=E.filter(e=>e.dias>=f[1]&&e.dias<=f[2]).reduce((a,e)=>a+e.custo,0),u=E.filter(e=>e.dias>=f[1]&&e.dias<=f[2]).reduce((a,e)=>a+e.q,0);
+    return `<div class="brow"><div>${f[0]}</div><div class="bar"><i style="width:${v/mxA*100}%;background:${i>=2?'var(--red)':i===1?'var(--warn)':'var(--ink2)'}"></i></div><div class="bv">${rs(v)} · ${unF(u)} un</div></div>`;}).join('');
+  // por loja (todas as lojas, ignora filtro)
+  const all=modCalc(''),lj=new Map();
+  for(const o of all)for(const [l,x] of Object.entries(o.lj)){if(x.est<=0)continue;const uc=R.uc[o.k]||0,e=exc(x.est,x.w,efOf(o)),q=lj.get(l)||{c:0,x:0};q.c+=x.est*uc;q.x+=e*uc;lj.set(l,q);}
+  const mxL=Math.max(1,...[...lj.values()].map(q=>q.c));
+  document.getElementById('cLoja').innerHTML=lj.size?[...lj.entries()].sort((a,c)=>c[1].c-a[1].c).map(([l,q])=>`<div class="brow"><div>${esc(l)}</div><div class="bar"><i style="width:${(q.c-q.x)/mxL*100}%;background:var(--ink2)"></i><i style="width:${q.x/mxL*100}%;background:var(--red)"></i></div><div class="bv">${rs(q.c)} · <span style="color:var(--down)">${rs(q.x)} excesso</span></div></div>`).join(''):'<div class="note">Sem estoque por loja.</div>';
+  const lista=rows0.filter(x=>x.excV>0).sort((a,c)=>c.excV-a.excV);
+  document.getElementById('cSub').textContent=`${lista.length} modelos com estoque acima da meta · ordenado pelo valor em excesso`;
+  const rows=lista.map(x=>{const o=x.o,acao=x.par?(o.emOferta?'Girar com a oferta atual':'Montar oferta ou transferir'):(o.emOferta?'Oferta ajuda a girar':'Segurar pedido / transferir');
+    return `<div class="full mdn">${esc(o.nome)}<small>${esc(o.marca)}${o.emOferta?' · oferta '+cf.format(o.of.preco)+(o.of.boost?' + Boost '+cf.format(o.of.boost):''):''}</small></div>
+    <div class="mdc" data-l="Estoque">${unF(o.est)}</div><div class="mdc" data-l="Dias em estoque">${o.dias?Math.round(o.dias):'—'}</div><div class="mdc" data-l="Capital">${rs(x.cap)}</div>
+    <div class="mdc" data-l="Vendas 30d">${unF(o.w)}</div><div class="mdc" data-l="Cobre">${cobTxt(o.cob)}</div><div class="mdc" data-l="Excesso"><b>${unF(x.exc)} un</b><br><span class="note">${rs(x.excV)}</span></div>
+    <div class="full" data-l="Ação"><span class="mac ${x.par?'ab':'gi'}">${acao}</span></div>`;});
+  t.innerHTML=lista.length?gTable(['2.2fr','.7fr','.8fr','1fr','.8fr','1fr','1.2fr','1.7fr'],['Modelo','Estoque','Dias','Capital','Vendas 30d','Cobre','Excesso','Ação'],rows,15,b,MS.mx.c):'<div class="note">Nenhum modelo com estoque acima da cobertura-alvo.</div>';
+  if(!lista.length)b.hidden=true;
+}
+function modPaineis(L,R){
+  document.querySelectorAll('#modSubTabs button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.p===MS.p)));
+  document.querySelectorAll('.mpan').forEach(x=>x.hidden=x.dataset.p!==MS.p);
+  document.getElementById('parAlvo').value=MS.alvo;document.getElementById('parUp').value=MS.up;
+  const fp=document.getElementById('modPar');fp.hidden=MS.p==='visao';
+  if(MS.p==='giro')renderGiro(L,R);else if(MS.p==='ped')renderPed(L,R);else if(MS.p==='ofx')renderOfx(L,R);else if(MS.p==='cap')renderCap(L,R);
+}
+document.getElementById('modSubTabs').addEventListener('click',e=>{const x=e.target.closest('button[data-p]');if(!x)return;MS.p=x.dataset.p;saveEst();renderMod();});
+document.getElementById('parAlvo').addEventListener('change',e=>{const v=Math.round(+e.target.value);MS.alvo=v>=3&&v<=90?v:15;saveEst();renderMod();});
+document.getElementById('parUp').addEventListener('change',e=>{const v=Math.round(+e.target.value);MS.up=v>=0&&v<=300?v:30;saveEst();renderMod();});
+[['gMore','g'],['pMore','p'],['oMore','o'],['cMore','c']].forEach(([id,kk])=>document.getElementById(id).addEventListener('click',()=>{MS.mx[kk]=!MS.mx[kk];renderMod();}));
+/* abas do topo */
+function abaSet(a,fresh){
+  document.body.dataset.aba=a;
+  document.querySelectorAll('#abas button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.a===a)));
+  try{localStorage.setItem('ligcel-ap-aba',a);}catch(e){}
+  if(a==='geral'&&!fresh)render();else if(a==='abast')renderMod();
+}
+document.getElementById('abas').addEventListener('click',e=>{const x=e.target.closest('button[data-a]');if(!x)return;abaSet(x.dataset.a);window.scrollTo({top:0});});
 document.getElementById('modRef').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b)return;MS.mes=+b.dataset.m;renderMod();});
 document.getElementById('modLoja').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=b.dataset.l;MS.loja=i?MD.lojas[+i-1]:'';renderMod();});
 document.getElementById('modMore').addEventListener('click',()=>{MS.all=!MS.all;renderMod();});
 
 document.getElementById('foot').textContent='Receita = Valor Venda · regra do unificado: Valor Venda acima de R$ 60 = aparelho, de R$ 10 a R$ 60 = chip, Seguro Proteção Móvel fora da conta · marca extraída da descrição do produto. Rankings de vendedor não incluem gerentes e pessoas fora do quadro de vendas; essas vendas continuam no total da loja. Vendedor aparece na loja da venda mais recente.';
-setDbState();renderLog();render();paintPub();
+setDbState();renderLog();let abaIni='geral';try{abaIni=localStorage.getItem('ligcel-ap-aba')||'geral';}catch(e){}if(abaIni!=='abast')abaIni='geral';document.body.dataset.aba=abaIni;render();abaSet(abaIni,true);paintPub();
 document.getElementById('btnPub').addEventListener('click',publicar);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderQ1();renderQ4();renderExec();renderRt();renderGer();renderDia();},150);});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{renderQ1();renderQ4();});
